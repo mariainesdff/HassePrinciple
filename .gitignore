@@ -12,6 +12,7 @@
 ## TeX
 *.aux
 *.lof
+.venv/*
 *.log
 *.lot
 *.fls
