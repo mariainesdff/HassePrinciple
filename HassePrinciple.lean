@@ -1,1 +1,2 @@
-import HassePrinciple.Example
+import HassePrinciple.QuadraticForm.Basic
+import HassePrinciple.QuadraticForm.HasseMinkowski
