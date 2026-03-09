@@ -1,5 +1,6 @@
 name = "HassePrinciple"
 defaultTargets = ["HassePrinciple"]
+lintDriver = "batteries/runLinter"
 
 [leanOptions]
 pp.unicode.fun = true
