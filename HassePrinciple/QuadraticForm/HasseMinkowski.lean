@@ -14,7 +14,7 @@ namespace QuadraticForm
 variable {V : Type*} [AddCommGroup V] [Module ℚ V] (Q : QuadraticForm ℚ V)
 
 /-- The Hasse-Minkowski theorem over `ℚ`. -/
-lemma HasseMinkowski [Module.Finite ℚ V] : Q.Isotropic ↔ Q.EverywhereLocallyIsotropic:= by
+lemma HasseMinkowski [Module.Finite ℚ V] : Q.Isotropic ↔ Q.EverywhereLocallyIsotropic := by
   refine ⟨fun h ↦ h.everywhereLocallyIsotropic, fun h ↦ ?_⟩
   match hr : Module.finrank ℚ V with
   | 0       => sorry
