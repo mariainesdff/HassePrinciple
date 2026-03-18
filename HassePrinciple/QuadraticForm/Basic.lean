@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2026b Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
+Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
@@ -38,30 +38,28 @@ theorem Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
     Q.EverywhereLocallyIsotropic := by
   sorry
 
-lemma _root_.QuadraticMap.nondegenerate_of_anisotropic {R M : Type*} [CommRing R] [AddCommGroup M]
-    [Module R M] [Invertible (2 : R)] {Q : QuadraticForm R M} (hQ : Q.Anisotropic) :
+lemma nondegenerate_of_anisotropic {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+    [Invertible (2 : R)] {Q : QuadraticForm R M} (hQ : Q.Anisotropic) :
     Q.Nondegenerate :=
   sorry
 
-lemma _root_.QuadraticMap.degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A]
-    [AddCommGroup M] [Algebra R A] [Module R M] [Invertible (2 : R)] [Invertible (2 : A)]
-    {Q : QuadraticForm R M} (hQ : ¬ Q.Nondegenerate) :
+lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [AddCommGroup M]
+    [Algebra R A] [Module R M] [Invertible (2 : R)] [Invertible (2 : A)] {Q : QuadraticForm R M}
+    (hQ : ¬ Q.Nondegenerate) :
     ¬ (Q.baseChange A).Nondegenerate := by
   sorry
 
 open QuadraticMap
 
-theorem HasseMinkowski_of_degenerate (Q : QuadraticForm ℚ V)
-    (hQ : ¬ Q.Nondegenerate) :
+/- Will follow from `QuadraticMap.nondegenerate_of_anisotropic` and
+  `QuadraticMap.degenerate_baseChange`. -/
+theorem HasseMinkowski_of_degenerate (Q : QuadraticForm ℚ V) (hQ : ¬ Q.Nondegenerate) :
     Q.Isotropic ↔ Q.EverywhereLocallyIsotropic := by
-  have degenQ := Q.nondegenerate_of_anisotropic.mt hQ
-  have degenR := ((Q.baseChange ℝ).nondegenerate_of_anisotropic).mt
-    (degenerate_baseChange (A := ℝ) hQ)
-  simp only [Isotropic, degenQ, not_false_eq_true,
-    EverywhereLocallyIsotropic, degenR, and_true, true_iff]
+  have dQ := Q.nondegenerate_of_anisotropic.mt hQ
+  have dR := ((Q.baseChange ℝ).nondegenerate_of_anisotropic).mt (degenerate_baseChange (A := ℝ) hQ)
+  simp only [Isotropic, dQ, not_false_eq_true, EverywhereLocallyIsotropic, dR, and_true, true_iff]
   intro p hp
-  exact ((Q.baseChange ℚ_[p]).nondegenerate_of_anisotropic).mt
-    (degenerate_baseChange (A := ℚ_[p]) hQ)
+  exact ((Q.baseChange ℚ_[p]).nondegenerate_of_anisotropic).mt (degenerate_baseChange hQ)
 
 -- The cases of rank 0 and 1 are easy:
 
@@ -78,18 +76,29 @@ lemma anisotropic_of_rank_one {R V : Type*} [CommRing R] [IsDomain R] [StrongRan
     (hr : Module.finrank R V = 1) {Q : QuadraticForm R V} (hQ : Q ≠ 0) : Q.Anisotropic := by
   sorry
 
+theorem equivalent_weightedSumSquares' {K V : Type*} [Field K] [Invertible 2] [AddCommGroup V]
+  [Module K V] [FiniteDimensional K V] [NeZero (Module.finrank K V)] (Q : QuadraticForm K V) :
+  ∃ (w : Fin (Module.finrank K V) → K), w (0 : Fin (Module.finrank K V)) = 1 ∧
+    QuadraticMap.Equivalent Q (QuadraticMap.weightedSumSquares K w) := sorry
+
+theorem equivalent_weightedSumSquares_units_of_nondegenerate {K V : Type*} [Field K] [Invertible 2]
+  [AddCommGroup V] [Module K V] [FiniteDimensional K V] [NeZero (Module.finrank K V)]
+  (Q : QuadraticForm K V) (hQ : Q.Nondegenerate) :
+  ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
+    QuadraticMap.Equivalent Q (QuadraticMap.weightedSumSquares K w) := sorry
+
 namespace EverywhereLocallyIsotropic
 
-lemma isotropic_of_rank_two (hr : Module.finrank ℚ V = 2) (hQ : Q.EverywhereLocallyIsotropic) :
+lemma isotropic_of_rank_zero (hr : Module.finrank ℚ V = 0) (hQ : Q.Nondegenerate)
+    (hQ' : Q.EverywhereLocallyIsotropic) :
     Q.Isotropic := sorry
 
-lemma isotropic_of_rank_three (hr : Module.finrank ℚ V = 3) (hQ : Q.EverywhereLocallyIsotropic) :
+lemma isotropic_of_rank_one (hr : Module.finrank ℚ V = 1) (hQ : Q.Nondegenerate)
+    (hQ' : Q.EverywhereLocallyIsotropic) :
     Q.Isotropic := sorry
 
-lemma isotropic_of_rank_four (hr : Module.finrank ℚ V = 4) (hQ : Q.EverywhereLocallyIsotropic) :
-    Q.Isotropic := sorry
-
-lemma isotropic_of_five_le_rank (hr : Module.finrank ℚ V = 4) (hQ : Q.EverywhereLocallyIsotropic) :
+lemma isotropic_of_rank_two (hr : Module.finrank ℚ V = 2) (hQ : Q.Nondegenerate)
+    (hQ' : Q.EverywhereLocallyIsotropic) :
     Q.Isotropic := sorry
 
 end EverywhereLocallyIsotropic
