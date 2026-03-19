@@ -28,8 +28,7 @@ variable (Q : QuadraticForm ℚ V)
 /-- A quadratic form over `ℚ` is everywhere locally isotropic if it has nontrivial
 `p`-adic points for all `p`, and real points. -/
 def EverywhereLocallyIsotropic :=
-  (∀ (p : ℕ) [Fact (p.Prime)], (Q.baseChange ℚ_[p]).Isotropic) ∧
-  (Q.baseChange ℝ).Isotropic
+  (∀ (p : ℕ) [Fact (p.Prime)], (Q.baseChange ℚ_[p]).Isotropic) ∧ (Q.baseChange ℝ).Isotropic
 
 variable {Q}
 
