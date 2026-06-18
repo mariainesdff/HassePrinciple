@@ -53,30 +53,32 @@ theorem exists_rat_with_prescribed_hilbert_symbols_at_finitely_many_places
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1,h2,h3⟩ ↦ ?_⟩
   · -- TODO: Update Blueprint. BEWARE: Compared to Serre and the blueprint, 2 and infinity are not dealt with here.
     have : Fintype I := Fintype.ofFinite I
-
+    --define S to be the set of primes that divide either the numerator or the denominator of some
+    --(a i). N.B. In Serre, S contains also 2 and ∞.
     let S := Finset.univ.biUnion (fun i ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors)
+    --define T to be the set of primes such that at least one of the e_{i,v} is -1.
+    let T' := ⋃ i : I, {p : Nat.Primes | efin (i, p) = -1}
+    let f := fun (t' : T') ↦ (t' : ℕ)
+    let T'' := Set.range f
+    have : T''.Finite := by
+      refine (Set.finite_range_iff ?_).mpr ?_
+      · intro t1 t2 ht
+        unfold f at ht
+        ext
+        exact_mod_cast ht
+      · apply Set.finite_iUnion
+        intro i
+        specialize h1 i
+        simp only [Filter.eventually_cofinite] at h1
+        have (x : Nat.Primes) : ¬efin (i, x) = 1 ↔ efin (i, x) = -1 := by
+          specialize hefinpm1 i x
+          lia
+        simp_rw [this] at h1
+        exact h1
+    let T := Set.Finite.toFinset this
 
-    let T := ⋃ i : I, {p : Nat.Primes | efin (i, p) = -1}
 
---TODO Fix this
-    have Tfin : T.Finite := by
-      apply Set.finite_iUnion
-      intro i
-      specialize h1 i
-      simp only [Filter.eventually_cofinite] at h1
-      have (x : Nat.Primes) : ¬efin (i, x) = 1 ↔ efin (i, x) = -1 := by
-        specialize hefinpm1 i x
-        lia
-      simp_rw [this] at h1
-      exact h1
-    have T' := Set.Finite.toFinset Tfin
-    have T'' : Set ℕ := {(t : ℕ) | t : T'}
-    have Tfin'' : T''.Finite := by sorry
-    let T''' := Set.Finite.toFinset Tfin''
-
-
-
-    let A := ∏ᶠ t : T', (t : ℕ)
+    let A := ∏ᶠ t : T, (t : ℕ)
     have A_ne_zero : A ≠ 0 := by sorry
     let m := 8 * ∏ᶠ s : S, (s : ℕ)
     have m_ne_zero : m ≠ 0 := by
@@ -84,7 +86,7 @@ theorem exists_rat_with_prescribed_hilbert_symbols_at_finitely_many_places
       apply finprod_ne_zero
       intro s
       sorry
-    by_cases coprime_a_m : A.Coprime m ∧ ∀ i : I, einf i = 1
+    by_cases coprime_a_m : S ∩ T = ∅ ∧ 2 ∉ T ∧ ∀ i : I, einf i = 1
     · have ex_q : ∃ q, Nat.Prime q ∧ q ≡ A [MOD m] := by
         have := Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq m_ne_zero coprime_a_m.1)
         exact (Set.mem_image (fun x ↦ x % m) Irreducible (A % m)).mp this
