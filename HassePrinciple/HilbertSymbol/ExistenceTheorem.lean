@@ -87,6 +87,8 @@ theorem exists_rat_with_prescribed_hilbert_symbols_at_finitely_many_places
       intro s
       sorry
     by_cases coprime_a_m : S ∩ T = ∅ ∧ 2 ∉ T ∧ ∀ i : I, einf i = 1
+    <;> sorry
+    #exit
     · have ex_q : ∃ q, Nat.Prime q ∧ q ≡ A [MOD m] := by
         have := Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq m_ne_zero coprime_a_m.1)
         exact (Set.mem_image (fun x ↦ x % m) Irreducible (A % m)).mp this
