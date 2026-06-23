@@ -49,7 +49,105 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1,h2,h3⟩ ↦ ?_⟩
-  · sorry
+  · -- TODO: Update Blueprint. BEWARE: Compared to Serre and the blueprint, 2 and infinity are not dealt with here.
+    have : Fintype I := Fintype.ofFinite I
+    --define S to be the (fnite!) set of primes that divide either the numerator or the denominator
+    --of some (a i). N.B. In Serre, S contains also 2 and ∞.
+    let S := Finset.univ.biUnion (fun i ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors)
+    --define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1.
+    let T' := ⋃ i : I, {p : Nat.Primes | ep i p = -1}
+    let f := fun (t' : T') ↦ (t' : ℕ)
+    let T'' := Set.range f
+    have : T''.Finite := by
+      refine (Set.finite_range_iff ?_).mpr ?_
+      · intro t1 t2 ht
+        unfold f at ht
+        ext
+        exact_mod_cast ht
+      · apply Set.finite_iUnion
+        intro i
+        specialize h1 i
+        simp only [Filter.eventually_cofinite] at h1
+        have (x : Nat.Primes) : ¬ep i x = 1 ↔ ep i x = -1 := by
+          specialize hep1 i x
+          lia
+        simp_rw [this] at h1
+        exact h1
+    let T := Set.Finite.toFinset this
+
+
+    let A := ∏ t : T, (t : ℕ)
+    have A_ne_zero : A ≠ 0 := by
+      rw [Finset.prod_ne_zero_iff]
+      aesop
+    let M := 8 * ∏ s : S, (s : ℕ)
+    have M_ne_zero : M ≠ 0 := by
+      apply Nat.mul_ne_zero (by lia)
+      rw [Finset.prod_ne_zero_iff]
+      aesop
+
+
+    by_cases disjoint_ST : Disjoint S T ∧ 2 ∉ T ∧ ∀ i : I, ereal i = 1
+    · have coprime_AM : A.Coprime M := by
+        rw [← Nat.disjoint_primeFactors A_ne_zero M_ne_zero]
+        have Afac : A.primeFactors = T := by
+          --rw [Nat.primeFactors_prod ?_]
+          sorry
+
+
+
+
+        have Mfac : M.primeFactors = S ∪ {2} := by sorry
+        simp [Afac, Mfac, disjoint_ST, disjoint_comm]
+
+
+
+        -- rw [Nat.coprime_prod_left_iff]
+        -- intro t ht
+        -- refine Nat.coprime_mul_iff_right.mpr ⟨?_,?_⟩
+        -- · rw [(by omega: 8 = 2^3)]
+        --   refine Nat.Prime.coprime_pow_of_not_dvd Nat.prime_two ?_
+
+
+        --   sorry
+        -- · sorry
+
+
+
+      sorry
+    · sorry
+    #exit
+    · have ex_q : ∃ q, Nat.Prime q ∧ q ≡ A [MOD m] := by
+        have := Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq m_ne_zero coprime_a_m.1)
+        exact (Set.mem_image (fun x ↦ x % m) Irreducible (A % m)).mp this
+      let q := Classical.choose ex_q
+      have q_prime := (Classical.choose_spec ex_q).1
+      have q_Dirichlet := (Classical.choose_spec ex_q).2
+      have : IsUnit (A * q : ℚ) := by
+        apply IsUnit.mul
+        · simp [A_ne_zero]
+        · have : q ≠ 0 := by
+            apply Nat.Prime.ne_zero q_prime
+          simp [this]
+      let x := this.unit'
+      use x
+      intro i
+      constructor
+      · intro p
+        by_cases hp_S : p.val ∣ Int.natAbs (a i).val.num * (a i).val.den
+        · have eqAq : A * q ≡ A ^ 2 [MOD m] := by
+            rw [pow_two]
+            apply Nat.ModEq.mul (rfl) q_Dirichlet
+          have sq_mod_8 : A * q ≡ A ^ 2 [MOD 8] := by
+            exact Nat.ModEq.of_mul_right (∏ᶠ (s : ↥S), ↑s) eqAq
+          have := Polynomial.squares_in_Z2 (A * q) A
+          have sq_mod_p : A * q ≡ A ^ 2 [MOD p] := by
+            have := Nat.ModEq.of_mul_left 8 eqAq
+            sorry
+          sorry
+        · sorry
+      · sorry
+    · sorry
 
 
 theorem exists_rat_with_prescribed_hilbertSym (a : ℚˣ) {ep : Nat.Primes → ℤ} {ereal : ℤ}
