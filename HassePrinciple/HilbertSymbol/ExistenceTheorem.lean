@@ -48,7 +48,8 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1,h2,h3⟩ ↦ ?_⟩
-  · -- TODO: Update Blueprint. BEWARE: Compared to Serre and the blueprint, 2 and infinity are not dealt with here.
+  · --TODO: Update Blueprint.
+    --BEWARE: Compared to Serre and the blueprint, 2 and infinity are not dealt with here.
     have : Fintype I := Fintype.ofFinite I
     --define S to be the (fnite!) set of primes that divide either the numerator or the denominator
     --of some (a i). N.B. In Serre, S contains also 2 and ∞.
@@ -96,7 +97,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     have A_ne_zero : A ≠ 0 := by
       rw [Finset.prod_ne_zero_iff]
       aesop
-    let M := 8 * ∏ s : S, (s : ℕ)
+    let M := 8 * ∏ s : S, (s : ℕ) --technically should exclude 2 jere but probably not a problem
     have M_ne_zero : M ≠ 0 := by
       apply Nat.mul_ne_zero (by lia)
       rw [Finset.prod_ne_zero_iff]
@@ -125,38 +126,24 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       simp only [Set.mem_setOf_eq] at hq
       obtain ⟨q_prime, q_cong⟩ := hq
 
-      let x := (A * q : ℚ)
-      have : IsUnit x := by
+      let xQ := (A * q : ℚ)
+      have x_unit : IsUnit xQ := by
         apply IsUnit.mul
         · simp [A_ne_zero]
         · simp [Nat.Prime.ne_zero q_prime]
-      use this.unit'
-
-
-
-
-
-
-      sorry
-    · sorry
-    #exit
+      let x := x_unit.unit'
+      use x
 
 
       intro i
-      constructor
-      · intro p
-        by_cases hp_S : p.val ∣ Int.natAbs (a i).val.num * (a i).val.den
-        · have eqAq : A * q ≡ A ^ 2 [MOD m] := by
-            rw [pow_two]
-            apply Nat.ModEq.mul (rfl) q_Dirichlet
-          have sq_mod_8 : A * q ≡ A ^ 2 [MOD 8] := by
-            exact Nat.ModEq.of_mul_right (∏ᶠ (s : ↥S), ↑s) eqAq
-          have := Polynomial.squares_in_Z2 (A * q) A
-          have sq_mod_p : A * q ≡ A ^ 2 [MOD p] := by
-            have := Nat.ModEq.of_mul_left 8 eqAq
-            sorry
-          sorry
+      refine ⟨fun ⟨p,pprime⟩ ↦ ?_, ?_⟩
+      · by_cases hp : p = 2
         · sorry
+        · by_cases hp : p ∈ S
+          · sorry
+          · by_cases hp : p ∈ T
+            · sorry
+            · sorry
       · sorry
     · sorry
 
