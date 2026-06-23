@@ -89,19 +89,19 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
 
     by_cases disjoint_ST : Disjoint S T ∧ 2 ∉ T ∧ ∀ i : I, ereal i = 1
     · have coprime_AM : A.Coprime M := by
-        rw [← Nat.disjoint_primeFactors A_ne_zero M_ne_zero]
-        have Afac : A.primeFactors = T := by
-          unfold A
+        rw [Nat.coprime_fintype_prod_left_iff]
+        intro t
+        --rw [IsCoprime.mul_right_iff, Nat.coprime_fintype_prod_right_iff]
 
 
-          --rw [Nat.primeFactors_prod ?_]
-          sorry
-
-
-
-
-        have Mfac : M.primeFactors = S ∪ {2} := by sorry
-        simp [Afac, Mfac, disjoint_ST, disjoint_comm]
+        sorry
+        -- rw [← Nat.disjoint_primeFactors A_ne_zero M_ne_zero]
+        -- have Afac : A.primeFactors = T := by
+        --   unfold A
+        --   --rw [Nat.primeFactors_prod ?_]
+        --   sorry
+        -- have Mfac : M.primeFactors = S ∪ {2} := by sorry
+        -- simp [Afac, Mfac, disjoint_ST, disjoint_comm]
 
 
 
