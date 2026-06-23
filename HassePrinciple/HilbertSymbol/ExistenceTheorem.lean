@@ -91,6 +91,9 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     · have coprime_AM : A.Coprime M := by
         rw [← Nat.disjoint_primeFactors A_ne_zero M_ne_zero]
         have Afac : A.primeFactors = T := by
+          unfold A
+
+
           --rw [Nat.primeFactors_prod ?_]
           sorry
 
