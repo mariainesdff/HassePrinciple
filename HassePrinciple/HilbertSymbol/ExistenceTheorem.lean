@@ -14,7 +14,6 @@ public import HassePrinciple.Padics.Lemmas
 -/
 @[expose] public section
 
-
 namespace hilbertSym
 
 /-- The necessary conditions in the Existence Theorem are necessary -/
@@ -75,7 +74,24 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
         exact h1
     let T := Set.Finite.toFinset this
 
+    --S and T are made of prime numbers.
+    have primes_S : ∀ s : S, Nat.Prime s := by aesop
+    have primes_T : ∀ t : T, Nat.Prime t := by
+      intro t
+      have tinT := Subtype.mem t
+      simp only [T, Set.Finite.coe_toFinset] at tinT
+      have : ∀ x ∈ T'', Nat.Prime x := by
+        unfold T''
+        simp only [Set.mem_range, Subtype.exists, forall_exists_index]
+        intro x x_prime _ _
+        have : x = x_prime := by aesop
+        have : Nat.Prime x_prime := x_prime.2
+        aesop
+      aesop
 
+
+    --Define A to be the product of the elements in T, and M to be 8 times the product of the
+    --elements in S. Both are nonzero.
     let A := ∏ t : T, (t : ℕ)
     have A_ne_zero : A ≠ 0 := by
       rw [Finset.prod_ne_zero_iff]
@@ -86,54 +102,46 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       rw [Finset.prod_ne_zero_iff]
       aesop
 
-
+    --Following Serre, we first assume that S and T are disjoint (and that 2, ∞ are not in T).
     by_cases disjoint_ST : Disjoint S T ∧ 2 ∉ T ∧ ∀ i : I, ereal i = 1
     · have coprime_AM : A.Coprime M := by
         rw [Nat.coprime_fintype_prod_left_iff]
-        intro t
-        --rw [IsCoprime.mul_right_iff, Nat.coprime_fintype_prod_right_iff]
+        refine fun t ↦ Nat.Coprime.mul_right ?_ ?_
+        · have : Odd (t : ℕ) := by
+            apply Nat.Prime.odd_of_ne_two (primes_T t)
+            have two_notin_T := disjoint_ST.2.1
+            rw [← Finset.forall_mem_not_eq] at two_notin_T
+            apply ne_comm.mp (two_notin_T t (Subtype.mem t))
+          rw [(by omega : 8 = 2^3), Nat.coprime_pow_right_iff (by omega)]
+          exact Odd.coprime_two_right this
+        · rw [Nat.coprime_fintype_prod_right_iff]
+          intro s
+          rw [Nat.coprime_primes (primes_T t) (primes_S s)]
+          refine Disjoint.ne_of_mem ?_ (Subtype.mem t) (Subtype.mem s)
+          simp only [Finset.disjoint_coe, (disjoint_ST.1).symm]
+      have dirichlet :=
+          Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq M_ne_zero coprime_AM)
+      obtain ⟨q, hq⟩ := dirichlet
+      simp only [Set.mem_setOf_eq] at hq
+      obtain ⟨q_prime, q_cong⟩ := hq
+
+      let x := (A * q : ℚ)
+      have : IsUnit x := by
+        apply IsUnit.mul
+        · simp [A_ne_zero]
+        · simp [Nat.Prime.ne_zero q_prime]
+      use this.unit'
 
 
-        sorry
-        -- rw [← Nat.disjoint_primeFactors A_ne_zero M_ne_zero]
-        -- have Afac : A.primeFactors = T := by
-        --   unfold A
-        --   --rw [Nat.primeFactors_prod ?_]
-        --   sorry
-        -- have Mfac : M.primeFactors = S ∪ {2} := by sorry
-        -- simp [Afac, Mfac, disjoint_ST, disjoint_comm]
 
-
-
-        -- rw [Nat.coprime_prod_left_iff]
-        -- intro t ht
-        -- refine Nat.coprime_mul_iff_right.mpr ⟨?_,?_⟩
-        -- · rw [(by omega: 8 = 2^3)]
-        --   refine Nat.Prime.coprime_pow_of_not_dvd Nat.prime_two ?_
-
-
-        --   sorry
-        -- · sorry
 
 
 
       sorry
     · sorry
     #exit
-    · have ex_q : ∃ q, Nat.Prime q ∧ q ≡ A [MOD m] := by
-        have := Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq m_ne_zero coprime_a_m.1)
-        exact (Set.mem_image (fun x ↦ x % m) Irreducible (A % m)).mp this
-      let q := Classical.choose ex_q
-      have q_prime := (Classical.choose_spec ex_q).1
-      have q_Dirichlet := (Classical.choose_spec ex_q).2
-      have : IsUnit (A * q : ℚ) := by
-        apply IsUnit.mul
-        · simp [A_ne_zero]
-        · have : q ≠ 0 := by
-            apply Nat.Prime.ne_zero q_prime
-          simp [this]
-      let x := this.unit'
-      use x
+
+
       intro i
       constructor
       · intro p
