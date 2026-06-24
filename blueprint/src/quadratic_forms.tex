@@ -295,24 +295,26 @@ Suffices to see that every rank zero quadratic form over a field is anisotropic.
 \end{proof}
 
 \begin{lemma}\label{lem:equiv_sum_squares}
-\lean{QuadraticForm.equivalent_weightedSumSquares_units_of_nondegenerate}
+\lean{QuadraticForm.isotropic_iff_weightedSumSquares_units_of_nondegenerate}
 \uses{def:quadratic_form}
 \leanok
 Let $K$ be a field of characteristic not equal to $2$, let $M$ be a $K$-vector space of positive dimension $n$ and let $f : M \to K$ be a
-nondegenerate quadratic form. Then $f$ is equivalent to a form $X_1^2 +  a_2X_2^2 + \cdots + a_nX_n^2$, for some $a_i \in K^\times$.
+nondegenerate quadratic form. Then there exists a form $X_1^2 +  a_2X_2^2 + \cdots + a_nX_n^2$ for some $a_i \in K^\times$ such that it is isotropic if and only if $f$ is.
 \end{lemma}
 \begin{proof}
-Note that \mathlib contains a similar statement\footnote{\code{QuadraticForm.equivalent_weightedSumSquares_units_of_nondegenerate}}, where the coefficient of $X_1$ is not assumed to be $1$.
+\leanok
+Note that \mathlib contains a similar statement\footnote{\code{QuadraticForm.equivalent_weightedSumSquares_units_of_nondegenerate'}}, where the coefficient of $X_1$ is not assumed to be $1$.
 \end{proof}
 
 \begin{lemma}\label{lem:equiv_sum_squares_sqfree}
-	\lean{QuadraticForm.equivalent_weightedSumSquares_squarefree_units_of_nondegenerate}
+	\lean{QuadraticForm.isotropic_iff_weightedSumSquares_squarefree_units_of_nondegenerate}
 	\uses{lem:equiv_sum_squares}
 	\leanok
 	Let $K$ be a field of characteristic not equal to $2$, let $M$ be a $K$-vector space of positive dimension $n$ and let $f : M \to K$ be a
-	nondegenerate quadratic form. Then $f$ is equivalent to a form $X_1^2 +  a_2X_2^2 + \cdots + a_nX_n^2$, for some squarefree $a_i \in K^\times$.
+	nondegenerate quadratic form. Then there exists a form $X_1^2 +  a_2X_2^2 + \cdots + a_nX_n^2$, for some squarefree $a_i \in K^\times$ such that it is isotropic if and only if $f$ is.
 \end{lemma}
 \begin{proof}
+\leanok
 Follows from Lemma \ref{lem:equiv_sum_squares}.
 \end{proof}
 

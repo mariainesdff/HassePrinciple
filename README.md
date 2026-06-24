@@ -8,7 +8,7 @@ Project leaders:
 
 Project members:
 - Mallory Dolorfino
-- Kate Finnerty
+- [Kate Finnerty](https://katefinnertymath.com)
 - Cathy Hsu
 - Chi-Yun Hsu
 

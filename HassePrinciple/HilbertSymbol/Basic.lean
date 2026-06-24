@@ -45,12 +45,13 @@ variable {k : Type*} [Field k] {a b : k} (a' b' : k)
 
 /-- If `a` and `b` are nonzero, then `hilbertSym a b` is nonzero. -/
 lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 := by
-  sorry
+  simp [hilbertSym, ha, hb]
+  split_ifs <;> simp
 
 /-- If `a` and `b` are multiplied by a square, the Hilbert symbol is unchanged. -/
 @[simp]
 lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
-    hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
+  hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
   simp only [hilbertSym, mul_eq_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
       pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
   by_cases ha : a = 0
@@ -88,30 +89,61 @@ lemma comm : hilbertSym a b = hilbertSym b a := by
 # Basic properties of the Hilbert symbol
 -/
 
-/- May make sense to split in two lemmas, one for `QuadraticAlgebra k b 0 = k` and the other for
-  `QuadraticAlgebra k b 0 ≠ k`. -/
+/- Split in two lemmas, one for `QuadraticAlgebra k b 0 = k`(right_square_eq_one) and the other for
+  `QuadraticAlgebra k b 0 ≠ k` (immediately below). -/
 
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if and only if a is a norm from the
   quadratic algebra `QuadraticAlgebra k b 0`. -/
-theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) :
+theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
     hilbertSym a b = 1 ↔ ∃ t : QuadraticAlgebra k b 0, a = QuadraticAlgebra.norm t := by
-  sorry
+  rw [hilbertSym, if_neg (by simp [ha, hb])]
+  refine ⟨fun hhilb ↦ ?_, fun hnorm ↦ ?_⟩
+  · simp only [ne_eq, Prod.mk.injEq, not_and, Int.reduceNeg, ite_eq_left_iff, not_exists,
+      reduceCtorEq, imp_false, not_forall, not_not] at hhilb
+    obtain ⟨z, x, y, hnonzero, heq⟩ := hhilb
+    use (QuadraticAlgebra.mk (z/x) (y/x))
+    symm
+    rw [sub_eq_zero] at heq
+    have hx : x ≠ 0 := by
+      contrapose heq
+      contrapose hc
+      use z / y
+      grind
+    calc QuadraticAlgebra.norm { re := z / x, im := y / x }
+      _ = z / x * (z / x) - b * (y / x) * (y / x) := by simp [QuadraticAlgebra.norm]
+      _ = (z ^ 2 - b * y ^ 2) / x ^ 2 := by ring
+      _ = a := by
+        rw [← heq, sub_sub_cancel]
+        field_simp
+  · rw [if_pos]
+    obtain ⟨⟨p, q⟩, hnorm'⟩ := hnorm
+    use p, 1, q, by aesop
+    simp only [QuadraticAlgebra.norm_def, zero_mul, add_zero] at hnorm'
+    rw [hnorm']
+    ring
 
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if b is a square. -/
 @[simp]
 theorem right_square_eq_one (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a (b ^ 2) = 1 := by
-  sorry
+  rw [hilbertSym, if_neg (by aesop), if_pos]
+  use b, 0, 1
+  aesop
+
 
 /-- The Hilbert symbol of a and -a, with a nonzero, equals 1. -/
 @[simp]
 theorem right_neg_self_eq_one (ha : a ≠ 0) : hilbertSym a (-a) = 1 := by
-  sorry
+  rw [hilbertSym, if_neg (by simp [ha]), if_pos]
+  use 0, 1, 1
+  aesop
 
 /-- The Hilbert symbol of a and 1-a, with a different from 0 and 1, equals 1. -/
 @[simp]
 theorem right_one_minus_self_eq_one (ha0 : a ≠ 0) (ha1 : a ≠ 1) :
     hilbertSym a (1 - a) = 1 := by
-  sorry
+  rw [hilbertSym, if_neg (by simp [ha0, sub_ne_zero.mpr ha1.symm]), if_pos]
+  use 1, 1, 1
+  aesop
 
 /-- If the Hilbert symbol of a and b equals 1, then the Hilbert symbol of a and b * b' equals the
 Hilbert symbol of a and b'. -/
