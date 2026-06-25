@@ -1,5 +1,7 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
+public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
+public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.HilbertSymbol.ExistenceTheorem
 public import HassePrinciple.NumberTheory.ApproximationTheorem

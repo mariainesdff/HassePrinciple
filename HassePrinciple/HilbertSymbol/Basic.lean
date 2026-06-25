@@ -43,6 +43,11 @@ section Field
 
 variable {k : Type*} [Field k] {a b : k} (a' b' : k)
 
+lemma eq_one_or_neg_one_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) :
+    hilbertSym a b = 1 ∨ hilbertSym a b = -1 := by
+  simp only [hilbertSym, ha, hb, false_or, if_false]
+  split_ifs <;> tauto
+
 /-- If `a` and `b` are nonzero, then `hilbertSym a b` is nonzero. -/
 lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 := by
   simp [hilbertSym, ha, hb]
@@ -265,25 +270,17 @@ end two
 -/
 open Nat
 
-/-- For `a, b : ℚ`, and for a prime `p : ℕ`, `atP a b p` denotes the Hilbert symbol of `a` and `b`
-computed in `ℚ_[p]`. -/
-noncomputable abbrev atP (a b : ℚ) (p : ℕ) [hp : Fact (Nat.Prime p)] : ℤ :=
-  hilbertSym (a : ℚ_[p]) (b : ℚ_[p])
-
-/-- For `a, b : ℚ`, `atInfty a b` the Hilbert symbol of `a` and `b` computed in `ℝ`. -/
-noncomputable abbrev atInfty (a b : ℚ) : ℤ := hilbertSym (a : ℝ) (b : ℝ)
-
 /-- The instance that provides the fact that the nth prime is prime. -/
 scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, atP a b p = 1 := by
+    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
   sorry
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    atInfty a b * ∏ᶠ (p : Nat.Primes), atP a b p = 1 := by
+    (∏ᶠ (p : Nat.Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
   sorry
 
 end hilbertSym
