@@ -61,7 +61,7 @@ noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
 `z', y',` and `x'` in `ℤ_[p]`, and at least one is a unit -/
-lemma exists_padicInt_solution {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
+lemma exists_padicInt_sol {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' x' : ℤ_[p],
       (z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2 = 0
@@ -152,73 +152,6 @@ lemma exists_padicInt_solution {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
             exact PadicInt.isUnit_iff.mpr hz'_unit
       use z', y', x'
 
-/-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
-and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
-`z', y',` and `x'` in `ℤ_[p]`, and at least one is a unit -/
-lemma lift_solutions_to_int_first {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
-    (hnontriv : (x,y,z) ≠ (0,0,0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
-    ∃ z' y' x' : ℤ_[p],
-      (z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2 = 0
-      ∧ (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
-      sorry
-
-  -- · --   have hx'unit : ‖x'‖ = 1 := by
-  --     unfold x'
-  --     have := norm_mul_pow_neg_valuation_eq_one (Units.mk0 x h_x_ne_zero)
-  --     simp only [Units.val_mk0, zpow_neg, norm_mul,
-  --     norm_inv, norm_p_zpow, inv_inv] at this
-  --     simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-  --     exact this
-  --   have hx' : ‖x'‖ ≤ 1 := by
-  --     exact Std.le_of_eq hx'unit
-  --   have hy' : ‖y'‖ ≤ 1 := by
-  --     unfold y'
-  --     simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-  --     have hxinvval : ↑p ^ x.valuation = ‖x‖⁻¹ := by
-  --       have := norm_mul_pow_neg_valuation_eq_one (Units.mk0 x h_x_ne_zero)
-  --       simp only [Units.val_mk0, zpow_neg, norm_mul,
-  --       norm_inv, norm_p_zpow, inv_inv] at this
-  --       rw[mul_eq_one_iff_inv_eq₀] at this
-  --       · exact Real.ext_cauchy (congrArg Real.cauchy (id (Eq.symm this)))
-  --       · simp only [ne_eq, norm_eq_zero]
-  --         exact h_x_ne_zero
-  --     rw [hxinvval]
-  --     rw [mul_inv_le_iff₀]
-  --     · simp only [one_mul]
-  --       exact h_x_max.1
-  --     · simp only [norm_pos_iff, ne_eq]
-  --       exact h_x_ne_zero
-  --   have hz' : ‖z'‖ ≤ 1 := by
-  --     unfold z'
-  --     simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-  --     have hxinvval : ↑p ^ x.valuation = ‖x‖⁻¹ := by
-  --       have := norm_mul_pow_neg_valuation_eq_one (Units.mk0 x h_x_ne_zero)
-  --       simp only [Units.val_mk0, zpow_neg, norm_mul,
-  --       norm_inv, norm_p_zpow, inv_inv] at this
-  --       rw [mul_eq_one_iff_inv_eq₀] at this
-  --       · exact Real.ext_cauchy (congrArg Real.cauchy (id (Eq.symm this)))
-  --       · simp only [ne_eq, norm_eq_zero]
-  --         exact h_x_ne_zero
-  --     rw [hxinvval]
-  --     rw [mul_inv_le_iff₀]
-  --     · simp only [one_mul]
-  --       exact h_x_max.2
-  --     · simp only [norm_pos_iff, ne_eq]
-  --       exact h_x_ne_zero
-  --   have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
-  --     - v * (y' : ℚ_[p])^2 = 0) := by
-  --     unfold x' y' z'
-  --     grind
-  --   let z'' : ℤ_[p] := ⟨z',hz'⟩
-  --   let y'' : ℤ_[p] := ⟨y',hy'⟩
-  --   let x'' : ℤ_[p] := ⟨x',hx'⟩
-  --   use z'', y'', x''
-  --   constructor
-  --   · exact hnewsol
-  --   · right
-  --     right
-  --     exact PadicInt.isUnit_iff.mpr hx'unit
-
 --better name?
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
@@ -227,22 +160,36 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2 = 0 := by
-  obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_solution hnontriv hsol
+  obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_sol hnontriv hsol
   have heq_int : ‖(z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2
-     - v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by
-     rw [hnewsol]
-     simp only [norm_zero, zero_le_one]
+     - v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by -- now can take the zmodrepr of the equation (unused)
+     simp only [hnewsol, norm_zero, zero_le_one]
+  have hvy'_int : ‖v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by -- now can take the zmodrepr of v * y' (unused)
+    rw [sub_eq_zero] at hnewsol
+    rw [← hnewsol]
+    rw [← PadicInt.mem_subring_iff]
+    apply (PadicInt.subring p).sub_mem
+    · apply (PadicInt.subring p).pow_mem
+      simp only [SetLike.coe_mem]
+    · apply (PadicInt.subring p).mul_mem
+      · exact natCast_mem (PadicInt.subring p) p
+      apply (PadicInt.subring p).pow_mem
+      simp only [SetLike.coe_mem]
+  let vy' : ℤ_[p] := ⟨v * (y' : ℚ_[p]) ^ 2, hvy'_int⟩ -- unused
+  let eq : ℤ_[p] := ⟨(z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2, heq_int⟩ -- unused
   have hz'_unit : ‖z'‖ = 1 := by
     rw [← PadicInt.norm_natCast_zmodRepr_eq_one_iff,
     PadicInt.norm_natCast_zmodRepr_eq_one_iff_ne]
     by_contra
     have hy'_zmodRep_eq_ze : y'.zmodRepr = 0 := by
-      rw [PadicInt.zmodRepr_eq_zero_iff_dvd] at this ⊢
-      refine (PadicInt.norm_lt_one_iff_dvd y').mp ?_
-      by_cases (y = 0)
-      · expose_names
-        sorry
-      · sorry
+      simp only [PadicInt.zmodRepr_eq_zero_iff_dvd] at this ⊢
+      have hp_div_vy' : ↑p ∣ v * (y' : ℚ_[p]) ^ 2 := by
+        rw [sub_eq_zero] at hnewsol
+        rw [← hnewsol]
+        refine (dvd_sub_left ?_).mpr ?_
+        · simp only [dvd_mul_right]
+        · sorry
+      sorry
     have hx'_zmodRep_eq_ze : x'.zmodRepr = 0 := by
       sorry
     have hz'_not_unit : ¬IsUnit z' := by
@@ -272,7 +219,7 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
   let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit
   let x'' : ℤ_[p] := x'
   use z'', y'', x''
-  apply hnewsol
+  exact hnewsol
 
 
 lemma common_root_tfae {σ ι : Type*} {f : ι → MvPolynomial σ ℤ_[p]}
