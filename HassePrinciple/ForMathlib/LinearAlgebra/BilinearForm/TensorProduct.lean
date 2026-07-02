@@ -37,4 +37,8 @@ lemma BilinForm.baseChange_add {R A M : Type*} [CommSemiring R] [CommSemiring A]
     BilinForm.baseChange A (f + g) = BilinForm.baseChange A f + BilinForm.baseChange A g := by
   ext; simp [add_smul]
 
+lemma BilinForm.baseChange_flip {R A M : Type*} [CommSemiring R] [CommSemiring A]
+    [Algebra R A] [AddCommMonoid M] [Module R M] {B : LinearMap.BilinForm R M} :
+  LinearMap.flip (B.baseChange A) = (B.flip).baseChange A := by ext; simp
+
 end LinearMap

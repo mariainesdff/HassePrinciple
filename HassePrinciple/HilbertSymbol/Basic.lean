@@ -94,9 +94,6 @@ lemma comm : hilbertSym a b = hilbertSym b a := by
 # Basic properties of the Hilbert symbol
 -/
 
-/- Split in two lemmas, one for `QuadraticAlgebra k b 0 = k`(right_square_eq_one) and the other for
-  `QuadraticAlgebra k b 0 ≠ k` (immediately below). -/
-
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if and only if a is a norm from the
   quadratic algebra `QuadraticAlgebra k b 0`. -/
 theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
@@ -150,24 +147,81 @@ theorem right_one_minus_self_eq_one (ha0 : a ≠ 0) (ha1 : a ≠ 1) :
   use 1, 1, 1
   aesop
 
+/-- If both a and b are nonzero, the Hilbert symbol of a and b must be either 1 or -1. -/
+theorem eq_one_or_neg_one (ha : a ≠ 0) (hb : b ≠ 0) :
+    hilbertSym a b = 1 ∨ hilbertSym a b = -1 := by
+  rw [hilbertSym]
+  split_ifs <;> aesop
+
+/-- If both a and b are nonzero, the Hilbert symbol of a and b is -1 if and only if it is not 1. -/
+theorem eq_neg_one_iff_not_one (ha : a ≠ 0) (hb : b ≠ 0) :
+    hilbertSym a b = -1 ↔ ¬hilbertSym a b = 1 := by
+  refine ⟨fun h ↦ by simp [h], fun h ↦ ?_⟩
+  have := eq_one_or_neg_one ha hb
+  aesop
+
 /-- If the Hilbert symbol of a and b equals 1, then the Hilbert symbol of a and b * b' equals the
 Hilbert symbol of a and b'. -/
 @[simp]
 theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
     hilbertSym a (b * b') = hilbertSym a b' := by
-  sorry
+  by_cases hb' : b' = 0
+  · aesop
+  · have ⟨hanzero, hbnzero⟩ : a ≠ 0 ∧ b ≠ 0 := by
+      rw [hilbertSym] at hab
+      aesop
+    by_cases ha : IsSquare a
+    · obtain ⟨sqrta, sqrtadef⟩ := ha
+      simp [sqrtadef, ← pow_two, comm]
+      aesop
+    · have Hab : Fact (∀ r : k, r ^ 2 ≠ a + 0 * r) := by
+        rw [fact_iff]
+        intro r
+        simp only [zero_mul, add_zero, ne_eq]
+        contrapose ha
+        use r
+        grind
+      rw [comm, eq_one_iff hbnzero hanzero ha] at hab
+      obtain ⟨t, ht⟩ := hab
+      rw [hilbertSym, hilbertSym]
+      split_ifs <;> try grind
+      · have ⟨tt', htt'⟩ : ∃ tt' : QuadraticAlgebra k a 0, b * b' = QuadraticAlgebra.norm tt' := by
+          rw [← eq_one_iff, hilbertSym]
+          split_ifs <;> try grind
+          all_goals aesop
+        have : ∃ t' : QuadraticAlgebra k a 0, b' = QuadraticAlgebra.norm t' := by
+          use tt' * (1 / t)
+          simp [map_mul, ← htt', ht]
+          field_simp
+          rw [← map_mul]
+          grind
+        rw [← eq_one_iff hb' hanzero ha, hilbertSym, if_neg (by aesop)] at this
+        grind
+      · have ⟨t', ht'⟩ : ∃ t' : QuadraticAlgebra k a 0, b' = QuadraticAlgebra.norm t' := by
+          rw [← eq_one_iff, hilbertSym]
+          split_ifs <;> try grind
+          all_goals aesop
+        have : ∃ tt' : QuadraticAlgebra k a 0, b * b' = QuadraticAlgebra.norm tt' := by
+          use t * t'
+          simp [map_mul, ht, ht']
+        rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, if_neg (by aesop)] at this
+        simp only [ite_eq_left_iff] at this
+        grind
 
 /-- The Hilbert symbol of a and -a*b, equals the Hilbert symbol of a and b. -/
 @[simp]
 theorem right_neg_mul : hilbertSym a (- (a * b)) = hilbertSym a b := by
-  sorry
+  by_cases hzero : a = 0
+  · simp [hzero, hilbertSym]
+  · rw [← neg_mul]
+    exact right_mul_eq_of_eq_one b (right_neg_self_eq_one hzero)
 
 /-- If a is different from 1, then the Hilbert symbol of a and (1-a)*b equals the Hilbert symbol of
 a and b. -/
 @[simp]
 theorem right_minus_self_mul (ha : a ≠ 1) :
     hilbertSym a ((1 - a) * b) = hilbertSym a b := by
-  sorry
+  by_cases hzero : a = 0 <;> aesop
 
 end Field
 

@@ -13,6 +13,7 @@ public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct
 public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
+public import Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 
 /-! # Quadratic forms -/
 
@@ -184,22 +185,50 @@ lemma nondegenerate_of_anisotropic [Invertible (2 : R)] {Q : QuadraticMap R M N}
   rw [nondegenerate_iff_radical_eq_bot, eq_bot_iff]
   exact fun m hm ↦ hQ m (mem_radical_iff'.mp hm).1
 
-open QuadraticMap
+open Module QuadraticMap
 
 -- The rank zero case of Hasse-Minkowski will follow trivially from this lemma:
 lemma anisotropic_of_rank_zero [IsDomain R] [StrongRankCondition R] [Module.Finite R M]
-    [Module.IsTorsionFree R M] (hr : Module.finrank R M = 0) (Q : QuadraticMap R M N) :
+    [IsTorsionFree R M] (hr : finrank R M = 0) (Q : QuadraticMap R M N) :
     Q.Anisotropic := by
-  rw [Module.finrank_zero_iff] at hr
+  rw [finrank_zero_iff] at hr
   exact fun x _ ↦ Subsingleton.eq_zero x
 
 -- The rank one case of Hasse-Minkowski will follow from:
-lemma anisotropic_of_rank_one [IsDomain R] [StrongRankCondition R] [Module.IsTorsionFree R M]
-    (hr : Module.finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
+/-
+Proof idea: Pick `b` so that `Q(b) ≠ 0`. Let `x` be such that `Q(x) = 0`.
+Then by the rank one assumption, `r • x + s • b = 0` for some `r` and `s` not both zero.
+Then `s² Q(b) = Q (s • b) = Q (- r • x) = Q (r • x) = r² Q(x) = 0`.
+Because `Q(b) ≠ 0` and N is torsion free, we have `s² = 0`, so `s = 0`.
+Then `r • x = 0` and `r ≠ 0`. Hence `x = 0`.
+-/
+open Finsupp in
+lemma anisotropic_of_rank_one [IsDomain R] [StrongRankCondition R] [IsTorsionFree R M]
+    [IsTorsionFree R N] (hr : finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
     Q.Anisotropic := by
-  sorry
+  intro x hx
+  obtain ⟨b, hb⟩ : ∃ m, Q m ≠ 0 := by simpa [Q.ext_iff] using hQ
+  obtain ⟨r, s, hrs, h0⟩ : ∃ (r s : R), r • x + s • b = 0 ∧ (r ≠ 0 ∨ s ≠ 0) := by
+    rw [finrank, Cardinal.toNat_eq_one] at hr
+    have hdep : ¬ LinearIndependent R ![x, b] :=
+      fun hli ↦ (by simpa [hr] using LinearIndependent.cardinal_lift_le_rank hli)
+    obtain ⟨l, hl_sum, hl_ne_zero⟩ : ∃ l, (linearCombination R ![x, b]) l = 0 ∧ l ≠ 0 := by
+      simpa [linearIndependent_iff] using hdep
+    refine ⟨l 0, l 1, ?_, (by contrapose! hl_ne_zero; ext i; fin_cases i <;> simp [hl_ne_zero])⟩
+    simp only [linearCombination, coe_lsum, sum,
+      LinearMap.coe_smulRight, LinearMap.id_coe, id_eq] at hl_sum
+    rw [Finset.sum_subset (Finset.subset_univ _)
+      (fun _ _ hi ↦ by rw [(notMem_support_iff).mp hi, zero_smul])] at hl_sum
+    simpa [Fin.sum_univ_two] using hl_sum
+  have h : s ^ 2 • Q b = 0 := by
+    calc
+      s ^ 2 • Q b
+        = Q (s • b) := ((pow_two s).symm ▸ (Q.toFun_smul s b)).symm
+      _ = Q (-r • x) := congrArg _ ((neg_smul r x).symm ▸ (eq_neg_of_add_eq_zero_right hrs))
+      _ = 0 := by simp [QuadraticMap.map_smul, hx]
+  simp_all
 
-theorem Equivalent.nondegenerate [IsDomain R] [Module.IsTorsionFree R M] [Module.IsTorsionFree R M']
+theorem Equivalent.nondegenerate [IsDomain R] [IsTorsionFree R M] [IsTorsionFree R M']
     [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q')
     (hQ : Q.Nondegenerate) : Q'.Nondegenerate := by
   rw [nondegenerate_iff_radical_eq_bot] at hQ ⊢
@@ -211,9 +240,8 @@ theorem Equivalent.nondegenerate [IsDomain R] [Module.IsTorsionFree R M] [Module
   rw [← Submodule.finrank_eq_zero, h.symm.rank_radical_eq, Submodule.finrank_eq_zero]
   exact hQ
 
-theorem Equivalent.nondegenerate_iff [IsDomain R] [Module.IsTorsionFree R M]
-    [Module.IsTorsionFree R M'] [Invertible (2 : R)] {Q : QuadraticMap R M N}
-    {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q') :
+theorem Equivalent.nondegenerate_iff [IsDomain R] [IsTorsionFree R M] [IsTorsionFree R M']
+    [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q') :
     Q.Nondegenerate ↔ Q'.Nondegenerate :=
   ⟨fun hQ ↦ h.nondegenerate hQ, fun hQ' ↦ h.symm.nondegenerate hQ'⟩
 
@@ -251,10 +279,25 @@ end QuadraticMap
 
 namespace QuadraticForm
 
-lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A] [AddCommGroup M]
-    [Module R M] [Invertible (2 : R)] {Q : QuadraticForm R M} (hQ : ¬ Q.Nondegenerate) :
+open _root_.QuadraticMap LinearMap TensorProduct
+
+/-
+Chiyun: Added `[Module.FaithfullyFlat R A]`. Counterexample otherwise: R = ℤ, A = ℤ/3ℤ, M = ℤ,
+Q : ℤ → ℤ/3ℤ given by Q(x) = x². Then Q is degenerate but Q.baseChange A is nondegenerate.
+-/
+lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A]
+    [Module.FaithfullyFlat R A] [AddCommGroup M] [Module R M] [Invertible (2 : R)]
+    {Q : QuadraticForm R M} (hQ : ¬ Q.Nondegenerate) :
     ¬ (Q.baseChange A).Nondegenerate := by
-  sorry
+  contrapose! hQ
+  have : Invertible (2 : A) := (Invertible.map (algebraMap R A) 2).copy 2 (map_ofNat _ _).symm
+  simp only [← nondegenerate_associated_iff, associated_baseChange, LinearMap.Nondegenerate,
+    separatingLeft_iff_linear_nontrivial, separatingRight_iff_linear_flip_nontrivial] at hQ ⊢
+  refine ⟨fun x hx ↦ (Module.FaithfullyFlat.one_tmul_eq_zero_iff R M x).mp
+    (hQ.1 _ (AlgebraTensorModule.ext (by simp [hx]))), fun y hy ↦ ?_⟩
+  have hy' : BilinForm.flip (associated Q) y = 0 := by simpa [hy]
+  exact (Module.FaithfullyFlat.one_tmul_eq_zero_iff R M y).mp
+    (hQ.2 _ (AlgebraTensorModule.ext (by simp [hy', BilinForm.baseChange_flip])))
 
 section Field
 
