@@ -1,6 +1,7 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
 public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
+public import HassePrinciple.ForMathlib.LinearAlgebra.Determinant
 public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.HilbertSymbol.ExistenceTheorem
@@ -13,6 +14,7 @@ public import HassePrinciple.QuadraticForm.Chain
 public import HassePrinciple.QuadraticForm.HasseMinkowski
 public import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
 public import HassePrinciple.QuadraticForm.HighRank
+public import HassePrinciple.QuadraticForm.LowRank
 public import HassePrinciple.QuadraticForm.RankFour
 public import HassePrinciple.QuadraticForm.RankThree
 public import HassePrinciple.QuadraticForm.Rat

@@ -41,7 +41,7 @@ namespace hilbertSym
 
 section Field
 
-variable {k : Type*} [Field k] {a b : k} (a' b' : k)
+variable {k : Type*} [Field k] {a b a' b' : k}
 
 lemma eq_one_or_neg_one_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) :
     hilbertSym a b = 1 ∨ hilbertSym a b = -1 := by
@@ -54,9 +54,8 @@ lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 :=
   split_ifs <;> simp
 
 /-- If `a` and `b` are multiplied by a square, the Hilbert symbol is unchanged. -/
-@[simp]
 lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
-  hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
+    hilbertSym (a * a' ^ 2) (b * b' ^ 2) = hilbertSym a b := by
   simp only [hilbertSym, mul_eq_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
       pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
   by_cases ha : a = 0
@@ -73,6 +72,20 @@ lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
       · obtain ⟨z, x, y, h0, heq⟩ := h'
         apply h ⟨ z, (1/a'*x), (1/b'*y), by aesop, by field_simp; rw [heq]⟩
       · rfl
+
+/-- Special case of `mul_square_eq`. -/
+@[simp]
+lemma mul_left_square_eq (ha' : a' ≠ 0) :
+    hilbertSym (a * a' ^ 2) b = hilbertSym a b := by
+  nth_rw 1 [← mul_one b]
+  rw [← one_pow 2, mul_square_eq ha' one_ne_zero]
+
+/-- Special case of `mul_square_eq`. -/
+@[simp]
+lemma mul_right_square_eq (hb' : b' ≠ 0) :
+    hilbertSym a (b * b' ^ 2) = hilbertSym a b := by
+  nth_rw 1 [← mul_one a]
+  rw [← one_pow 2, mul_square_eq one_ne_zero hb']
 
 /-- The Hilbert symbol is commutative. -/
 lemma comm : hilbertSym a b = hilbertSym b a := by
@@ -130,7 +143,6 @@ theorem right_square_eq_one (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a (b ^ 2)
   rw [hilbertSym, if_neg (by aesop), if_pos]
   use b, 0, 1
   aesop
-
 
 /-- The Hilbert symbol of a and -a, with a nonzero, equals 1. -/
 @[simp]
@@ -214,7 +226,11 @@ theorem right_neg_mul : hilbertSym a (- (a * b)) = hilbertSym a b := by
   by_cases hzero : a = 0
   · simp [hzero, hilbertSym]
   · rw [← neg_mul]
-    exact right_mul_eq_of_eq_one b (right_neg_self_eq_one hzero)
+    exact right_mul_eq_of_eq_one (right_neg_self_eq_one hzero)
+
+@[simp]
+theorem left_neg_mul : hilbertSym (- (a * b)) b = hilbertSym a b := by
+  rw [comm, mul_comm a, right_neg_mul, comm]
 
 /-- If a is different from 1, then the Hilbert symbol of a and (1-a)*b equals the Hilbert symbol of
 a and b. -/
@@ -229,96 +245,135 @@ end Field
 ## Local properties: computation of the Hilbert symbol in the real and p-adic cases
 -/
 
+section Real
+
+variable {a b a' b' : ℝ}
+
 /-- If k = ℝ, and a and b are nonzero, then the Hilbert symbol equals 1 if and only if either a or
 b is positive. -/
-theorem real_eq {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0) :
+theorem real_eq (ha : a ≠ 0) (hb : b ≠ 0) :
     hilbertSym a b = if 0 < a ∨ 0 < b then 1 else -1 := by
   sorry
+
+-- aesop could finish the proof earlier, but it is quite slow
+lemma real_mul_left_eq :
+    hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b := by
+  by_cases h0 : a = 0 ∨ a' = 0 ∨ b = 0
+  · rcases h0 with h0 | h0 | h0 <;> simp [hilbertSym, h0]
+  · simp  only [not_or] at h0
+    obtain ⟨ha, ha', hb⟩ := h0
+    rw [real_eq ha hb, real_eq ha' hb, real_eq (by positivity) hb]
+    rcases lt_or_gt_of_ne (Ne.symm ha) with ha | ha
+    · simp [ha]
+    · by_cases hb0 : 0 < b
+      · simp [hb0]
+      · simp [not_lt.mpr ha.le, hb0]
+        by_cases ha'0 : 0 < a'
+        · simp [ha'0, ha.le]
+        · simp [ha'0, mul_pos_of_neg_of_neg ha (lt_of_le_of_ne (not_lt.mp ha'0) ha')]
+
+lemma real_mul_right_eq :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  rw [comm, real_mul_left_eq, comm, comm (b := b')]
+
+end Real
+
+section Padic
+
+variable {p : ℕ} [hp : Fact (Nat.Prime p)] {a b a' b' : (ℚ_[p])}
 
 open Padic PadicInt
 section odd
 
-variable {p : ℕ} [hp : Fact (Nat.Prime p)] (hp2 : p ≠ 2) {x y : (ℚ_[p])} (hx : x ≠ 0) (hy : y ≠ 0)
+variable (hp2 : p ≠ 2) (ha : a ≠ 0) (hb : b ≠ 0)
 
-/-- Main theorem for odd p, case v(x)=0, v(y)=0. -/
-lemma padic_odd_case00 (hx0 : x.valuation = 0) (hy0 : y.valuation = 0) :
-    (hilbertSym x y : ℚ) =
-      Int.negOnePow (valuation (x : ℚ_[p]) * valuation (y : ℚ_[p]) * epsilon (p2 hp2)) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 x hx) : ℤ_[p])) ^ (valuation (y : ℚ_[p])) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 y hy) : ℤ_[p])) ^ (valuation (x : ℚ_[p]))  := by
+/-- Main theorem for odd p, case v(a)=0, v(b)=0. -/
+lemma padic_odd_case00 (ha0 : a.valuation = 0) (hb0 : b.valuation = 0) :
+    (hilbertSym a b : ℚ) =
+      Int.negOnePow (valuation (a : ℚ_[p]) * valuation (b : ℚ_[p]) * epsilon (p2 hp2)) *
+      (legendreSym (unitPart (Units.mk0 a ha) : ℤ_[p])) ^ valuation (b : ℚ_[p]) *
+      (legendreSym (unitPart (Units.mk0 b hb) : ℤ_[p])) ^ valuation (a : ℚ_[p])  := by
   sorry
 
-/-- Main theorem for odd p, case v(x)=1, v(y)=0. -/
-lemma padic_odd_case10 (hx1 : valuation (x : ℚ_[p]) = 1) (hy0 : valuation (y : ℚ_[p]) = 0) :
-    (hilbertSym x y : ℚ) =
-      Int.negOnePow (valuation (x : ℚ_[p]) * valuation (y : ℚ_[p]) * epsilon (p2 hp2)) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 x hx) : ℤ_[p])) ^ (valuation (y : ℚ_[p])) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 y hy) : ℤ_[p])) ^ (valuation (x : ℚ_[p]))  := by
+/-- Main theorem for odd p, case v(a)=1, v(b)=0. -/
+lemma padic_odd_case10 (ha1 : valuation (a : ℚ_[p]) = 1) (hb0 : valuation (b : ℚ_[p]) = 0) :
+    (hilbertSym a b : ℚ) =
+      Int.negOnePow (valuation (a : ℚ_[p]) * valuation (b : ℚ_[p]) * epsilon (p2 hp2)) *
+      (legendreSym (unitPart (Units.mk0 a ha) : ℤ_[p])) ^ (valuation (b : ℚ_[p])) *
+      (legendreSym (unitPart (Units.mk0 b hb) : ℤ_[p])) ^ valuation (a : ℚ_[p]) := by
   sorry
 
-/-- Main theorem for odd p, case v(x)=1, v(y)=1. -/
-lemma padic_odd_case11 (hx1 : valuation (x : ℚ_[p]) = 1) (hy1 : valuation (y : ℚ_[p]) = 1) :
-    (hilbertSym x y : ℚ) =
-    Int.negOnePow (valuation (x : ℚ_[p]) * valuation (y : ℚ_[p]) * epsilon (p2 hp2)) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 x hx) : ℤ_[p])) ^ (valuation (y : ℚ_[p])) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 y hy) : ℤ_[p])) ^ (valuation (x : ℚ_[p]))  := by
+/-- Main theorem for odd p, case v(a)=1, v(b)=1. -/
+lemma padic_odd_case11 (ha1 : valuation (a : ℚ_[p]) = 1) (hb1 : valuation (b : ℚ_[p]) = 1) :
+    (hilbertSym a b : ℚ) =
+    Int.negOnePow (valuation (a : ℚ_[p]) * valuation (b : ℚ_[p]) * epsilon (p2 hp2)) *
+      (legendreSym (unitPart (Units.mk0 a ha) : ℤ_[p])) ^ (valuation (b : ℚ_[p])) *
+      (legendreSym (unitPart (Units.mk0 b hb) : ℤ_[p])) ^ valuation (a : ℚ_[p]) := by
   sorry
 
-/-- If p is an odd prime and x, y are nonzero in ℚ_[p], then the Hilbert symbol of x and y equals
-`(-1) ^ v(x) * v(y) * ε(p) ` times the product of the Legendre symbol of the unit part of x to v(y)
-times the Legendre symbol of the unit part of y to v(x). -/
+/-- If p is an odd prime and a, b are nonzero in ℚ_[p], then the Hilbert symbol (a, b)ₚ equals
+`(-1) ^ v(a) * v(b) * ε(p) ` times the product of the Legendre symbol of the unit part of a to v(b)
+times the Legendre symbol of the unit part of b to v(a). -/
 theorem padic_odd_eq :
-    (hilbertSym x y : ℚ) =
-      Int.negOnePow (valuation (x : ℚ_[p]) * valuation (y : ℚ_[p]) * epsilon (p2 hp2)) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 x hx) : ℤ_[p])) ^ (valuation (y : ℚ_[p])) *
-      (PadicInt.legendreSym (unitPart (Units.mk0 y hy)  : ℤ_[p])) ^ (valuation (x : ℚ_[p])) := by
+    (hilbertSym a b : ℚ) =
+      Int.negOnePow (valuation (a : ℚ_[p]) * valuation (b : ℚ_[p]) * epsilon (p2 hp2)) *
+      (legendreSym (unitPart (Units.mk0 a ha) : ℤ_[p])) ^ (valuation (b : ℚ_[p])) *
+      (legendreSym (unitPart (Units.mk0 b hb)  : ℤ_[p])) ^ valuation (a : ℚ_[p]):= by
   sorry
 
 end odd
 
 section two
 
-variable {x y : (ℚ_[2])} (hx : x ≠ 0) (hy : y ≠ 0)
+variable {a b : (ℚ_[2])} (ha : a ≠ 0) (hb : b ≠ 0)
 
-/-- Main theorem for p=2, case v(x)=0, v(y)=0. -/
-lemma two_adic_case00 (hx0 : valuation (x : ℚ_[2]) = 0) (hy0 : valuation (y : ℚ_[2]) = 0) :
-    hilbertSym x y = Int.negOnePow (epsilon (unitPart (Units.mk0 x hx)) *
-      epsilon (unitPart (Units.mk0 y hy)) + valuation (x : ℚ_[2]) *
-      omega (unitPart (Units.mk0 y hy)) + valuation (y : ℚ_[2]) *
-      omega (unitPart (Units.mk0 x hx))) := by
+/-- Main theorem for p=2, case v(a)=0, v(b)=0. -/
+lemma two_adic_case00 (ha0 : valuation (a : ℚ_[2]) = 0) (hb0 : valuation (b : ℚ_[2]) = 0) :
+    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
+      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
+      omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
-/-- Main theorem for p=2, case v(x)=1, v(y)=0. -/
-lemma two_adic_case10 (hx1 : valuation (x : ℚ_[2]) = 1) (hy0 : valuation (y : ℚ_[2]) = 0) :
-    hilbertSym x y = Int.negOnePow (epsilon (unitPart (Units.mk0 x hx)) *
-      epsilon (unitPart (Units.mk0 y hy)) + valuation (x : ℚ_[2]) *
-      omega (unitPart (Units.mk0 y hy)) + valuation (y : ℚ_[2]) *
-      omega (unitPart (Units.mk0 x hx))) := by
+/-- Main theorem for p=2, case v(a)=1, v(b)=0. -/
+lemma two_adic_case10 (ha1 : valuation (a : ℚ_[2]) = 1) (hb0 : valuation (b : ℚ_[2]) = 0) :
+    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
+      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
+      omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
-/-- Main theorem for p=2, case v(x)=1, v(y)=1. -/
-lemma two_adic_case11 (hx1 : valuation (x : ℚ_[2]) = 1) (hy1 : valuation (y : ℚ_[2]) = 1) :
-    hilbertSym x y = Int.negOnePow (epsilon (unitPart (Units.mk0 x hx)) *
-      epsilon (unitPart (Units.mk0 y hy)) + valuation (x : ℚ_[2]) *
-      omega (unitPart (Units.mk0 y hy)) + valuation (y : ℚ_[2]) *
-      omega (unitPart (Units.mk0 x hx))) := by
+/-- Main theorem for p=2, case v(a)=1, v(b)=1. -/
+lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : ℚ_[2]) = 1) :
+    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
+      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
+      omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
-open PadicInt
-
-/-- If x, y are nonzero in ℚ_[2], then the Hilbert symbol of x and y equals
-`(-1) ^ (ε(u_x)ε(u_y) + v(x)ω(u_y) + v(y)ω(u_x))`, where u_x, u_y are the unit parts of x, y
+/-- If a, b are nonzero in ℚ_[2], then the Hilbert symbol (a, b)₂ equals
+`(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where u_a, u_b are the unit parts of a, b
 respectively. -/
 theorem two_adic_eq :
-    hilbertSym x y = Int.negOnePow (PadicInt.epsilon (unitPart (Units.mk0 x hx)) *
-      epsilon (unitPart (Units.mk0 y hy)) + valuation (x : ℚ_[2]) *
-      omega (unitPart (Units.mk0 y hy)) + valuation (y : ℚ_[2]) *
-      omega (unitPart (Units.mk0 x hx))) := by
+    hilbertSym a b = Int.negOnePow (PadicInt.epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
+      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
+      omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
 end two
 
--- do we need the bilinear form property? (see Theorem 2 and Cor.)
+-- TODO: add to blueprint
+lemma padic_mul_left_eq :
+    hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b := by
+  sorry
+
+lemma padic_mul_right_eq :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  rw [comm, padic_mul_left_eq, comm, comm (b := b')]
+
+end Padic
+
 /-
 # Global properties of the Hilbert symbol
 -/

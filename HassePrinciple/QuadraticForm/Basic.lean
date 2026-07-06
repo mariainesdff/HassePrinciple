@@ -19,7 +19,10 @@ public import Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 
 @[expose] public section
 
+universe u
 namespace QuadraticForm
+
+-- TODO: add section variables (after Mathlib PR)
 
 /-- The product of two quadratic forms. -/
 abbrev prod {R M₁ M₂ : Type*} [CommSemiring R] [AddCommMonoid M₁] [AddCommMonoid M₂] [Module R M₁]
@@ -91,6 +94,50 @@ lemma baseChange_discr {R n M₁ : Type*} [Fintype n] [DecidableEq n] (A : Type*
     (Q.baseChange A).discr (b.baseChange A) = algebraMap R A (Q.discr b) := by
   simp [discr, baseChange_toMatrix, Matrix.det_apply]
 
+/-- This generalizes Mathlib's `weightedSumSquaresCongr`. -/
+def weightedSumSquaresCongr' {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
+    {w : ι → S} {w' : κ → S} (f : ι ≃ κ) (h : w = w'.comp f) :
+    (weightedSumSquares R w).IsometryEquiv (weightedSumSquares R w') where
+  toFun m k := m (f.symm k)
+  map_add' m n  := by ext; simp
+  map_smul' r m := by ext; simp
+  invFun m i    := m (f i)
+  left_inv m    := by simp
+  right_inv m   := by simp
+  map_app' m    := by
+    simp only [QuadraticMap.weightedSumSquares_apply, h, Function.comp_apply]
+    exact Finset.sum_equiv f.symm (by simp) (by simp)
+
+lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
+    {w : ι → S} {w' : κ → S} (f : ι ≃ κ) (h : w = w'.comp f) :
+    (weightedSumSquares R w).Equivalent (weightedSumSquares R w') := ⟨weightedSumSquaresCongr' f h⟩
+
+open Module _root_.QuadraticMap in
+lemma IsometryEquiv.discr {R M N : Type*} [CommRing R] [Invertible (2 : R)]
+    [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+    {ι κ : Type u} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
+    (e : ι ≃ κ) (b₁ : Basis ι R M) (b₂ : Basis κ R N) {Q₁ : QuadraticForm R M}
+    {Q₂ : QuadraticForm R N} (f : Q₁.IsometryEquiv Q₂) :
+    Q₁.discr b₁ = Q₂.discr b₂ * (f.toLinearEquiv.toMatrix (b₁.reindex e) b₂).det ^ 2 := by
+  calc Q₁.discr b₁
+    _ = Q₁.discr (b₁.reindex e) := by
+      simp only [QuadraticForm.discr, Matrix.det_apply]
+      rw [Finset.sum_equiv (t := Finset.univ) (e.equivCongr e) (by simp)]
+      intro g _
+      simp only [Equiv.equivCongr_apply_apply, toMatrix, LinearMap.toMatrix₂_apply,
+        associated_apply, End.smul_def, half_moduleEnd_apply_eq_half_smul, smul_eq_mul,
+        Basis.coe_reindex, Function.comp_apply, Equiv.symm_apply_apply]
+      rw [Equiv.Perm.sign_eq_sign_of_equiv g ((e.equivCongr e) g) e (by intro i; simp),
+        Finset.prod_equiv (t := Finset.univ) e (by simp)]
+      simp
+    _ = Q₂.discr b₂ * (f.toLinearEquiv.toMatrix (b₁.reindex e) b₂).det ^ 2 := by
+      have hcomp : Q₁ = Q₂.comp f := by ext; simp
+      simp [QuadraticForm.discr, hcomp,
+          toMatrix_comp (b₁.reindex e) b₂ _ (f.toLinearEquiv : M →ₗ[R] N)]
+      ring
+
 end QuadraticForm
 
 namespace QuadraticMap
@@ -120,6 +167,8 @@ lemma Equivalent.baseChange (A : Type*) [CommRing A] [Algebra R A] [Invertible (
         ext m n
         simp [polar, -map_add, ← map_add f]
       simpa [polar, ← hx, ← hy] using this
+
+open Module
 
 -- TODO: change in Mathlib
 theorem polarBilin_injective' :
@@ -273,6 +322,11 @@ lemma mul_unit_isotropic_iff {a : Sˣ} (h : ∀ (i : ι), w' i = a * w i) :
     (weightedSumSquares R w).Isotropic ↔ (weightedSumSquares R w').Isotropic :=
   ⟨mul_unit_isotropic (by simp[h]: ∀ (i : ι), w i = a⁻¹ * w' i), mul_unit_isotropic h⟩
 
+lemma weightedSumSquares_mul_squares_equivalent [IsScalarTower S R R] {w w' : ι → S}
+    (u : ι → Sˣ) (h : ∀ i, w' i * u i ^ 2 = w i) :
+    Equivalent (weightedSumSquares R w) (weightedSumSquares R w') :=
+  ⟨QuadraticForm.isometryEquivWeightedSumSquaresWeightedSumSquares u h⟩
+
 end WeightedSumSquares
 
 end QuadraticMap
@@ -319,8 +373,7 @@ theorem isotropic_iff_weightedSumSquares_units_of_nondegenerate {Q : QuadraticFo
   let w : Fin (finrank K V) → Kˣ := fun i => w₁ i / (w₀ 0) ^ 2
   refine ⟨w, by simp [w, w₁, pow_two], ?_⟩
   have hw₁ : (weightedSumSquares K w₁).Equivalent (weightedSumSquares K w) :=
-    ⟨isometryEquivWeightedSumSquaresWeightedSumSquares (w := fun i ↦ (w₁ i : K))
-      (fun i ↦ (w₀ 0)) (by simp [w])⟩
+    weightedSumSquares_mul_squares_equivalent (w := fun i ↦ (w₁ i : K)) (fun i ↦ w₀ 0) (by simp [w])
   rw [hw₀.isotropic_iff, mul_unit_isotropic_iff (w' := fun i ↦ w₀ 0 * w₀ i) (a := w₀ 0) (by simp),
     hw₁.isotropic_iff]
 

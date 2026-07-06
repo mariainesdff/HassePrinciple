@@ -167,7 +167,7 @@ Note that \mathlib contains \code{QuadraticForm.discr}, as an element of $\Q_p$.
 
 \begin{definition}\label{def:HM_inv}
 \uses{def:Hilbert_symbol}
-\lean{QuadraticForm.HasseMinkoskiInvariant}
+\lean{QuadraticForm.hasseMinkoskiInv}
 \leanok
 Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p$. Take a diagonal quadratic form $a_1X_1^2 + \cdots + a_nX_n^2$ which is equivalent to $f$; then the \emph{Hasse--Minkowski invariant} of $f$ is the element
 \[ \epsilon(f) := \prod_{i < j}(a_i, a_j).\]
@@ -175,7 +175,7 @@ Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p
 
 \begin{lemma}\label{lem:HM_inv_well_defined}
 \uses{def:HM_inv, thm:exists_chain}
-\lean{QuadraticForm.HasseMinkoskiInvariant.eq_of_equivalent}
+\lean{QuadraticForm.hasseMinkoskiInv.eq_of_equivalent}
 \leanok
 The value $\epsilon(f)$ does not depend on the choice of diagonal quadratic form equivalent to $f$.
 \end{lemma}
@@ -197,7 +197,7 @@ The result follows by combining $a_1 = a_1'$ and the induction hypothesis applie
 \iffalse
 \begin{lemma}\label{lem:HM_inv_pm_one}
 \uses{def:HM_inv}
-\lean{QuadraticForm.HasseMinkoskiInvariant.eq_one_or_neg_one}
+\lean{QuadraticForm.hasseMinkoskiInv.eq_one_or_neg_one}
 \leanok
 For every quadratic form $f$, we have $\epsilon(f) = \pm 1$.
 \end{lemma}
@@ -207,13 +207,14 @@ Each term in the product is equal to $\pm 1$.
 \fi
 
 \begin{lemma}\label{lem:represents_zero_iff_rk_3}
-\lean{QuadraticForm.represents_zero_iff_of_rank_three}
+\lean{QuadraticForm.Real.represents_zero_iff_of_rank_three, QuadraticForm.Padic.represents_zero_iff_of_rank_three}
 \leanok
 \uses{lem:HM_inv_well_defined}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $3$ over $k$. Then $f$ represents $0$ if and only if $(-1, -d(f)) = \epsilon(f)$.
 \end{lemma}
 
 \begin{proof}
+\leanok
 $f$ is equivalent to $aX^2 + bY^2 + cZ^2$ for some $a, b, c \in k^\times$, and $f$ represents $0$ if and only if the form $-caX^2 -cbY^2 - Z^2$ represents $0$.
 
 By the definition of Hilbert symbol, this last form represents $0$ if and only if $(-ca, -cb) = 1$.
@@ -225,7 +226,7 @@ or equivalently, $(-1, -d(f)) = \epsilon(f)$.
 \end{proof}
 
 \begin{lemma}\label{lem:represents_iff_rk_2}
-\lean{QuadraticForm.represents_iff_of_rank_two}
+\lean{QuadraticForm.Real.represents_iff_of_rank_two, QuadraticForm.Padic.represents_iff_of_rank_two}
 \leanok
 \uses{lem:represents_zero_iff_rk_3}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $2$ over $k$, and let $a \in k^\times / {k^\times}^2$. Then $f$ represents $a$ if and only if $(a, -d(f)) = \epsilon(f)$.

@@ -152,48 +152,48 @@ the same equation.
 	\lambda z)$ is a solution. Taking $\lambda = p^a$ for an appropriate $a$, we can assume that
 	$x,y,z$ are all in $\Z_p$ and at least one of them is a unit. Now, if $z$ is not a unit, then
 	$px^2+vy^2$ is also not a unit, thus $y$ is not a unit. Conversely if $y$ is not a unit, then
-	$z^2-px^2$ is also not a unit, thus $z$ is not a unit. This shows that if eithe $y$ or $z$ is not
+	$z^2-px^2$ is also not a unit, thus $z$ is not a unit. This shows that if either $y$ or $z$ is not
 	a unit, then they are both non units, but then $p^2$ would divide $px^2$, hence $x$ would not be a
 	unit either, contradicting the fact that one of $x,y,z$ is a unit.
 \end{proof}
 
-We are now ready to compute the Hilbert symbol $(x,y)$ in the $p$-adic case.
+We are now ready to compute the Hilbert symbol $(a,b)$ in the $p$-adic case.
 We split the statement and the proof of the theorem for the $p$-adic into the cases where $p$ is odd
-and where $p = 2$, and for each we first consider separately the cases where the valuations of $x$
-and $y$ are both $0$, both $1$, or one of them is $0$ and the other is $1$.
+and where $p = 2$, and for each we first consider separately the cases where the valuations of $a$
+and $b$ are both $0$, both $1$, or one of them is $0$ and the other is $1$.
 
-Everywhere in the following, we assume that $x, y \in (\Q_p)^\times$, and denote by $v_x$ and $v_y$
-their valuations, and by $u_x$ and $u_y$ their unit parts.
+Everywhere in the following, we assume that $a, b \in (\Q_p)^\times$, and denote by $v_a$ and $v_b$
+their valuations, and by $u_a$ and $u_b$ their unit parts.
 
 \begin{theorem}
 	\label{thm:padic_odd_p}
 	\lean{hilbertSym.padic_odd_eq, hilbertSym.padic_odd_case00, hilbertSym.padic_odd_case10, hilbertSym.padic_odd_case11}
 	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:legendreSym}
 	\leanok
-Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Then
-\[(x,y) = (-1)^{v_x v_y\epsilon(p)}\left(\dfrac{u_x}{p}\right) \left(\dfrac{u_y}{p}\right),\]
+Let $p$ be an odd prime and let $a, b \in (\Q_p)^\times$. Then
+\[(a,b) = (-1)^{v_a v_b\epsilon(p)}\left(\dfrac{u_a}{p}\right) \left(\dfrac{u_b}{p}\right),\]
 where $\left(\dfrac{\cdot}{p}\right)$ is the Legendre symbol.
 \end{theorem}
 
 \begin{proof}
 	\uses{lem:nontrivialzero, prop:hilbert_symbol_properties, lem:multivariable_hensel}
-	Since the Hilbert symbol is well defined up to squares, we can assume that $v_x, v_y \in \{0, 1\}$.
+	Since the Hilbert symbol is well defined up to squares, we can assume that $v_a, v_b \in \{0, 1\}$.
 	\begin{itemize}
-		\item Suppose $v_x=v_y=0$. Then $x=u_x$ and $y=u_y$ are units. By the theorem of Chevalley--Warning,
-		the equation $z^2 = u_x x^2 + u_y y^2$ has a nontrivial solution in $\F_p$, so it has a
-		nontrivial solution in $\Z_p$ (by multivariate Hensel's lemma), so $(x,y)=1$.
+		\item Suppose $v_a=v_b=0$. Then $a=u_a$ and $b=u_b$ are units. By the theorem of Chevalley--Warning,
+		the equation $z^2 = u_a x^2 + u_b y^2$ has a nontrivial solution in $\F_p$, so it has a
+		nontrivial solution in $\Z_p$ (by multivariate Hensel's lemma), so $(a,b)=1$.
 		Note: Chevalley--Warning is in \mathlib as \code{char_dvd_card_solutions}, in \code{Mathlib.FieldTheory.ChevalleyWarning}.
-		\item Suppose $v_x=1$ and $v_y=0$. Then $x=p u_x$ and $y=u_y$. Since by the previous case, we
-		have $(u_x, u_y)=1$, we have $(x,y) = (p u_x, u_y) = (p, u_y)$. We just need to show that this is
-		equal to $\left(\dfrac{u_y}{p}\right)$. Observe that a unit is a square in $\Q_p$ if and only if
-		it is a square modulo $p$. Now, if $u_y$ is a square, then both terms are $1$, see
+		\item Suppose $v_a=1$ and $v_b=0$. Then $a=p u_a$ and $b=u_b$. Since by the previous case, we
+		have $(u_a, u_b)=1$, we have $(a,b) = (p u_a, u_b) = (p, u_b)$. We just need to show that this is
+		equal to $\left(\dfrac{u_b}{p}\right)$. Observe that a unit is a square in $\Q_p$ if and only if
+		it is a square modulo $p$. Now, if $u_b$ is a square, then both terms are $1$, see
 		\ref{prop:hilbert_symbol_properties}. Otherwise, both terms are $-1$. In fact,
-		if $z^2-p^2x^2-u_yy^2$ has a nontrivial solution, we can assume that $z$ and $u_y$ are units, so
-		we can reduce modulo $p$ to get $u_y = (zy^{-1})^2$, which is a contradiction.
-		\item Suppose $v_x=v_y=1$. Then $x=p u_x$ and $y=p u_y$. This case follows from the properties of
-		the Hilbert symbol and the previous case: $(pu_x,pu_y)=(pu_x, -p^2u_xu_y)= (pu_x, -u_xu_y)=
-		\left(\dfrac{-u_xu_y}{p}\right)$. By the properties of the Legendre symbol, this is equal to
-		$\left(\dfrac{-1}{p}\right)\left(\dfrac{u_x}{p}\right)\left(\dfrac{u_y}{p}\right)$, as claimed.
+		if $z^2-p^2x^2-u_by^2$ has a nontrivial solution, we can assume that $z$ and $u_b$ are units, so
+		we can reduce modulo $p$ to get $u_b = (zy^{-1})^2$, which is a contradiction.
+		\item Suppose $v_a=v_b=1$. Then $a=p u_a$ and $b=p u_b$. This case follows from the properties of
+		the Hilbert symbol and the previous case: $(pu_a,pu_b)=(pu_a, -p^2u_au_b)= (pu_a, -u_au_b)=
+		\left(\dfrac{-u_au_b}{p}\right)$. By the properties of the Legendre symbol, this is equal to
+		$\left(\dfrac{-1}{p}\right)\left(\dfrac{u_a}{p}\right)\left(\dfrac{u_b}{p}\right)$, as claimed.
 	\end{itemize}
 \end{proof}
 
@@ -205,75 +205,122 @@ We proceed similarly for the case $p = 2$.
 	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega, def:legendreSym}
 	\leanok
 Let $x,y \in (\Q_2)^\times$. Then
-\[(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}.\]
+\[(a,b) = (-1)^{\epsilon(u_a)\epsilon(u_b) + v_a \omega(u_b) + v_b  \omega(u_a)}.\]
 \end{theorem}
 
 \begin{proof}
 	\uses{prop:hilbert_symbol_properties, lem:nontrivialzero, lem:multivariable_hensel}
-	Similarly to the previous case, we can assume that $v_x, v_y \in \{0, 1\}$.
+	Similarly to the previous case, we can assume that $v_a, v_b \in \{0, 1\}$.
 
-	\noindent\textbf{Case 1} Suppose $v_x=v_y=0$. Then $x=u_x$ and $y=u_y$ are units. The claim is
-		$(u_x,u_y)=(-1)^{\epsilon(u_x)\epsilon(u_y)}$, which is $1$ exactly when at least one of $u_x$
-		and $u_y$ is congruent to $1$ modulo $4$ and $-1$ otherwise.
-		Suppose first, without loss of generality, that $u_x \equiv 1 \pmod 4$. Then its residue class
-		modulo $8$ is either $1$ or $5$. In the first case, $u_x$ is a square, so $(u_x,u_y)=1$. In the
-		second case, $u_x+4u_y \equiv 1 \pmod 8$, so it is the square of some $w in \Z_2$, so
+	\noindent\textbf{Case 1} Suppose $v_a=v_b=0$. Then $a=u_a$ and $b=u_b$ are units. The claim is
+		$(u_a,u_b)=(-1)^{\epsilon(u_a)\epsilon(u_b)}$, which is $1$ exactly when at least one of $u_a$
+		and $u_b$ is congruent to $1$ modulo $4$ and $-1$ otherwise.
+		Suppose first, without loss of generality, that $u_a \equiv 1 \pmod 4$. Then its residue class
+		modulo $8$ is either $1$ or $5$. In the first case, $u_a$ is a square, so $(u_a,u_b)=1$. In the
+		second case, $u_a+4u_b \equiv 1 \pmod 8$, so it is the square of some $w in \Z_2$, so
 		\[
-		w^2-u_x\cdot 1^2- u_y\cdot 2^2 = 0
+		w^2-u_a\cdot 1^2- u_b\cdot 2^2 = 0
 		\]
-		and thus $(u_x,u_y)=1$.
+		and thus $(u_a,u_b)=1$.
 
-		If $u_x \equiv u_y \equiv -1 \pmod 4$, then suppose there exist (X,Y,Z) not all zero, coprime,
+		If $u_a \equiv u_b \equiv -1 \pmod 4$, then suppose there exist $(x,y,z)$ not all zero, coprime,
 		such that
 		\[
-		Z^2-u_xX^2-u_yY^2=0.
+		z^2-u_ax^2-u_by^2=0.
 		\]
-		Reducing modulo $4$, we obtain $Z^2+X^2+Y^2 \equiv 0 \pmod 4$, which is impossible, since the
-		only squares modulo $4$ are $0$ and $1$, and the sum can be $0$ only if $X,Y,Z$ are all even,
-		contradicting the fact that they are coprime. Thus, $(u_x,u_y)=-1$.
+		Reducing modulo $4$, we obtain $z^2+x^2+y^2 \equiv 0 \pmod 4$, which is impossible, since the
+		only squares modulo $4$ are $0$ and $1$, and the sum can be $0$ only if $x,y,z$ are all even,
+		contradicting the fact that they are coprime. Thus, $(u_a,u_b)=-1$.
 		This proof uses \code{ZMod.exists_sq_eq_two_iff} from \code{Mathlib.NumberTheory.LegendreSymbol.QuadraticReciprocity} and \code{hensels_lemma} in \code{Mathlib.NumberTheory.Padics.Hensel}
 
-		\noindent\textbf{Case 2} Suppose $v_x=1$ and $v_y=0$. Then $x=2 u_x$ and $y=u_y$. We first show that
+		\noindent\textbf{Case 2} Suppose $v_a=1$ and $v_b=0$. Then $a=2 u_a$ and $b=u_b$. We first show that
 		\[
-		(2, u_y) = (-1)^{\omega(u_y)},
+		(2, u_b) = (-1)^{\omega(u_b)},
 		\]
-		i.e. that $(2, u_y)=1$ if an only if $u_y \equiv \pm 1 \pmod 8$.
-		Suppose that $(2, u_y)=1$. Equivalently, there exist $X,Y,Z$ not all zero, coprime, such that
+		i.e. that $(2, u_b)=1$ if an only if $u_b \equiv \pm 1 \pmod 8$.
+		Suppose that $(2, u_b)=1$. Equivalently, there exist $x,y,z$ not all zero, coprime, such that
 		\[
-		Z^2-2X^2-u_yY^2=0.
+		z^2-2x^2-u_by^2=0.
 		\]
-		By Lemma \ref{lem:nontrivialzero}, we can assume that $Z$ and $Y$ are units.
-		Reducing modulo $8$, we get $1 - 2X^2 - u_y \equiv 0 \pmod 8$. Since squares modulo $8$ are
-		$0, 1$ and $4$, we have $2X^2 \equiv 0$ or $2 \pmod 8$, so $u_y \equiv 1$ or $-1 \pmod 8$.
+		By Lemma \ref{lem:nontrivialzero}, we can assume that $z$ and $y$ are units.
+		Reducing modulo $8$, we get $1 - 2x^2 - u_b \equiv 0 \pmod 8$. Since squares modulo $8$ are
+		$0, 1$ and $4$, we have $2x^2 \equiv 0$ or $2 \pmod 8$, so $u_b \equiv 1$ or $-1 \pmod 8$.
 
-		Conversely, if $u_y \equiv 1 \pmod 8$, then it is a square, so $(2, u_y)=1$.
-		If $u_y \equiv -1 \pmod 8$, then $Z^2-2X^2-u_yY^2=0$ has a solution modulo $8$, namely $(1,1,1)$,
+		Conversely, if $u_b \equiv 1 \pmod 8$, then it is a square, so $(2, u_b)=1$.
+		If $u_b \equiv -1 \pmod 8$, then $z^2-2x^2-u_by^2=0$ has a solution modulo $8$, namely $(1,1,1)$,
 		which can be lifted to a solution in $\Z_2$ by Hensel's lemma (\ref{lem:multivariable_hensel}),
-		so $(2, u_y)=1$. Now, if we prove that $(2u_x,u_y)=(u_x,u_y)(2,u_y)$, then we are done. If either
+		so $(2, u_b)=1$. Now, if we prove that $(2u_a,u_b)=(u_a,u_b)(2,u_b)$, then we are done. If either
 		factor is $1$, by Proposition \ref{prop:hilbert_symbol_properties}, we are done. Otherwise, both
-		factors are $-1$, so by the above we know $u_x \equiv -1 \pmod 4$ and $u_y \equiv 3 \pmod 8$. Up
+		factors are $-1$, so by the above we know $u_a \equiv -1 \pmod 4$ and $u_b \equiv 3 \pmod 8$. Up
 		to multiplying by squares, we can consider the following two cases:
 		\begin{itemize}
-			\item $u_x=-1,u_y=3$. Then $(1,1,1)$ is a nontrivial solution to $Z^2+2X^2-3Y^2=0$.
-			\item $u_x=3,u_y=-5$. Then $(1,1,1)$ is a nontrivial solution to $Z^2-6X^2+5Y^2=0$.
+			\item $u_a=-1,u_b=3$. Then $(1,1,1)$ is a nontrivial solution to $z^2+2x^2-3y^2=0$.
+			\item $u_a=3,u_b=-5$. Then $(1,1,1)$ is a nontrivial solution to $z^2-6x^2+5y^2=0$.
 		\end{itemize}
 
-		\noindent\textbf{Case 3} Suppose $v_x=v_y=1$. Using Proposition \ref{prop:hilbert_symbol_properties} and the proof
+		\noindent\textbf{Case 3} Suppose $v_a=v_b=1$. Using Proposition \ref{prop:hilbert_symbol_properties} and the proof
 		of the previous case, we have
 		\[
-		(2u_x,2u_y)=(2u_x,-4u_xu_y)=(2u_x,-u_xu_y)=(-1)^{\epsilon(u_x)\epsilon(-u_xu_y)+\omega(-u_xu_y)},
+		(2u_a,2u_b)=(2u_a,-4u_au_b)=(2u_a,-u_au_b)=(-1)^{\epsilon(u_a)\epsilon(-u_au_b)+\omega(-u_au_b)},
 		\]
 		and a direct calculation shows that
 		\[
-		\epsilon(u_x)\epsilon(-u_xu_y)+\omega(-u_xu_y) = \epsilon(u_x)\epsilon(u_y) + \omega(u_y) + \omega(u_x).
+		\epsilon(u_a)\epsilon(-u_au_b)+\omega(-u_au_b) = \epsilon(u_a)\epsilon(u_b) + \omega(u_b) + \omega(u_a).
 		\]
 \end{proof}
 
-\subsection{Global properties of the Hilbert symbol}
+\begin{theorem}
+		\label{thm:bilinear}
+		\lean{hilbertSym.real_mul_left_eq, hilbertSym.real_mul_right_eq, hilbertSym.padic_mul_left_eq, hilbertSym.padic_mul_right_eq}
+		\uses{def:Hilbert_symbol}
+		\leanok
+The Hilbert Symbol is bilinear in both variables, i.e. for all $a, a', b, b' \in k^\times$, we have
+\[
+(aa',b)=(a,b)(a'b) \quad \text{and} \quad (a,bb')=(a,b)(a,b').
+\]
+\end{theorem}
 
-This section uses the \mathlib function \code{Nat.nth Nat.Prime}. The main goal is to prove
+
+\begin{proof}
+\uses{thm:padic_odd_p, thm:padic_2}
+By symmetry, it is enough to show the first equality.
+If any of $a, a', b$ is zero, then both sides are zero. We will assume that $a,a',b \neq 0$.
+
+The real case is trivial: if $b > 0$, then all the Hilbert symbols are $1$; otherwise,
+if $a$ and $a'$ have the same sign, then $(aa',b) = 1$ because $aa' > 0$, and $(a,b) = (a',b)$, so
+the right-hand side is also $1$;
+if $a$ and $a'$ have different signs, then $(aa',b) = -1$ because $aa' < 0$, and $(a,b) = -(a',b)$,
+so the right-hand side is also $-1$.
+
+We now assume that $k=\Q_p$. Suppose first that $p$ is odd. By the formula in Theorem \ref{thm:padic_odd_p},
+\begin{align*}
+(aa,b) = (-1)^{v_{aa'}v_b\epsilon(p)}\left(\dfrac{u_{aa'}}{p}\right)^{v_b}\left(\dfrac{u_b}{p}\right)^{v_{aa'}}=\\
+=(-1)^{v_a+v_{a'}v_b\epsilon(p)}\left(\left(\dfrac{u_{a}}{p}\right)\left(\dfrac{u_{a'}}{p}\right)\right)^{v_b}\left(\dfrac{u_b}{p}\right)^{v_a+v_{a'}}=\\
+=(-1)^{v_av_b\epsilon(p)}(-1)^{v_{a'}v_b\epsilon(p)}\left(\dfrac{u_{a}}{p}\right)^{v_b}\left(\dfrac{u_{a'}}{p}\right)^{v_b}\left(\dfrac{u_b}{p}\right)^{v_a}\left(\dfrac{u_b}{p}\right)^{v_{a'}}=\\
+(a,b)(a',b).
+\end{align*}
+
+If $p=2$, we use the formula in Theorem \ref{thm:padic_2}.
+\begin{align*}
+(aa',b) = (-1)^{\epsilon(u_{aa'})\epsilon(u_b) + v_{aa'} \omega(u_b) + v_b \omega(u_{aa'})} = (\bullet)
+\end{align*}
+
+Since $\epsilon$ and $\omega$ are group homomorphisms from a multiplicative group to an additive group, we have
+\begin{align*}
+	(\bullet) = (-1)^{(\epsilon(u_{a})+\epsilon(u_{a'}))\epsilon(u_b) + (v_{a}+v_{a'}) \omega(u_b) + v_b (\omega(u_a)+\omega(u_{a'}))}=\\
+	=(-1)^{(\epsilon(u_{a})+\epsilon(u_{a'}))\epsilon(u_b)} (-1)^{(v_{a}+v_{a'}) \omega(u_b)} (-1)^{v_b (\omega(u_a)+\omega(u_{a'}))}=\\
+	=(-1)^{\epsilon(u_{a})\epsilon(u_b)}(-1)^{\epsilon(u_{a'})\epsilon(u_b)} (-1)^{v_{a} \omega(u_b)}(-1)^{v_{a'} \omega(u_b)}(-1)^{v_b \omega(u_a)}(-1)^{v_b \omega(u_{a'})}=(a,b)(a',b)\\
+\end{align*}
+
+\end{proof}
+
+
+
+\subsection{Global properties of the Hilbert symbol}
+The main goal of this section is to prove
 the product formula for the Hilbert symbol, which states that for every $a, b \in \Q^\times$, we have
-\[\prod_{v \in V} (a, b)_v = 1.\]
+\[\prod_{v \in V} (a, b)_v = 1\]
+and the Existence Theorem, that states the existence of a rational number with prescribed Hilbert symbols.
 Here, $V$ is the union of the set of prime numbers and the symbol $\infty$, and for each prime $p$,
 the symbol $(a, b)_p$ is the Hilbert symbol computed in $\Q_p$, while $(a, b)_\infty$ is the Hilbert
 symbol computed in $\R$.
@@ -335,8 +382,6 @@ Let $a, b \in \Q^\times$. Then $\prod_{v \in V} (a, b)_v = 1$.
 Let $S$ be a finite set of prime numbers.
 We define the \emph{finite embedding} of $\Q$ into $\R \times \prod_{p \in S} \Q_p$ as the diagonal map.
 
-N.B. more precisely, in the Lean code, S is a subset of the natural numbers, and the product is
-over the $n$-th prime for $n \in S$.
 \end{definition}
 
 Note: we will care about the product of finitely many completions of $\Q$, which do not necessarily
@@ -424,7 +469,7 @@ Taking $x=ap$ works.
 	\item If $v = \ell \notin T$ and $\ell \ne p$, $v_\ell(x)=0$ and so
 	$(x,a_i)_{\ell}=\left(\dfrac{a_i}{\ell}\right)^v_{\ell}(x)=1$. On the other hand, $e_{i,\ell=1}$,
 	since $v \notin T$.
-	\item If $v = \ell in T$, then $v_\ell(x)=1$, so $(x,a_i)_{\ell}=\left(\dfrac{a_i}{\ell}\right)$.
+	\item If $v = \ell \in T$, then $v_\ell(x)=1$, so $(x,a_i)_{\ell}=\left(\dfrac{a_i}{\ell}\right)$.
   By 3., there exists $x_\ell \in \Q_\ell^\times$ such that $(x_\ell, a_i)_\ell = e_{i,\ell}$ for all $i$,
 	and $v_\ell(x_\ell)$ is odd since at least one of the $e_{i,\ell}$'s is $-1$.
 	Therefore, $(a_i,x)_\ell$ and $(a_i,x_\ell)_\ell$ are both equal to $\left(\dfrac{a_i}{\ell}\right)$.
