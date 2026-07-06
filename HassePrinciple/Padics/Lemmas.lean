@@ -161,10 +161,7 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2 = 0 := by
   obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_sol hnontriv hsol
-  have heq_int : ‖(z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2
-     - v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by -- now can take the zmodrepr of the equation (unused)
-     simp only [hnewsol, norm_zero, zero_le_one]
-  have hvy'_int : ‖v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by -- now can take the zmodrepr of v * y' (unused)
+  have hvy'_int : ‖v * (y' : ℚ_[p]) ^ 2‖ ≤ 1 := by -- now can take the zmodrepr of v * y'
     rw [sub_eq_zero] at hnewsol
     rw [← hnewsol]
     rw [← PadicInt.mem_subring_iff]
@@ -176,41 +173,31 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
       apply (PadicInt.subring p).pow_mem
       simp only [SetLike.coe_mem]
   let vy' : ℤ_[p] := ⟨v * (y' : ℚ_[p]) ^ 2, hvy'_int⟩ -- unused
-  let eq : ℤ_[p] := ⟨(z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2, heq_int⟩ -- unused
+  let eq : ℤ_[p] := z' ^ 2 - p * x' ^ 2 - vy'
+  have eq_zero : eq = 0 := by
+    unfold eq
+    unfold vy'
+    exact PadicInt.coe_eq_zero.mp hnewsol
   have hz'_unit : ‖z'‖ = 1 := by
-    rw [← PadicInt.norm_natCast_zmodRepr_eq_one_iff,
-    PadicInt.norm_natCast_zmodRepr_eq_one_iff_ne]
     by_contra
-    have hy'_zmodRep_eq_ze : y'.zmodRepr = 0 := by
-      simp only [PadicInt.zmodRepr_eq_zero_iff_dvd] at this ⊢
-      have hp_div_vy' : ↑p ∣ v * (y' : ℚ_[p]) ^ 2 := by
-        rw [sub_eq_zero] at hnewsol
-        rw [← hnewsol]
-        refine (dvd_sub_left ?_).mpr ?_
-        · simp only [dvd_mul_right]
-        · sorry
+    have hz'_norm_ne_one : ‖z'‖ ≠ 1 := by exact Ne.symm (Ne.symm this)
+    have hy'_norm_ne_one : ‖y'‖ ≠ 1 := by
       sorry
-    have hx'_zmodRep_eq_ze : x'.zmodRepr = 0 := by
+    have hx'_norm_ne_one : ‖x'‖ ≠ 1 := by
       sorry
-    have hz'_not_unit : ¬IsUnit z' := by
-      refine PadicInt.not_isUnit_iff.mpr ?_
-      rw [← sub_zero z', ← CharP.cast_eq_zero, ← this]
-      exact PadicInt.norm_sub_zmodRepr_lt_one z'
-    have hy'_not_unit : ¬IsUnit y' := by
-      refine PadicInt.not_isUnit_iff.mpr ?_
-      rw [← sub_zero y', ← CharP.cast_eq_zero, ← hy'_zmodRep_eq_ze]
-      exact PadicInt.norm_sub_zmodRepr_lt_one y'
-    have hx'_not_unit : ¬IsUnit x' := by
-      refine PadicInt.not_isUnit_iff.mpr ?_
-      rw [← sub_zero x', ← CharP.cast_eq_zero, ← hx'_zmodRep_eq_ze]
-      exact PadicInt.norm_sub_zmodRepr_lt_one x'
-    have hnounits : ¬(IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
+    have h_not_units : ¬(IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
       simp only [not_or]
       constructor
-      · exact hz'_not_unit
-      · constructor
-        · exact hy'_not_unit
-        · exact hx'_not_unit
+      · by_contra
+        rw [PadicInt.isUnit_iff] at this
+        contradiction
+      constructor
+      · by_contra
+        rw [PadicInt.isUnit_iff] at this
+        contradiction
+      · by_contra
+        rw [PadicInt.isUnit_iff] at this
+        contradiction
     contradiction
   have hy'_unit : ‖y'‖ = 1 := by
     -- pretty much the same as hz'_unit
