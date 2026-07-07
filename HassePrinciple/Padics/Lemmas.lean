@@ -172,38 +172,43 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
       · exact natCast_mem (PadicInt.subring p) p
       apply (PadicInt.subring p).pow_mem
       simp only [SetLike.coe_mem]
-  let vy' : ℤ_[p] := ⟨v * (y' : ℚ_[p]) ^ 2, hvy'_int⟩ -- unused
+  let vy' : ℤ_[p] := ⟨v * (y' : ℚ_[p]) ^ 2, hvy'_int⟩
   let eq : ℤ_[p] := z' ^ 2 - p * x' ^ 2 - vy'
   have eq_zero : eq = 0 := by
     unfold eq
     unfold vy'
     exact PadicInt.coe_eq_zero.mp hnewsol
-  have hz'_unit : ‖z'‖ = 1 := by
+  have hz'_unit : IsUnit z' := by
     by_contra
-    have hz'_norm_ne_one : ‖z'‖ ≠ 1 := by exact Ne.symm (Ne.symm this)
-    have hy'_norm_ne_one : ‖y'‖ ≠ 1 := by
+    rw [PadicInt.not_isUnit_iff, PadicInt.norm_lt_one_iff_dvd] at this
+    have hy'_norm_ne_one : ‖y'‖ < 1 := by
+      have vy'_sq_eq : (v : ℚ_[p])*(y' : ℚ_[p]) ^ 2 = (z' : ℚ_[p]) ^ 2
+      - (p : ℚ_[p]) * (x' : ℚ_[p]) ^ 2 := by
+        rw [sub_eq_zero] at hnewsol
+        rw [← hnewsol]
+      have vy'_sq_norm_ne_one : ‖(v : ℚ_[p])*(y' : ℚ_[p]) ^ 2‖ < 1 := by
+        rw [vy'_sq_eq]
+        sorry
       sorry
-    have hx'_norm_ne_one : ‖x'‖ ≠ 1 := by
+    have hx'_norm_ne_one : ‖x'‖ < 1 := by
       sorry
     have h_not_units : ¬(IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
       simp only [not_or]
       constructor
-      · by_contra
-        rw [PadicInt.isUnit_iff] at this
-        contradiction
-      constructor
-      · by_contra
-        rw [PadicInt.isUnit_iff] at this
-        contradiction
-      · by_contra
-        rw [PadicInt.isUnit_iff] at this
-        contradiction
+      · rw [← PadicInt.norm_lt_one_iff_dvd, ← PadicInt.not_isUnit_iff] at this
+        exact this
+      · constructor
+        · rw [← PadicInt.not_isUnit_iff] at hy'_norm_ne_one
+          exact hy'_norm_ne_one
+        · rw [← PadicInt.not_isUnit_iff] at hx'_norm_ne_one
+          exact hx'_norm_ne_one
     contradiction
-  have hy'_unit : ‖y'‖ = 1 := by
+  have hy'_unit : ‖y'‖ = 1 := by -- need to fix this to match
     -- pretty much the same as hz'_unit
     sorry
+  rw [PadicInt.isUnit_iff] at hz'_unit
   let z'' : ℤ_[p]ˣ := PadicInt.mkUnits hz'_unit
-  let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit
+  let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit -- need to fix this to match
   let x'' : ℤ_[p] := x'
   use z'', y'', x''
   exact hnewsol
