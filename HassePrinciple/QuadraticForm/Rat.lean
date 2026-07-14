@@ -14,7 +14,7 @@ public import Mathlib.NumberTheory.Padics.PadicNumbers
 
 @[expose] public section
 
-open QuadraticMap
+open Module QuadraticMap
 
 namespace QuadraticForm
 
@@ -34,9 +34,9 @@ variable {Q}
 -- The easy implication of the Hasse-Minkowski theorem.
 theorem _root_.QuadraticMap.Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
     Q.EverywhereLocallyIsotropic := by
-  sorry
-
-open QuadraticMap
+  obtain ⟨x, ⟨hx, hxne0⟩⟩ := represents_zero_iff_isotropic.mpr h
+  refine ⟨fun _ _ => ?_, ?_⟩ <;>
+  exact represents_zero_iff_isotropic.mp ⟨1 ⊗ₜ x, ⟨by simp [hx], by simp [hxne0]⟩⟩
 
 /- Will follow from `QuadraticMap.nondegenerate_of_anisotropic` and
   `QuadraticMap.degenerate_baseChange`. -/
@@ -50,17 +50,19 @@ theorem HasseMinkowski_of_degenerate (Q : QuadraticForm ℚ V) (hQ : ¬ Q.Nondeg
 
 namespace EverywhereLocallyIsotropic
 
-lemma isotropic_of_rank_zero (hr : Module.finrank ℚ V = 0) (hQ : Q.Nondegenerate)
-    (hQ' : Q.EverywhereLocallyIsotropic) :
-    Q.Isotropic := sorry
+lemma isotropic_of_rank_zero [Module.Finite ℚ V] (hr : finrank ℚ V = 0)
+    (hQ' : Q.EverywhereLocallyIsotropic) : Q.Isotropic := by
+  have h' := hQ'.2
+  contrapose! h'
+  exact QuadraticMap.anisotropic_of_rank_zero (by simp [hr])
 
-lemma isotropic_of_rank_one (hr : Module.finrank ℚ V = 1) (hQ : Q.Nondegenerate)
-    (hQ' : Q.EverywhereLocallyIsotropic) :
-    Q.Isotropic := sorry
+lemma isotropic_of_rank_one (hr : finrank ℚ V = 1) (hQ : Q.EverywhereLocallyIsotropic) :
+    Q.Isotropic := by
+  simpa [isotropic_iff_zero_of_rank_one hr, baseChange_ext_iff, Q.ext_iff] using
+    (isotropic_iff_zero_of_rank_one (by simp [hr])).mp hQ.2
 
-lemma isotropic_of_rank_two (hr : Module.finrank ℚ V = 2) (hQ : Q.Nondegenerate)
-    (hQ' : Q.EverywhereLocallyIsotropic) :
-    Q.Isotropic := sorry
+lemma isotropic_of_rank_two [FiniteDimensional ℚ V] (hr : finrank ℚ V = 2) (hQ : Q.Nondegenerate)
+    (hQ' : Q.EverywhereLocallyIsotropic) : Q.Isotropic := by sorry
 
 end EverywhereLocallyIsotropic
 
