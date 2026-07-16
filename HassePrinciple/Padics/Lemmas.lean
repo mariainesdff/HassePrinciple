@@ -188,7 +188,10 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
         rw [← hnewsol]
       have vy'_sq_norm_ne_one : ‖(v : ℚ_[p])*(y' : ℚ_[p]) ^ 2‖ < 1 := by
         rw [vy'_sq_eq]
+        rw [dvd_def] at this
         sorry
+      simp only [norm_mul, norm_pow, PadicInt.padic_norm_e_of_padicInt] at vy'_sq_norm_ne_one
+
       sorry
     have hx'_norm_ne_one : ‖x'‖ < 1 := by
       sorry
@@ -203,12 +206,13 @@ lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
         · rw [← PadicInt.not_isUnit_iff] at hx'_norm_ne_one
           exact hx'_norm_ne_one
     contradiction
-  have hy'_unit : ‖y'‖ = 1 := by -- need to fix this to match
+  have hy'_unit : IsUnit y' := by
     -- pretty much the same as hz'_unit
     sorry
   rw [PadicInt.isUnit_iff] at hz'_unit
   let z'' : ℤ_[p]ˣ := PadicInt.mkUnits hz'_unit
-  let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit -- need to fix this to match
+  rw [PadicInt.isUnit_iff] at hy'_unit
+  let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit
   let x'' : ℤ_[p] := x'
   use z'', y'', x''
   exact hnewsol
