@@ -8,6 +8,8 @@ module
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.QuadraticForm.Basic
 
+/-! # Quadratic forms of low rank -/
+
 @[expose] public section
 
 namespace QuadraticForm
@@ -53,21 +55,6 @@ lemma weightedSumSquares_isotropic_iff_hilbertSym_eq_one {R : Type*} [Field R] (
       (by simp [Fin.forall_fin_succ, pow_two, c'])).isotropic_iff,
     weightedSumSquares_isotropic_iff_hilbertSym_eq_one']
   simp
-
-theorem equivalent_weightedSumSquares_three_units_of_nondegenerate {K V : Type*}
-    [Field K] [Invertible (2 : K)] [AddCommGroup V] [Module K V] (hr : finrank K V = 3)
-    {Q : QuadraticForm K V} (hQ : LinearMap.SeparatingLeft (QuadraticMap.associated Q)) :
-    ∃ (w : Fin 3 → Kˣ), QuadraticMap.Equivalent Q (QuadraticMap.weightedSumSquares K w) := by
-  have : FiniteDimensional K V := finite_of_finrank_eq_succ hr
-  obtain ⟨w, hw⟩ := Q.equivalent_weightedSumSquares_units_of_nondegenerate' hQ
-  refine ⟨![w ⟨0, by omega⟩, w ⟨1, by omega⟩, w ⟨2, by omega⟩], ?_⟩
-  apply hw.trans
-  apply (weightedSumSquaresCongr'_equivalent (finCongr hr) ?_)
-  ext n
-  cases n with
-  | mk n hn =>
-    have hn : n = 0 ∨ n = 1 ∨ n = 2  := by omega
-    aesop
 
 end Rank3
 

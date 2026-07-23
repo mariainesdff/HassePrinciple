@@ -76,7 +76,7 @@ lemma exists_padicInt_solution {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
 `z', y',` and `x'` in `ℤ_[p]`, and at least one is a unit -/
 lemma lift_solutions_to_int_first {v : ℚ_[p]ˣ} {x y z : ℚ_[p]}
-    (hnontriv : (x,y,z) ≠ (0,0,0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
+    (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' x' : ℤ_[p],
       (z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2 - v * (y' : ℚ_[p]) ^ 2 = 0
       ∧ (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
@@ -244,23 +244,72 @@ end Padic
 
 @[expose] public section
 
-
-namespace Polynomial
-
-/-- An element in ℤ_p (p odd) is a square if its reduction modulo p is a square. -/
-lemma squares_in_Zp {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) (m : ℤ_[p]) (n : ℕ)
-    (hmod : m.zmodRepr ≡ n ^ 2 [MOD p]) : ∃ x : ℤ_[p], m = x ^ 2 := by
-  let F : ℤ_[p][X] := X ^ 2 - C m
-  sorry
-
-/-- An element in ℤ_2 is a square if its reduction modulo 8 is a square. -/
-lemma squares_in_Z2 (m : ℤ_[2]) (n : ℕ)
-    (hmod : m.zmodRepr ≡ n ^ 2 [MOD 8]) : ∃ x : ℤ_[2], m = x^2 := by sorry
-
-end Polynomial
-
-
 namespace PadicInt
+
+open Polynomial
+
+lemma p_dvd_iff_toZMod_eq_zero {p : ℕ} [Fact (Nat.Prime p)] {m : ℤ_[p]} :
+    (p : ℤ_[p]) ∣ m ↔ m.toZMod = 0 := by
+  rw [← Ideal.mem_span_singleton, ← maximalIdeal_eq_span_p, ← RingHom.mem_ker, ker_toZMod]
+
+lemma pow_p_dvd_iff_toZModPow_eq_zero {p : ℕ} [Fact (Nat.Prime p)] {m : ℤ_[p]} {n : ℕ} :
+    (p : ℤ_[p]) ^ n ∣ m ↔ m.toZModPow n = 0 := by
+  rw [← Ideal.mem_span_singleton, ← RingHom.mem_ker, ker_toZModPow]
+
+/-- An element in `ℤ_[p]` for odd `p` is a square if its reduction modulo `p` is a square. -/
+lemma isSquare_of_zmod {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2)
+    {m : ℤ_[p]} (hm : ¬ (p : ℤ_[p]) ∣ m) (hmod : IsSquare m.toZMod) : IsSquare m := by
+  obtain ⟨r, hr⟩ := hmod
+  let a := (r.cast : ℤ_[p])
+  let F : ℤ_[p][X] := X ^ 2 - C m
+  have hF : ‖(aeval a) F‖ < ‖(aeval a) (derivative F)‖ ^ 2 := by
+    have h2 : ‖(2 : ℤ_[p])‖ = 1 := by
+      rw [← Nat.cast_two, norm_natCast_eq_one_iff]
+      simp [Nat.coprime_two_right, Nat.Prime.odd_of_ne_two Fact.out hp]
+    have h1 : ‖(r.cast : ℤ_[p])‖ = 1 := by
+      rw [← isUnit_iff, ← IsLocalRing.notMem_maximalIdeal, ← ker_toZMod, RingHom.mem_ker]
+      simp only [ZMod.ringHom_map_cast]
+      by_contra h0
+      simp only [h0, mul_zero, ← p_dvd_iff_toZMod_eq_zero] at hr
+      exact hm hr
+    simp only [aeval_sub, coe_aeval_eq_eval, eval_pow, eval_X, aeval_C, Algebra.algebraMap_self,
+      RingHom.id_apply, derivative_sub, derivative_X_pow_succ, Nat.cast_one, one_add_one_eq_two,
+      pow_one, derivative_C, sub_zero, eval_mul, eval_C, norm_mul, a, F, h2, one_mul, h1, one_pow]
+    simp [norm_lt_one_iff_dvd, p_dvd_iff_toZMod_eq_zero, hr, pow_two]
+  obtain ⟨z, hz0, hz⟩ := hensels_lemma hF
+  simp only [aeval_sub, coe_aeval_eq_eval, eval_pow, eval_X, aeval_C, Algebra.algebraMap_self,
+    RingHom.id_apply, F, sub_eq_zero] at hz0
+  exact ⟨z, by simp [← hz0, pow_two]⟩
+
+/-- An element in `ℤ_[2]` is a square if its reduction modulo `8` is a square. -/
+lemma isSquare_of_zmodPow {m : ℤ_[2]} (hm : ¬ (2 : ℤ_[2]) ∣ m) (hmod : IsSquare (m.toZModPow 3)) :
+    IsSquare m := by
+  obtain ⟨r, hr⟩ := hmod
+  let a := (r.cast : ℤ_[2])
+  let F : ℤ_[2][X] := X ^ 2 - C m
+  have hF : ‖(aeval a) F‖ < ‖(aeval a) (derivative F)‖ ^ 2 := by
+    have h1 : ‖(r.cast : ℤ_[2])‖ = 1 := by
+      rw [← isUnit_iff, ← IsLocalRing.notMem_maximalIdeal, ← ker_toZMod, RingHom.mem_ker]
+      simp only [Nat.reducePow, ← p_dvd_iff_toZMod_eq_zero, Nat.cast_ofNat]
+      by_contra h0
+      have : toZModPow 3 r.cast = r := by simp
+      rw [← sub_eq_zero, ← this, ← map_mul, ← map_sub, ← pow_p_dvd_iff_toZModPow_eq_zero,
+        Nat.cast_ofNat] at hr
+      exact hm ((dvd_iff_dvd_of_dvd_sub (dvd_trans (dvd_pow_self 2 three_ne_zero) hr)).mpr
+        (dvd_mul_of_dvd_left h0 r.cast))
+    simp only [aeval_sub, coe_aeval_eq_eval, eval_pow, eval_X, aeval_C, Algebra.algebraMap_self,
+      RingHom.id_apply, derivative_sub, derivative_X_pow_succ, Nat.cast_one, one_add_one_eq_two,
+      pow_one, derivative_C, sub_zero, eval_mul, eval_C, norm_mul, a, F, mul_one, h1,
+      ← Nat.cast_two (R := ℤ_[2]), PadicInt.norm_p, ← zpow_neg_one, ← zpow_natCast,
+      ← zpow_mul, Nat.reducePow, Int.reduceNeg, neg_mul, one_mul,
+      norm_lt_pow_iff_norm_le_pow_sub_one, Nat.cast_ofNat (R := ℤ), Int.reduceSub]
+    rw [← Nat.cast_three, norm_le_pow_iff_mem_span_pow, Ideal.mem_span_singleton,
+      pow_p_dvd_iff_toZModPow_eq_zero]
+    simp [hr, pow_two]
+  obtain ⟨z, hz0, hz⟩ := hensels_lemma hF
+  simp only [aeval_sub, coe_aeval_eq_eval, eval_pow, eval_X, aeval_C, Algebra.algebraMap_self,
+    RingHom.id_apply, F, sub_eq_zero] at hz0
+  exact ⟨z, by simp [← hz0, pow_two]⟩
 
 /-! ## Multivariable Hensel's Lemma -/
 
