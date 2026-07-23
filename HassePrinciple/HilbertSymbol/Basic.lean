@@ -391,155 +391,291 @@ noncomputable abbrev atInfty (a b : ℚ) : ℤ := hilbertSym (a : ℝ) (b : ℝ)
 /-- The instance that provides the fact that the nth prime is prime. -/
 scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
+/-- valuation is `0' at `p' when `x' is `-1' or a prime `≠ p' -/
+lemma padicValRat_special_eq_zero {p : ℕ} [Fact (Nat.Prime p)]
+    {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
+    padicValRat p x = 0 := by
+  rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
+  · simp only [padicValRat.neg, padicValRat.one]
+  · have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
+    rw [← padicValRat_of_nat]
+    norm_cast
+    exact padicValNat_primes hpr
+
+/-- `x ≠ 0' in `ℚ_[p]' when `x' is `-1' or a prime -/
+lemma special_ne_zero {p : ℕ} [Fact (Nat.Prime p)]
+    {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r) :
+    (x : ℚ_[p]) ≠ 0 := by
+  rcases hx with rfl | ⟨r, hr, rfl⟩
+  · simp only [Rat.cast_neg, Rat.cast_one, ne_eq, neg_eq_zero, one_ne_zero, not_false_eq_true]
+  · simp only [ne_eq, Rat.cast_eq_zero]
+    exact_mod_cast hr.ne_zero
+
+/-- the actual Hilbert symbol computation, once both valuations vanish. -/
+lemma hilbertSym_special_eq_one {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
+    {x y : ℚ} (hx : (x : ℚ_[p]) ≠ 0) (hy : (y : ℚ_[p]) ≠ 0)
+    (hvx : padicValRat p x = 0) (hvy : padicValRat p y = 0) :
+    atP x y p = 1 := by
+  have hval_cast_x : valuation (x : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_ratCast, hvx]
+  have hval_cast_y : valuation (y : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_ratCast, hvy]
+  have castkey : (hilbertSym (x : ℚ_[p]) (y : ℚ_[p]) : ℚ) = 1 := by
+    rw [padic_odd_eq hp2 hx hy, hval_cast_x, hval_cast_y]
+    simp only [mul_zero, mul_ite, val_mkUnits, mul_one, ite_self,
+      Int.negOnePow_zero, Units.val_one, Int.cast_one, zpow_zero]
+  exact_mod_cast castkey
+
+/-- `atP x 1 p = 1', needed for the n = 1 base case -/
+lemma hilbertSym_one_right {p : ℕ} [Fact (Nat.Prime p)]
+    {x : ℚ} (hx : (x : ℚ_[p]) ≠ 0) :
+    atP x 1 p = 1 := by
+  unfold atP
+  change hilbertSym (x : ℚ_[p]) (1 : ℚ_[p]) = 1
+  unfold hilbertSym
+  rw [if_neg (not_or.mpr ⟨hx, by norm_num⟩), if_pos ⟨1, 0, 1, by simp, by ring⟩]
+
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
     ∀ᶠ (p : Nat.Primes) in Filter.cofinite, atP a b p = 1 := by
-  suffices hyeah : ∀ c d : ℚˣ, (c = -1 ∨ (∃ r : ℕ, Nat.Prime r ∧ (c : ℚ) = r)) →
+  suffices hreduction : ∀ c d : ℚˣ, (c = -1 ∨ (∃ r : ℕ, Nat.Prime r ∧ (c : ℚ) = r)) →
     (d = -1 ∨ (∃ q : ℕ, Nat.Prime q ∧ (d : ℚ) = q)) →
     (∀ᶠ (p : Nat.Primes) in Filter.cofinite, atP c d p = 1) by
-    · have nat_one_reduced (c₀ : ℚˣ) (hc₀ : c₀ = -1 ∨ ∃ r, Nat.Prime r ∧ (c₀:ℚ) = r) :
-      ∀ n : ℕ, n ≠ 0 → ∀ᶠ p : Nat.Primes in Filter.cofinite, atP c₀ (n:ℚ) p = 1 := by
-        intro n hn
-        induction n using UniqueFactorizationMonoid.induction_on_prime with
-        | h₁ => exact absurd rfl hn
-        | h₂ x hx =>
-          obtain rfl : x = 1 := Nat.isUnit_iff.mp hx
-          rw [Filter.eventually_cofinite]
-          --apply real_eq
-          sorry
-        | h₃ m p hm1 hp hm2 =>
-          apply hm2 at hm1
-          sorry
-      have one_reduced_general (c₀ : ℚˣ) (hc₀ : c₀ = -1 ∨ ∃ r, Nat.Prime r ∧ (c₀:ℚ) = r) (b : ℚˣ) :
-        ∀ᶠ p : Nat.Primes in Filter.cofinite, atP c₀ b p = 1 := by
-        have hden := nat_one_reduced c₀ hc₀ (b:ℚ).den
-        have hnum := nat_one_reduced c₀ hc₀ (b:ℚ).num.natAbs
-  -- fold in sign via hc₀'s -1 branch / hyeah applied to c₀, -1
-  -- then b = (sign * natAbs num) * den⁻¹ as rationals; assemble
-  -- reduce to case of integers first? can just multiply by sqre denom and it won't change
-  -- this will avoid dealing with the denominators
-        sorry
-      sorry
+      · have one_reduced_general : ∀ (c₀ : ℚˣ),
+          (∀ d : ℚˣ, (d = -1 ∨ ∃ q, Nat.Prime q ∧ (↑d : ℚ) = ↑q) →
+          ∀ᶠ p : Nat.Primes in Filter.cofinite, atP ↑c₀ ↑d ↑p = 1) →
+          ∀ (b' : ℚˣ), ∀ᶠ p : Nat.Primes in Filter.cofinite, atP ↑c₀  ↑b' ↑p = 1 := by
+          intro c₀ hbase b'
+          set N := (b' : ℚ).num with hN; set D := (b' : ℚ).den with hD
+          have hDnonzero : D ≠ 0 := (b':ℚ).den_ne_zero
+          have hNnonzero : N ≠ 0 := by
+            exact Rat.num_ne_zero.mpr (Units.ne_zero b')
+          have hND_nonzero : N * D ≠ 0 :=
+            mul_ne_zero hNnonzero (by exact_mod_cast (b':ℚ).den_ne_zero)
+          have hclearden : ∀ q, [Fact (Nat.Prime q)] → atP c₀ b' q = atP c₀ ((N*D : ℤ):ℚ) q := by
+            intro q hq
+            have hbq : (b' : ℚ) = (N : ℚ) / (D : ℚ) := by
+              rw [hN, hD]; exact (Rat.num_div_den _).symm
+            unfold atP
+            simp only [Int.cast_mul, Int.cast_natCast, Rat.cast_mul,
+              Rat.cast_intCast, Rat.cast_natCast]
+            calc
+              hilbertSym ((c₀ : ℚ) : ℚ_[q]) ((b' : ℚ) : ℚ_[q]) =
+              hilbertSym  ((c₀ : ℚ) : ℚ_[q]) (((N/D):ℚ) : ℚ_[q]) := by
+                simp only [Rat.cast_div, Rat.cast_intCast, Rat.cast_natCast]
+                rw [hbq]
+                simp only [Rat.cast_div, Rat.cast_intCast, Rat.cast_natCast]
+              _ = hilbertSym ((c₀ : ℚ) : ℚ_[q]) ((((N/D)*D^2):ℚ) : ℚ_[q]) := by
+                have h := mul_square_eq (a := (↑↑c₀ : ℚ_[q])) (a' := 1) (b := (↑N/↑D : ℚ_[q]))
+                  (b' := (D : ℚ_[q])) one_ne_zero (Nat.cast_ne_zero.mpr hDnonzero)
+                simp only [one_pow, mul_one] at h
+                simp only [Rat.cast_div, Rat.cast_intCast, Rat.cast_natCast, Rat.cast_mul,
+                  Rat.cast_pow]
+                exact h.symm
+              _ = hilbertSym ((c₀ : ℚ) : ℚ_[q]) ((N*D : ℚ) : ℚ_[q]) := by
+                congr 1; push_cast; field_simp
+          simp only [hclearden]
+          have hsign : ((Int.sign (N * D) : ℤ) : ℚ)*(((N * D).natAbs : ℕ) : ℚ)
+            = ((N*D : ℤ) : ℚ) := by
+            rw [← Int.cast_natCast (R := ℚ), Int.natCast_natAbs]
+            exact_mod_cast Int.sign_mul_natAbs (N * D)
+          norm_cast; rw [← hsign]
+          have hpeelsign: ∀ᶠ q : Nat.Primes in Filter.cofinite,
+            atP c₀ ((Int.sign (N*D) : ℤ): ℚ) q = 1 := by
+            rcases Int.sign_trichotomy (N*D) with htrich1 | htrich2 | htrich3
+            · rw [htrich1]
+              refine Filter.Eventually.of_forall (fun q => ?_)
+              apply hilbertSym_one_right; aesop
+            · exact absurd (Int.sign_eq_zero_iff_zero.mp htrich2) hND_nonzero
+            · rw [htrich3]
+              have hcast : ((-1 : ℤ) : ℚ) = ((-1 : ℚˣ) : ℚ) := by simp
+              simp only [hcast]; exact hbase (-1) (Or.inl rfl)
+          have nat_one_reduced: ∀ n : ℕ, n ≠ 0 →
+            ∀ᶠ p : Nat.Primes in Filter.cofinite, atP c₀ (n : ℚ) p = 1 := by
+            intro n hn
+            induction n using UniqueFactorizationMonoid.induction_on_prime with
+            | h₁ => exact absurd rfl hn
+            | h₂ x hx =>
+              obtain rfl : x = 1 := Nat.isUnit_iff.mp hx
+              rw [Nat.cast_one]
+              refine Filter.Eventually.of_forall (fun q => ?_)
+              have hqprime : Fact (Nat.Prime (q : ℕ)) := ⟨q.2⟩
+              exact hilbertSym_one_right (by exact_mod_cast Units.ne_zero c₀)
+            | h₃ m p' hm1 hp' hm2 =>
+              have hcombo := hm2 hm1
+              have hBase : ∀ᶠ q : Nat.Primes in Filter.cofinite, atP c₀ (p' : ℚ) q = 1 :=
+                hbase (Units.mk0 (p' : ℚ) (by exact_mod_cast hp'.ne_zero))
+                      (Or.inr ⟨p', Nat.prime_iff.mpr hp', by simp⟩)
+              rw [mul_comm p' m]; push_cast
+              filter_upwards [Filter.eventually_and.mpr ⟨hcombo, hBase⟩] with q ⟨hq1, hq2⟩
+              change atP c₀ ((m : ℚ) * (p' : ℚ)) q = 1; unfold atP
+              have hcast : (((m : ℚ) * (p' : ℚ) : ℚ) : ℚ_[q]) = (m : ℚ_[q]) * (p' : ℚ_[q]) := by
+                push_cast; ring
+              rw [hcast]
+              unfold atP at hq1 hq2
+              rw [right_mul_eq_of_eq_one]
+              · exact hq2
+              · exact hq1
+          have h_nat : ∀ᶠ p : Nat.Primes in Filter.cofinite,
+            atP c₀ ((N*D).natAbs : ℚ) p = 1 :=
+            nat_one_reduced (N*D).natAbs (Int.natAbs_ne_zero.mpr hND_nonzero)
+          filter_upwards [hpeelsign, h_nat] with p hsignND hnatND
+          have hpprime: Fact (Nat.Prime (p : ℕ)) := ⟨p.2⟩
+          have hpeelsign2 : (((N*D).sign * (N*D).natAbs : ℚ) : ℚ_[(p : ℕ)])
+            = ((N*D).sign : ℚ_[(p : ℕ)]) * ((N*D).natAbs : ℚ_[(p : ℕ)]) := by
+            push_cast; ring
+          unfold atP
+          rw [hpeelsign2, right_mul_eq_of_eq_one]
+          · exact hnatND
+          · exact hsignND
+        have atP_comm : ∀ (x y : ℚ) (p : ℕ) [Fact (Nat.Prime p)], atP x y p = atP y x p := by
+          intro x y p hp; unfold atP; exact comm
+        have hbase_b : ∀ d : ℚˣ, (d = -1 ∨ ∃ q, Nat.Prime q ∧ (↑d : ℚ) = ↑q) →
+            ∀ᶠ p : Nat.Primes in Filter.cofinite, atP ↑b ↑d ↑p = 1 := by
+          intro d hd
+          have hd_base : ∀ e : ℚˣ, (e = -1 ∨ ∃ q, Nat.Prime q ∧ (↑e : ℚ) = ↑q) →
+              ∀ᶠ (p : Primes) in Filter.cofinite, atP ↑d ↑e ↑p = 1 := by
+              intro e he
+              exact hreduction d e hd he
+          have h := one_reduced_general d hd_base b
+          filter_upwards [h] with p hp
+          rw [atP_comm]; exact hp
+        have h := one_reduced_general b hbase_b a
+        filter_upwards [h] with p hp
+        rw [atP_comm]; exact hp
   · simp only [Filter.eventually_cofinite]
     rintro c d (hc | ⟨r, hr, hcr⟩) (hd | ⟨q, hq, hdq⟩)
-    · rw [hc,hd]
-      unfold atP
-      simp only [Units.val_neg, Units.val_one, Rat.cast_neg, Rat.cast_one]
-      apply Set.Finite.subset (Set.finite_singleton ⟨2, by decide⟩)
+    · rw [hc, hd]
+      apply Set.Finite.subset (Set.finite_singleton ⟨2, Nat.prime_two⟩)
       intro ⟨p, hp⟩ hexception
       simp only [Set.mem_setOf_eq] at hexception
       simp only [Set.mem_singleton_iff]
       by_contra hnot
       have hp2 : p ≠ 2 := by aesop
       have hfact : Fact (Nat.Prime p) := ⟨hp⟩
-      have hx : ((-1 : ℚ) : ℚ_[p]) ≠ 0 := by simp only [Rat.cast_neg, Rat.cast_one, ne_eq,
-        neg_eq_zero, one_ne_zero, not_false_eq_true]
-      have hy : ((-1 : ℚ) : ℚ_[p]) ≠ 0 := by simp only [Rat.cast_neg, Rat.cast_one, ne_eq,
-        neg_eq_zero, one_ne_zero, not_false_eq_true]
-      apply hexception
-      have padicoddeq := padic_odd_eq hp2 hx hy
-      have hval : valuation ((-1 : ℚ) : ℚ_[p]) = 0 := by
-        rw [Padic.valuation_ratCast]
-        simp only [padicValRat.neg, padicValRat.one]
-      have castkey : (hilbertSym ((-1 : ℚ) : ℚ_[p]) ((-1 : ℚ) : ℚ_[p]) : ℚ) = 1 := by
-        rw [padicoddeq, hval]
-        simp only [mul_zero, mul_ite, val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
-          Units.val_one, Int.cast_one, Rat.cast_neg, Rat.cast_one, zpow_zero]
-      exact_mod_cast castkey
+      apply hexception (hilbertSym_special_eq_one hp2
+        (special_ne_zero (Or.inl rfl)) (special_ne_zero (Or.inl rfl))
+        (padicValRat_special_eq_zero (Or.inl rfl)) (padicValRat_special_eq_zero (Or.inl rfl)))
     · have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
       rw [hc]
-      unfold atP
-      simp only [Units.val_neg, Units.val_one, Rat.cast_neg, Rat.cast_one]
       refine Set.Finite.subset (Set.toFinite
         ({⟨2, Nat.prime_two⟩, ⟨q, hq⟩} : Set Nat.Primes)) ?_
-      intro ⟨p,hp⟩ hexception
+      intro ⟨p, hp⟩ hexception
       simp only [Set.mem_setOf_eq] at hexception
       by_contra hnot
-      have hpq : p ≠ q := by
-          intro h
-          apply hnot
-          subst h
-          simp
-      apply hexception
+      have hpq : p ≠ q := fun h => hnot (by subst h; simp)
       have hp2 : p ≠ 2 := by aesop
       have hfact : Fact (Nat.Prime p) := ⟨hp⟩
-      have hx : ((-1 : ℚ) : ℚ_[p]) ≠ 0 := by simp only [Rat.cast_neg, Rat.cast_one, ne_eq,
-        neg_eq_zero, one_ne_zero, not_false_eq_true]
-      have hy : ((d : ℚ) : ℚ_[p]) ≠ 0 := by simp only [ne_eq, Rat.cast_eq_zero, Units.ne_zero,
-        not_false_eq_true]
-      have padicoddeq := padic_odd_eq hp2 hx hy
-      have hval : valuation ((-1 : ℚ) : ℚ_[p]) = 0 := by
-        rw [Padic.valuation_ratCast]
-        simp only [padicValRat.neg, padicValRat.one]
-      have castkey : (hilbertSym ((-1 : ℚ) : ℚ_[p]) ((d : ℚ) : ℚ_[p]) : ℚ) = 1 := by
-        rw [padicoddeq, hval]
-        simp only [valuation_ratCast, zero_mul, mul_ite, val_mkUnits, mul_zero, mul_one, ite_self,
-          Int.negOnePow_zero, Units.val_one, Int.cast_one, Rat.cast_neg, Rat.cast_one, one_mul,
-          zpow_zero]
-        have zeroval: padicValRat p ↑d = 0 := by
-            rw [hdq, ← padicValRat_of_nat]
-            norm_cast
-            exact padicValNat_primes hpq
-        rw [zeroval, zpow_zero]
-      exact_mod_cast castkey
-    · -- this should just be from symmetry
-      sorry
+      exact hexception (hilbertSym_special_eq_one hp2
+        (special_ne_zero (Or.inl rfl)) (special_ne_zero (Or.inr ⟨q, hq, hdq⟩))
+        (padicValRat_special_eq_zero (Or.inl rfl))
+        (padicValRat_special_eq_zero (Or.inr ⟨q, hq, hdq, hpq⟩)))
+    · have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
+      rw [hd]
+      refine Set.Finite.subset (Set.toFinite
+        ({⟨2, Nat.prime_two⟩, ⟨r, hr⟩} : Set Nat.Primes)) ?_
+      intro ⟨p, hp⟩ hexception
+      simp only [Set.mem_setOf_eq] at hexception
+      by_contra hnot
+      have hpr : p ≠ r := fun h => hnot (by subst h; simp)
+      have hp2 : p ≠ 2 := by aesop
+      have hfact : Fact (Nat.Prime p) := ⟨hp⟩
+      exact hexception (hilbertSym_special_eq_one hp2
+        (special_ne_zero (Or.inr ⟨r, hr, hcr⟩)) (special_ne_zero (Or.inl rfl))
+        (padicValRat_special_eq_zero (Or.inr ⟨r, hr, hcr, hpr⟩))
+        (padicValRat_special_eq_zero (Or.inl rfl)))
     · have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
       have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
-      unfold atP
       refine Set.Finite.subset (Set.toFinite
         ({⟨2, Nat.prime_two⟩, ⟨q, hq⟩, ⟨r, hr⟩} : Set Nat.Primes)) ?_
-      intro ⟨p,hp⟩ hexception
+      intro ⟨p, hp⟩ hexception
       simp only [Set.mem_setOf_eq] at hexception
       by_contra hnot
-      have hpq : p ≠ q := by
-        intro h
-        apply hnot
-        subst h
-        grind
-      have hpr : p ≠ r := by
-        intro h
-        apply hnot
-        subst h
-        grind
-      apply hexception
+      have hpq : p ≠ q := fun h => hnot (by subst h; grind)
+      have hpr : p ≠ r := fun h => hnot (by subst h; grind)
       have hp2 : p ≠ 2 := by aesop
       have hfact : Fact (Nat.Prime p) := ⟨hp⟩
-      have hx : ((c : ℚ) : ℚ_[p]) ≠ 0 := by simp only [ne_eq, Rat.cast_eq_zero,
-        Units.ne_zero, not_false_eq_true]
-      have hy : ((d : ℚ) : ℚ_[p]) ≠ 0 := by simp only [ne_eq, Rat.cast_eq_zero, Units.ne_zero,
-          not_false_eq_true]
-      have padicoddeq := padic_odd_eq hp2 hx hy
-      have castkey : (hilbertSym ((c : ℚ) : ℚ_[p]) ((d : ℚ) : ℚ_[p]) : ℚ) = 1 := by
-        rw [padicoddeq]
-        simp only [valuation_ratCast, mul_ite, val_mkUnits, mul_zero, mul_one, Int.coe_negOnePow]
-        have zerovala: padicValRat p ↑c = 0 := by
-          rw [hcr, ← padicValRat_of_nat]
-          norm_cast
-          exact padicValNat_primes hpr
-        have zerovalb: padicValRat p ↑d = 0 := by
-          rw [hdq, ← padicValRat_of_nat]
-          norm_cast
-          exact padicValNat_primes hpq
-        rw [zerovala, zerovalb]
-        simp only [mul_zero, ite_self, Int.natAbs_zero, pow_zero, zpow_zero, mul_one]
-      exact_mod_cast castkey
+      exact hexception (hilbertSym_special_eq_one hp2
+        (special_ne_zero (Or.inr ⟨r, hr, hcr⟩)) (special_ne_zero (Or.inr ⟨q, hq, hdq⟩))
+        (padicValRat_special_eq_zero (Or.inr ⟨r, hr, hcr, hpr⟩))
+        (padicValRat_special_eq_zero (Or.inr ⟨q, hq, hdq, hpq⟩)))
+
+/-- Right-multiplicativity over ℚ_p, nonzero arguments. -/
+lemma hilbertSym_padic_mul_right {p : ℕ} [hp: Fact (Nat.Prime p)]
+    {a b b' : ℚ_[p]} (ha : a ≠ 0) (hb : b ≠ 0) (hb' : b' ≠ 0) :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  rcases eq_or_ne p 2 with h2 | hodd
+  · subst h2
+    sorry
+  · have castkey: ((hilbertSym a (b * b') : ℤ) : ℚ)
+         = ((hilbertSym a b * hilbertSym a b' : ℤ) : ℚ) := by
+      push_cast
+      rw [padic_odd_eq hodd ha (mul_ne_zero hb hb'),
+          padic_odd_eq hodd ha hb, padic_odd_eq hodd ha hb']
+      --   valuation_mul, unitPart_mul, legendreSym mult, pow_add, Int.negOnePow_add
+      simp only [mul_ite, val_mkUnits, mul_zero, mul_one, Int.coe_negOnePow, Units.mk0_mul]
+      sorry
+    exact_mod_cast castkey
+
+/-- Right-multiplicativity over ℝ, nonzero arguments. -/
+lemma hilbertSym_real_mul_right {a b b' : ℝ}
+    (ha : a ≠ 0) (hb : b ≠ 0) (hb' : b' ≠ 0) :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  -- for nonzero reals hilbertSym a b = -1 ↔ a < 0 ∧ b < 0, else 1;
+  -- sign case-split on a, b, b'
+  sorry
+
+/-- Right-multiplicativity for atP over ℚ_p. -/
+lemma atP_mul_right (a b b' : ℚˣ) {p : ℕ} [hp : Fact (Nat.Prime p)] :
+    atP a (↑(b * b')) p = atP a b p * atP a b' p := by
+  unfold atP
+  push_cast
+  exact hilbertSym_padic_mul_right
+    (by exact_mod_cast a.ne_zero) (by exact_mod_cast b.ne_zero)
+    (by exact_mod_cast b'.ne_zero)
+
+/-- Right-multiplicativity for atP over ℝ. -/
+lemma atInfty_mul_right (a b b' : ℚˣ) :
+    atInfty a (↑(b * b')) = atInfty a b * atInfty a b' := by
+  unfold atInfty
+  push_cast
+  exact hilbertSym_real_mul_right
+    (by exact_mod_cast a.ne_zero) (by exact_mod_cast b.ne_zero)
+    (by exact_mod_cast b'.ne_zero)
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
     atInfty a b * ∏ᶠ (p : Nat.Primes), atP a b p = 1 := by
-  suffices hyeah : ∀ c d : ℚˣ, (c = -1 ∨ (∃ r : ℕ, Nat.Prime r ∧ (c : ℚ) = r)) →
+  suffices hreduction : ∀ c d : ℚˣ, (c = -1 ∨ (∃ r : ℕ, Nat.Prime r ∧ (c : ℚ) = r)) →
     (d = -1 ∨ (∃ q : ℕ, Nat.Prime q ∧ (d : ℚ) = q)) →
     (atInfty c d * ∏ᶠ (p : Nat.Primes), atP c d p = 1) by
     · sorry
   · rintro c d (hc | ⟨r, hr, hcr⟩) (hd | ⟨q, hq, hdq⟩)
     · rw [hc,hd]
       simp only [Units.val_neg, Units.val_one]
+      unfold atInfty
+      simp only [Rat.cast_neg, Rat.cast_one]
+      unfold hilbertSym
+      simp only [neg_eq_zero, one_ne_zero, or_self, ↓reduceIte, ne_eq, Prod.mk.injEq, not_and,
+        neg_mul, one_mul, sub_neg_eq_add, Int.reduceNeg, ite_mul]
       sorry
-    · sorry
+    · have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
+      rw [hc]
+      simp only [Units.val_neg, Units.val_one]
+      unfold atInfty
+      simp only [Rat.cast_neg, Rat.cast_one]
+      sorry
     · -- this should just be from symmetry
+      have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
+      rw [hd]
+      simp only [Units.val_neg, Units.val_one]
+      unfold atInfty
+      simp only [Rat.cast_neg, Rat.cast_one]
       sorry
     · -- this is the only case that needs quadratic reciprocity
+      have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
+      have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
+      unfold atInfty
       sorry
 
 end hilbertSym
