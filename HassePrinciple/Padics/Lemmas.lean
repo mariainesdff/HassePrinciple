@@ -56,102 +56,196 @@ noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
   PadicInt.mkUnits (Padic.norm_natCast_eq_one_iff.mpr
     ((Nat.coprime_primes Nat.prime_two Fact.out).mpr hp.symm))
 
--- List.max [‖x‖, ‖y‖, ‖z‖]
+/-- helper lemma: if `x,y ∈ ℚ_[p]` and `‖y‖ ≤ ‖x‖,` then `‖y *  p ^ (-x.valuation)‖ ≤ 1` -/
+lemma mul_by_max_norm_is_int {x y : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖) (x_ne_ze : x ≠ 0) :
+    ‖y *  p ^ (-x.valuation)‖ ≤ 1 := by
+    have x_inv_val : ↑p ^ x.valuation = ‖x‖⁻¹ := by
+      have := norm_mul_pow_neg_valuation_eq_one (Units.mk0 x x_ne_ze)
+      simp only [Units.val_mk0, zpow_neg, norm_mul,
+        norm_inv, norm_p_zpow, inv_inv] at this
+      rw[mul_eq_one_iff_inv_eq₀] at this
+      · exact Real.ext_cauchy (congrArg Real.cauchy (id (Eq.symm this)))
+      · simp only [ne_eq, norm_eq_zero]
+        exact x_ne_ze
+    simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
+    rw [x_inv_val, mul_inv_le_iff₀]
+    · simp only [one_mul]
+      exact h_x_max
+    · simp only [norm_pos_iff]
+      exact x_ne_ze
 
-/-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
-and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
-`z', y',` and `x'` in `ℤ_[p]`, and at least one is a unit -/
+/-- helper lemma: if `x,y,z ∈ ℚ_[p]`, `‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖,` and `(x,y,z) ≠ (0,0,0),` then
+`x ≠ 0`-/
+lemma norm_max_ne_ze {x y z : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖)
+(hnontriv : (x, y, z) ≠ (0, 0, 0)) : x ≠ 0 := by
+  by_contra
+  have normx_eq_ze : ‖x‖ = 0 := by
+    exact norm_eq_zero.mpr this
+  rw [normx_eq_ze] at h_x_max
+  obtain ⟨maxy, maxz⟩ := h_x_max
+  have y_eq_ze : y = 0 := by
+    rw [norm_le_zero_iff] at maxy
+    exact maxy
+  have z_eq_ze : z = 0 := by
+    rw [norm_le_zero_iff] at maxz
+    exact maxz
+  have htriv : (x,y,z) = (0,0,0) := by
+    simp only [Prod.mk.injEq]
+    constructor
+    · exact this
+    · constructor
+      · exact y_eq_ze
+      · exact z_eq_ze
+  contradiction
+
+/-- helper lemma: if `p` is a prime and `x ∈ ℚ_[p]` is nonzero, then
+`‖x * p ^ (-x.valuation)‖ = 1` -/
+lemma x_mul_p_to_neg_val {x : ℚ_[p]} (x_ne_ze: x ≠ 0) : ‖x * p ^ (-x.valuation)‖ = 1 := by
+  simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
+  rw [norm_eq_zpow_neg_valuation (x_ne_ze)]
+  apply zpow_neg_mul_zpow_self x.valuation (NeZero.out)
+
+/-- If `p` is a prime, `x, y, z ∈ ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v in`
+`ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same
+equation with `z', y',x' ∈ ℤ_[p]`, and at least one is a unit -/
 lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' x' : ℤ_[p],
-      z' ^ 2 - p * (x') ^ 2 - v * (y') ^ 2 = 0
+      z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0
       ∧ (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
-      set min := List.min [x.valuation, y.valuation, z.valuation] (by simp)
-      let x' := x * p ^ (-min)
-      let y' := y * p ^ (-min)
-      let z' := z * p ^ (-min)
-      have hx'_int : ‖x'‖ ≤ 1 := by
-        unfold x'
-        simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-        by_cases (x = 0)
-        · have hx : ‖x‖ = 0 := by (expose_names; exact norm_eq_zero.mpr h)
-          simp [hx, zero_mul, zero_le_one]
+      by_cases (‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖)
+      · expose_names
+        have x_ne_ze : x ≠ 0 := by
+          apply norm_max_ne_ze (h) (hnontriv)
+        let x' := x * p ^ (-x.valuation)
+        let y' := y * p ^ (-x.valuation)
+        let z' := z * p ^(-x.valuation)
+        have x'_unit : ‖x'‖ = 1 := by
+          unfold x'
+          exact x_mul_p_to_neg_val (x_ne_ze)
+        have y'_int : ‖y'‖ ≤ 1 := by
+          unfold y'
+          exact mul_by_max_norm_is_int (h.left) (x_ne_ze)
+        have z'_int : ‖z'‖ ≤ 1 := by
+          unfold z'
+          exact mul_by_max_norm_is_int (h.right) (x_ne_ze)
+        let z'' : ℤ_[p] := ⟨z',z'_int⟩
+        let y'' : ℤ_[p] := ⟨y',y'_int⟩
+        let x'' : ℤ_[p] := ⟨x', (by exact Std.le_of_eq x'_unit)⟩
+        use z'', y'', x''
+        constructor
+        · unfold z'' y'' x''
+          refine PadicInt.coe_eq_zero.mp ?_
+          have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
+            - v * (y' : ℚ_[p])^2 = 0) := by
+            unfold x' y' z'
+            grind
+          exact hnewsol
+        · right
+          right
+          exact PadicInt.isUnit_iff.mpr x'_unit
+      · expose_names
+        simp only [not_and_or, not_le] at h
+        by_cases (‖z‖ ≤ ‖y‖)
         · expose_names
-          have h₁ : x ≠ 0 := h
-          simp only [norm_eq_zpow_neg_valuation h₁]
-          rw [mul_comm,← zpow_add₀ (by exact_mod_cast (Nat.Prime.ne_zero Fact.out))]
-          have hexpneg : min + -x.valuation ≤ 0 := by
-            simp [min, List.min]
-          have hp_ge_one : 1 ≤ (p : ℝ) := by exact_mod_cast (Nat.Prime.one_le Fact.out)
-          apply zpow_le_one_of_nonpos₀ (hp_ge_one) (hexpneg)
-      have hy'_int : ‖y'‖ ≤ 1 := by
-        unfold y'
-        simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-        by_cases (y = 0)
-        · have hy : ‖y‖ = 0 := by (expose_names; exact norm_eq_zero.mpr h)
-          simp [hy, zero_mul, zero_le_one]
-        · expose_names
-          have h₁ : y ≠ 0 := h
-          simp only [norm_eq_zpow_neg_valuation h₁]
-          rw [mul_comm,← zpow_add₀ (by exact_mod_cast (Nat.Prime.ne_zero Fact.out))]
-          have hexpneg : min + -y.valuation ≤ 0 := by
-            simp [min, List.min]
-          have hp_ge_one : 1 ≤ (p : ℝ) := by exact_mod_cast (Nat.Prime.one_le Fact.out)
-          apply zpow_le_one_of_nonpos₀ (hp_ge_one) (hexpneg)
-      have hz'_int : ‖z'‖ ≤ 1 := by
-        unfold z'
-        simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
-        by_cases (z = 0)
-        · have hz : ‖z‖ = 0 := by (expose_names; exact norm_eq_zero.mpr h)
-          simp [hz, zero_mul, zero_le_one]
-        · expose_names
-          have h₁ : z ≠ 0 := h
-          simp only [norm_eq_zpow_neg_valuation h₁]
-          rw [mul_comm,← zpow_add₀ (by exact_mod_cast (Nat.Prime.ne_zero Fact.out))]
-          have hexpneg : min + -z.valuation ≤ 0 := by
-            simp [min, List.min]
-          have hp_ge_one : 1 ≤ (p : ℝ) := by exact_mod_cast (Nat.Prime.one_le Fact.out)
-          apply zpow_le_one_of_nonpos₀ (hp_ge_one) (hexpneg)
-      let z' : ℤ_[p] := ⟨z', hz'_int⟩
-      let y' : ℤ_[p] := ⟨y', hy'_int⟩
-      let x' : ℤ_[p] := ⟨x',hx'_int⟩
-      have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
-       - v * (y' : ℚ_[p])^2 = 0) := by
-        unfold x' y' z'
-        grind
-      have h_or_is_unit : (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
-        have min_is_mem : (min = x.valuation ∨ min = y.valuation ∨ min = z.valuation) := by
-          simpa [min] using List.min_mem (l := [x.valuation, y.valuation, z.valuation]) (by simp)
-        by_cases (min = x.valuation)
-        · have hx'_unit : ‖x'‖ = 1 := by
+          have norm_y_ge_norm_x : ‖x‖ ≤ ‖y‖ := by
+            by_contra
+            simp only [not_le] at this
+            have h_z_min : ‖z‖ < ‖x‖ := by
+              exact Std.lt_of_le_of_lt h_1 this
+            have hnot : ¬ (‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) := by
+              simp only [not_or, not_lt]
+              constructor
+              · exact Std.le_of_lt this
+              · exact Std.le_of_lt h_z_min
+            contradiction
+          have h_y_max : (‖x‖ ≤ ‖y‖ ∧ ‖z‖ ≤ ‖y‖) := by -- can make this its own lemma
+            constructor
+            · exact norm_y_ge_norm_x
+            · exact h_1
+          have y_ne_ze : y ≠ 0 := by -- make this into its own lemma too
+            have hynontriv : (y,x,z) ≠ (0,0,0) := by
+              simp only [ne_eq, Prod.mk.injEq, not_and]
+              simp only [ne_eq, Prod.mk.injEq, not_and] at hnontriv
+              exact fun a a_1 ↦ Ne.symm fun a_2 ↦ hnontriv a_1 a (id (Eq.symm a_2))
+            apply norm_max_ne_ze (h_y_max) (hynontriv)
+          let x' := x * p ^ (-y.valuation)
+          let y' := y * p ^ (-y.valuation)
+          let z' := z * p ^(-y.valuation)
+          have y'_unit : ‖y'‖ = 1 := by
+            unfold y'
+            exact x_mul_p_to_neg_val (y_ne_ze)
+          have x'_int : ‖x'‖ ≤ 1 := by
             unfold x'
-            simp only [PadicInt.norm_eq_padic_norm]
-            expose_names
-            unfold x'_1
-            rw [h]
-            sorry
-          right
-          right
-          exact PadicInt.isUnit_iff.mpr hx'_unit
-        · by_cases (min = y.valuation)
-          · have hy'_unit : ‖y'‖ = 1 := by
-              sorry
-            right
+            exact mul_by_max_norm_is_int (h_y_max.left) (y_ne_ze)
+          have z'_int : ‖z'‖ ≤ 1 := by
+            unfold z'
+            exact mul_by_max_norm_is_int (h_y_max.right) (y_ne_ze)
+          let z'' : ℤ_[p] := ⟨z',z'_int⟩
+          let y'' : ℤ_[p] := ⟨y',(by exact Std.le_of_eq y'_unit)⟩
+          let x'' : ℤ_[p] := ⟨x', x'_int⟩
+          use z'', y'', x''
+          constructor
+          · unfold z'' y'' x''
+            refine PadicInt.coe_eq_zero.mp ?_ -- probably this too
+            have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
+              - v * (y' : ℚ_[p])^2 = 0) := by
+              unfold x' y' z'
+              grind
+            exact hnewsol
+          · right
             left
-            exact PadicInt.isUnit_iff.mpr hy'_unit
-          · have hzmin : (min = z.valuation) := by
-              by_contra
-              expose_names
-              have hnotmineq : ¬(min = x.valuation ∨ min = y.valuation ∨ min = z.valuation) := by
-                simp only [h, h_1, false_or, ← ne_eq]
-                exact this
-              contradiction
-            have hz'_unit : ‖z'‖ = 1 := by
-              sorry
-            left
-            exact PadicInt.isUnit_iff.mpr hz'_unit
-      use z', y', x'
-      sorry
+            exact PadicInt.isUnit_iff.mpr y'_unit
+        · expose_names
+          simp only [not_le] at h_1
+          have norm_z_ge_norm_x : ‖x‖ ≤ ‖z‖ := by
+            by_contra
+            simp only [not_le] at this
+            have h_y_min : ‖y‖ < ‖x‖ := by
+              exact lt_trans h_1 this
+            have hnot : ¬ (‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) := by
+              simp only [not_or, not_lt]
+              constructor
+              · exact Std.le_of_lt h_y_min
+              · exact Std.le_of_lt this
+            contradiction
+          have h_z_max : (‖x‖ ≤ ‖z‖ ∧ ‖y‖ ≤ ‖z‖) := by
+            constructor
+            · exact norm_z_ge_norm_x
+            · exact Std.le_of_lt h_1
+          have z_ne_ze : z ≠ 0 := by
+            have hznontriv : (z,x,y) ≠ (0,0,0) := by
+              simp only [ne_eq, Prod.mk.injEq, not_and]
+              simp only [ne_eq, Prod.mk.injEq, not_and] at hnontriv
+              exact fun a a_1 ↦ Ne.symm fun a_2 ↦ hnontriv a_1 (id (Eq.symm a_2)) a
+            apply norm_max_ne_ze (h_z_max) (hznontriv)
+          let x' := x * p ^ (-z.valuation)
+          let y' := y * p ^ (-z.valuation)
+          let z' := z * p ^(-z.valuation)
+          have z'_unit : ‖z'‖ = 1 := by
+            unfold z'
+            exact x_mul_p_to_neg_val (z_ne_ze)
+          have x'_int : ‖x'‖ ≤ 1 := by
+            unfold x'
+            exact mul_by_max_norm_is_int (h_z_max.left) (z_ne_ze)
+          have y'_int : ‖y'‖ ≤ 1 := by
+            unfold y'
+            exact mul_by_max_norm_is_int (h_z_max.right) (z_ne_ze)
+          let z'' : ℤ_[p] := ⟨z',(by exact Std.le_of_eq z'_unit)⟩
+          let y'' : ℤ_[p] := ⟨y', y'_int⟩
+          let x'' : ℤ_[p] := ⟨x', x'_int⟩
+          use z'', y'', x''
+          constructor
+          · unfold z'' y'' x''
+            refine PadicInt.coe_eq_zero.mp ?_ -- probably this too
+            have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
+              - v * (y' : ℚ_[p])^2 = 0) := by
+              unfold x' y' z'
+              grind
+            exact hnewsol
+          · left
+            exact PadicInt.isUnit_iff.mpr z'_unit
+
 
 --better name?
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
