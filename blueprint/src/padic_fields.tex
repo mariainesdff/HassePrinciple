@@ -35,13 +35,16 @@ For the equivalence (b) $\iff$ (c), Serre applies the first Lemma from \cite[\S 
 \section[Squares in the p-adic units]{Squares in $\Q_p^{\times}$}\label{sec:padic_squares}
 
 \begin{theorem}\label{thm:padic_squares_open}
-\lean{Padic.squares}
+\lean{Padic.unitSquares}
 \leanok
 ${\Q_p^\times}^2$ is an open subgroup of $\Q_p^\times$.
 \end{theorem}
 
 \begin{proof}
-See \cite[\S II.3.3]{Ser73}.
+\leanok
+The only nontrivial part is to show that the squares form an open set.  Since $\Q_p$ is a field, the unit topology agrees with the subspace topology, so it suffices to check that the set of nonzero squares in $\Q_p$ is open. Define $r$ as $1$ if $p$ is odd, or as $2^{-2}$ if $p = 2$, and denote by $B_{1, r}$ the open ball with center $1$ and radius $r$. For each $c \in B_{1, r}$, by applying Hensel's lemma with the polynomial $X^2 - c$, we obtain that $c$ is a square.
+Then, for each nonzero square $s \in \Q_p$, $s \cdot B_{1, r}$ is an open neighbourhood of $s$ contained in the set of nonzero squares, which shows that the latter is open.
+See \cite[\S II.3.3]{Ser73} for more details.
 \end{proof}
 
 \begin{lemma}

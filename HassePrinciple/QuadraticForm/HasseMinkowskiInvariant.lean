@@ -31,7 +31,7 @@ end Prelim
 
 namespace QuadraticForm
 
-variable {k : Type*} [Field k] --[CharZero k]
+variable {k : Type*} [Field k]
 
 -- Let `V` and `W` be `k`-vector spaces.
 variable {V W : Type*} [AddCommGroup V] [Module k V] [AddCommGroup W] [Module k W]
@@ -52,7 +52,11 @@ lemma hasseMinkoskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' :
     hasseMinkoskiInvAux w = hasseMinkoskiInvAux w' := by
   sorry
 
-variable [Invertible (2 : k)] [FiniteDimensional k V] [FiniteDimensional k W]
+variable [FiniteDimensional k V] [FiniteDimensional k W]
+
+section invertibleTwo
+
+variable [Invertible (2 : k)]
 
 /-- Let `Q` be a quadratic form on `V` such that `Q.associated` is `SeparatingLeft`, and
 suppose that `Q` is equivalent to the diagonal quadratic form `a_1 X_1^2 + ⋯ + a_n X_n ^ 2`.
@@ -134,15 +138,16 @@ lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
 
 end hasseMinkoskiInv
 
+end invertibleTwo
+
 open hilbertSym Module _root_.QuadraticMap
-section Field
+section CharZero
 
-variable {K V : Type*} [Field K] [CharZero K] [AddCommGroup V] [Module K V]
-  [FiniteDimensional K V] {Q : QuadraticForm K V} (hQ : Q.Nondegenerate)
+variable {Q} [CharZero k] (hQ : Q.Nondegenerate)
 
-private lemma represents_zero_iff_of_rank_three_aux (b : Basis (Fin 3) K V) (hQ : Q.Nondegenerate)
-    {w : Fin 3 → Kˣ} (hw : Q.Equivalent (weightedSumSquares K w))
-    (heq : hilbertSym (-w 2 * w 0 : K) (-w 2 * w 1) = hilbertSym (-1) (-Q.discr b) *
+private lemma represents_zero_iff_of_rank_three_aux (b : Basis (Fin 3) k V) (hQ : Q.Nondegenerate)
+    {w : Fin 3 → kˣ} (hw : Q.Equivalent (weightedSumSquares k w))
+    (heq : hilbertSym (-w 2 * w 0 : k) (-w 2 * w 1) = hilbertSym (-1) (-Q.discr b) *
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1) :
     Q.Isotropic ↔ hilbertSym (-1) (-Q.discr b) =
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
@@ -155,134 +160,73 @@ private lemma represents_zero_iff_of_rank_three_aux (b : Basis (Fin 3) K V) (hQ 
     hasseMinkoskiInv.eq_one_or_neg_one (Q.nondegenerate_associated_iff.mpr hQ).1
   have hsε : s = ε ↔ s * ε = 1 := by
     rcases hs1 with hs1 | hs1 <;> rcases hε1 with hε1 | hε1 <;> simp [hs1, hε1]
-  have hε : ε = hilbertSym (w 0 : K) (w 1) * hilbertSym (w 0 : K) (w 2) *
-      hilbertSym (w 1 : K) (w 2) := by
+  have hε : ε = hilbertSym (w 0 : k) (w 1) * hilbertSym (w 0 : k) (w 2) *
+      hilbertSym (w 1 : k) (w 2) := by
     simp [ε, hasseMinkoskiInv.eq_of_equivalent _ hw,
       hasseMinkoskiInv.weightedSumSquares_three]
   rw [hw.isotropic_iff, hw', weightedSumSquares_isotropic_iff_hilbertSym_eq_one, hsε, heq]
 
-end Field
+section HasBilinHilbertSym
 
-namespace Real
+open HasBilinHilbertSym
 
-variable {V : Type*} [AddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V] {Q : QuadraticForm ℝ V}
-  (hQ : Q.Nondegenerate)
+variable [HasBilinHilbertSym k]
 
-lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) ℝ V) :
+lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
     Q.Isotropic ↔
       hilbertSym (-1) (-Q.discr b) =
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_three_units_of_nondegenerate
-    ( by simp [finrank_eq_card_basis b]) (Q.nondegenerate_associated_iff.mpr hQ).1
+  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 3
+    (by simp [finrank_eq_card_basis b]) (Q.nondegenerate_associated_iff.mpr hQ).1
   -- Set up notation for readability
   let ⟨fw⟩ := hw
   let a₀ := w 0
   let a₁ := w 1
   let a₂ := w 2
-  let u := ((LinearMap.toMatrix b (Pi.basisFun ℝ (Fin 3))) fw.toLinearEquiv).det
+  let u := ((LinearMap.toMatrix b (Pi.basisFun k (Fin 3))) fw.toLinearEquiv).det
   set s := hilbertSym (-1) (-Q.discr b)
   set ε := hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 with hε_def
-  have hε : ε = hilbertSym (a₀ : ℝ) a₁ * hilbertSym (a₀ : ℝ) a₂ * hilbertSym (a₁ : ℝ) a₂ := by
+  have hε : ε = hilbertSym (a₀ : k) a₁ * hilbertSym (a₀ : k) a₂ * hilbertSym (a₁ : k) a₂ := by
     simp [ε, hasseMinkoskiInv.eq_of_equivalent _ hw,
       hasseMinkoskiInv.weightedSumSquares_three, a₀, a₁, a₂]
   rw [represents_zero_iff_of_rank_three_aux b hQ hw]
   -- Computation using properties of the Hilbert Symbol
-  calc hilbertSym (-a₂ * a₀ : ℝ) (-a₂ * a₁)
-      _ = hilbertSym (-1 : ℝ) (- 1) * hilbertSym (-1 : ℝ) a₀ * hilbertSym (-1 : ℝ) a₁ *
-          hilbertSym (a₂ : ℝ) a₂ *
-          (hilbertSym (a₀ : ℝ) a₁ * hilbertSym (a₀ : ℝ) a₂ * hilbertSym (a₁ : ℝ) a₂) := by
-          rw [← neg_one_mul (a₂ : ℝ)]
-          simp only [real_mul_right_eq, real_mul_left_eq]
-          rw [comm (a := (a₂ : ℝ)) (b := -1), comm (a := (a₀ : ℝ)) (b := -1),
-            comm (a := (a₂ : ℝ)) (b := a₁)]
+  calc hilbertSym (-a₂ * a₀ : k) (-a₂ * a₁)
+      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+          hilbertSym (a₂ : k) a₂ *
+          (hilbertSym (a₀ : k) a₁ * hilbertSym (a₀ : k) a₂ * hilbertSym (a₁ : k) a₂) := by
+          rw [← neg_one_mul (a₂ : k)]
+          simp only [mul_right_eq, mul_left_eq]
+          rw [comm (a := (a₂ : k)) (b := -1), comm (a := (a₀ : k)) (b := -1),
+            comm (a := (a₂ : k)) (b := a₁)]
           ring_nf
           rw [sq_eq_one_iff.mpr (eq_one_or_neg_one_of_ne_zero (by simp) (by simp))]
           simp
-      _ = hilbertSym (-1 : ℝ) (- 1) * hilbertSym (-1 : ℝ) a₀ * hilbertSym (-1 : ℝ) a₁ *
-          hilbertSym (a₂ : ℝ) a₂ * ε := by simp [hε]
-      _ = hilbertSym (-1 : ℝ) (- 1) * hilbertSym (-1 : ℝ) a₀ * hilbertSym (-1 : ℝ) a₁ *
-          hilbertSym (-1 : ℝ) a₂ * ε := by
+      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+          hilbertSym (a₂ : k) a₂ * ε := by simp [hε]
+      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+          hilbertSym (-1 : k) a₂ * ε := by
           congr 2
           rw [← left_neg_mul (a := -1)]
           simp
-      _ = hilbertSym (-1 : ℝ) (- 1) * hilbertSym (-1 : ℝ) (a₀ * a₁ * a₂) * ε := by
-        rw [real_mul_right_eq, real_mul_right_eq]
+      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) (a₀ * a₁ * a₂) * ε := by
+        rw [mul_right_eq, mul_right_eq]
         ring
-      _ = hilbertSym (-1 : ℝ) (- (a₀ * a₁ * a₂)) * ε := by
-        rw [← neg_one_mul (_ * _), real_mul_right_eq (b := -1)]
-      _ = hilbertSym (-1 : ℝ) (- (a₀ * a₁ * a₂ * u ^ 2)) * ε := by
-        rw [← neg_mul _ ((u : ℝ) ^ 2), mul_right_square_eq]
+      _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂)) * ε := by
+        rw [← neg_one_mul (_ * _), mul_right_eq (b := -1)]
+      _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂ * u ^ 2)) * ε := by
+        rw [← neg_mul _ ((u : k) ^ 2), mul_right_square_eq]
         exact LinearEquiv.det_toMatrix_ne_zero _ _ _
       _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
 
-lemma represents_iff_of_rank_two (b : Basis (Fin 2) ℝ V) (a : ℝ) :
+lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : k) :
     Q.represents a ↔
       hilbertSym a (-Q.discr b) =
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
   sorry
 
-end Real
+end HasBilinHilbertSym
 
-namespace Padic
-
-variable {p : ℕ} [Fact (Nat.Prime p)] {V : Type*} [AddCommGroup V] [Module ℚ_[p] V]
-  [FiniteDimensional ℚ_[p] V] {Q : QuadraticForm ℚ_[p] V}
-  (hQ : Q.Nondegenerate)
-
-lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) ℚ_[p] V) :
-    Q.Isotropic ↔
-      hilbertSym (-1) (-Q.discr b) =
-        hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_three_units_of_nondegenerate
-    ( by simp [finrank_eq_card_basis b]) (Q.nondegenerate_associated_iff.mpr hQ).1
-  -- Set up notation for readability
-  let ⟨fw⟩ := hw
-  let a₀ := w 0
-  let a₁ := w 1
-  let a₂ := w 2
-  let u := ((LinearMap.toMatrix b (Pi.basisFun ℚ_[p] (Fin 3))) fw.toLinearEquiv).det
-  set s := hilbertSym (-1) (-Q.discr b)
-  set ε := hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 with hε_def
-  have hε : ε = hilbertSym (a₀ : ℚ_[p]) a₁ * hilbertSym (a₀ : ℚ_[p]) a₂ *
-      hilbertSym (a₁ : ℚ_[p]) a₂ := by
-    simp [ε, hasseMinkoskiInv.eq_of_equivalent _ hw,
-      hasseMinkoskiInv.weightedSumSquares_three, a₀, a₁, a₂]
-  rw [represents_zero_iff_of_rank_three_aux b hQ hw]
-  -- Computation using properties of the Hilbert Symbol
-  calc hilbertSym (-a₂ * a₀ : ℚ_[p]) (-a₂ * a₁)
-      _ = hilbertSym (-1 : ℚ_[p]) (- 1) * hilbertSym (-1 : ℚ_[p]) a₀ * hilbertSym (-1 : ℚ_[p]) a₁ *
-          hilbertSym (a₂ : ℚ_[p]) a₂ * (hilbertSym (a₀ : ℚ_[p]) a₁ * hilbertSym (a₀ : ℚ_[p]) a₂ *
-            hilbertSym (a₁ : ℚ_[p]) a₂) := by
-          rw [← neg_one_mul (a₂ : ℚ_[p])]
-          simp only [padic_mul_right_eq, padic_mul_left_eq]
-          rw [comm (a := (a₂ : ℚ_[p])) (b := -1), comm (a := (a₀ : ℚ_[p])) (b := -1),
-            comm (a := (a₂ : ℚ_[p])) (b := a₁)]
-          ring_nf
-          rw [sq_eq_one_iff.mpr (eq_one_or_neg_one_of_ne_zero (by simp) (by simp))]
-          simp
-      _ = hilbertSym (-1 : ℚ_[p]) (- 1) * hilbertSym (-1 : ℚ_[p]) a₀ * hilbertSym (-1 : ℚ_[p]) a₁ *
-          hilbertSym (a₂ : ℚ_[p]) a₂ * ε := by simp [hε]
-      _ = hilbertSym (-1 : ℚ_[p]) (- 1) * hilbertSym (-1 : ℚ_[p]) a₀ * hilbertSym (-1 : ℚ_[p]) a₁ *
-          hilbertSym (-1 : ℚ_[p]) a₂ * ε := by
-          congr 2
-          rw [← left_neg_mul (a := -1)]
-          simp
-      _ = hilbertSym (-1 : ℚ_[p]) (- 1) * hilbertSym (-1 : ℚ_[p]) (a₀ * a₁ * a₂) * ε := by
-        rw [padic_mul_right_eq, padic_mul_right_eq]
-        ring
-      _ = hilbertSym (-1 : ℚ_[p]) (- (a₀ * a₁ * a₂)) * ε := by
-        rw [← neg_one_mul (_ * _), padic_mul_right_eq (b := -1)]
-      _ = hilbertSym (-1 : ℚ_[p]) (- (a₀ * a₁ * a₂ * u ^ 2)) * ε := by
-        rw [← neg_mul _ ((u : ℚ_[p]) ^ 2), mul_right_square_eq]
-        exact LinearEquiv.det_toMatrix_ne_zero _ _ _
-      _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
-
-lemma represents_iff_of_rank_two (b : Basis (Fin 2) ℚ_[p] V) (a : ℚ_[p]) :
-    Q.represents a ↔
-      hilbertSym a (-Q.discr b) =
-        hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
-
-end Padic
+end CharZero
 
 end QuadraticForm

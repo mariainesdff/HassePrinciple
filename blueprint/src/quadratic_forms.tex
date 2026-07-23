@@ -207,7 +207,7 @@ Each term in the product is equal to $\pm 1$.
 \fi
 
 \begin{lemma}\label{lem:represents_zero_iff_rk_3}
-\lean{QuadraticForm.Real.represents_zero_iff_of_rank_three, QuadraticForm.Padic.represents_zero_iff_of_rank_three}
+\lean{QuadraticForm.represents_zero_iff_of_rank_three}
 \leanok
 \uses{lem:HM_inv_well_defined}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $3$ over $k$. Then $f$ represents $0$ if and only if $(-1, -d(f)) = \epsilon(f)$.
@@ -226,7 +226,7 @@ or equivalently, $(-1, -d(f)) = \epsilon(f)$.
 \end{proof}
 
 \begin{lemma}\label{lem:represents_iff_rk_2}
-\lean{QuadraticForm.Real.represents_iff_of_rank_two, QuadraticForm.Padic.represents_iff_of_rank_two}
+\lean{QuadraticForm.represents_iff_of_rank_two}
 \leanok
 \uses{lem:represents_zero_iff_rk_3}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $2$ over $k$, and let $a \in k^\times / {k^\times}^2$. Then $f$ represents $a$ if and only if $(a, -d(f)) = \epsilon(f)$.

@@ -271,13 +271,39 @@ a and b. -/
 @[simp]
 theorem right_minus_self_mul (ha : a ≠ 1) :
     hilbertSym a ((1 - a) * b) = hilbertSym a b := by
-  by_cases hzero : a = 0
-  · aesop
-  · have hone : hilbertSym a (1-a) = 1 := by
-      apply right_one_minus_self_eq_one hzero
-      exact ha
-    apply right_mul_eq_of_eq_one
-    exact hone
+  by_cases hzero : a = 0 <;> aesop
+
+section Bilin
+
+variable (k) in
+/-- We say that `HasBilinHilbertSym k` if the Hilbert symbol on `k` is bilinear, i.e., if
+  `hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
+  Note that, by the commutativity property of the Hilbert symbol, this also implies
+  `hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b'` for all `a, b, b'` in k. -/
+class HasBilinHilbertSym : Prop where
+  mul_left_eq {a a' b : k} : hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b
+
+lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  rw [comm, mul_left_eq, comm, comm (b := b')]
+
+end Bilin
+
+section Bilin
+
+variable (k) in
+/-- We say that `HasBilinHilbertSym k` if the Hilbert symbol on `k` is bilinear, i.e., if
+  `hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
+  Note that, by the commutativity property of the Hilbert symbol, this also implies
+  `hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b'` for all `a, b, b'` in k. -/
+class HasBilinHilbertSym : Prop where
+  mul_left_eq {a a' b : k} : hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b
+
+lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
+    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+  rw [comm, mul_left_eq, comm, comm (b := b')]
+
+end Bilin
 
 end Field
 
@@ -289,7 +315,46 @@ end Field
 b is positive. -/
 theorem real_eq {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0) :
     hilbertSym a b = if 0 < a ∨ 0 < b then 1 else -1 := by
-  sorry
+  split_ifs with h
+  · wlog ha_pos : 0 < a with h1
+    · rw [comm, h1 hb ha (by tauto) (by tauto)]
+    simp only [hilbertSym, ha, hb, or_self, reduceIte, ne_eq, Prod.mk.injEq, not_and,
+      Int.reduceNeg, ite_eq_left_iff, not_exists, reduceCtorEq, imp_false, not_forall,
+      Decidable.not_not]
+    exact ⟨Real.sqrt a, 1, 0, by simp, by simp [Real.sq_sqrt (by linarith)]⟩
+  · simp only [not_or, not_lt] at h
+    simp only [hilbertSym, ha, hb, or_self, ↓reduceIte, ne_eq, Prod.mk.injEq, not_and, sub_sub,
+      Int.reduceNeg, ite_eq_right_iff, reduceCtorEq, imp_false, not_exists,
+      sub_eq_add_neg _ ( _ + _)]
+    intro z x y h0
+    have : 0 ≤ z ^ 2 := by positivity
+    have {r s : ℝ} (hr : 0 ≤ r) (hs : 0 ≤ s) (hadd : r + s = 0) : r = 0 ∧ s = 0 :=
+      (add_eq_zero_iff_of_nonneg hr hs).mp hadd
+    have : 0 ≤ -a * x^2 := by positivity [Left.nonneg_neg_iff.mpr h.1]
+    have : 0 ≤ -b * y^2 := by positivity [Left.nonneg_neg_iff.mpr h.2]
+    grind
+
+instance _root_.Real.instHasBilinHilbertSym : HasBilinHilbertSym ℝ where
+  mul_left_eq {a a' b} := by
+    by_cases h0 : a = 0 ∨ a' = 0 ∨ b = 0
+    · rcases h0 with h0 | h0 | h0 <;> simp [hilbertSym, h0]
+    · simp  only [not_or] at h0
+      obtain ⟨ha, ha', hb⟩ := h0
+      rw [real_eq ha hb, real_eq ha' hb, real_eq (by positivity) hb]
+      rcases lt_or_gt_of_ne (Ne.symm ha) with ha | ha
+      · simp [ha]
+      · by_cases hb0 : 0 < b
+        · simp [hb0]
+        · simp [not_lt.mpr ha.le, hb0]
+          by_cases ha'0 : 0 < a'
+          · simp [ha'0, ha.le]
+          · simp [ha'0, mul_pos_of_neg_of_neg ha (lt_of_le_of_ne (not_lt.mp ha'0) ha')]
+
+end Real
+
+section Padic
+
+variable {p : ℕ} [hp : Fact (Nat.Prime p)] {a b a' b' : (ℚ_[p])}
 
 open Padic PadicInt
 section odd
@@ -374,7 +439,12 @@ theorem two_adic_eq :
 
 end two
 
--- do we need the bilinear form property? (see Theorem 2 and Cor.)
+instance _root_.Padic.instHasBilinHilbertSym : HasBilinHilbertSym ℚ_[p] where
+  mul_left_eq {a a' b} := by
+    sorry
+
+end Padic
+
 /-
 # Global properties of the Hilbert symbol
 -/
