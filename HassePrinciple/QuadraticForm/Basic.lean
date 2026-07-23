@@ -22,6 +22,15 @@ public import Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 universe u
 namespace QuadraticForm
 
+open _root_.QuadraticMap in
+theorem equivalent_weightedSumSquares_units_of_nondegenerate {K V : Type*} [Field K]
+    [Invertible (2 : K)] [AddCommGroup V] [Module K V] [FiniteDimensional K V] (n : ℕ)
+    (hn : Module.finrank K V = n) {Q : QuadraticForm K V}
+    (hQ : LinearMap.SeparatingLeft (associated Q)) :
+    ∃ w : Fin n → Kˣ, Equivalent Q (QuadraticMap.weightedSumSquares K w) := by
+  subst hn
+  exact equivalent_weightedSumSquares_units_of_nondegenerate' Q hQ
+
 -- TODO: add section variables (after Mathlib PR)
 
 /-- The product of two quadratic forms. -/
