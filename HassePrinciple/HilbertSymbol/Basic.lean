@@ -289,27 +289,15 @@ lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
 
 end Bilin
 
-section Bilin
-
-variable (k) in
-/-- We say that `HasBilinHilbertSym k` if the Hilbert symbol on `k` is bilinear, i.e., if
-  `hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
-  Note that, by the commutativity property of the Hilbert symbol, this also implies
-  `hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b'` for all `a, b, b'` in k. -/
-class HasBilinHilbertSym : Prop where
-  mul_left_eq {a a' b : k} : hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b
-
-lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
-    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
-  rw [comm, mul_left_eq, comm, comm (b := b')]
-
-end Bilin
-
 end Field
 
 /-
 ## Local properties: computation of the Hilbert symbol in the real and p-adic cases
 -/
+
+section Real
+
+variable {a b a' b' : ℝ}
 
 /-- If k = ℝ, and a and b are nonzero, then the Hilbert symbol equals 1 if and only if either a or
 b is positive. -/
