@@ -77,7 +77,7 @@ lemma mul_by_max_norm_is_int {x y : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖) (x_
 /-- helper lemma: if `x,y,z ∈ ℚ_[p]`, `‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖,` and `(x,y,z) ≠ (0,0,0),` then
 `x ≠ 0`-/
 lemma norm_max_ne_ze {x y z : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖)
-(hnontriv : (x, y, z) ≠ (0, 0, 0)) : x ≠ 0 := by
+(hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) : x ≠ 0 := by
   by_contra
   have normx_eq_ze : ‖x‖ = 0 := by
     exact norm_eq_zero.mpr this
@@ -89,8 +89,8 @@ lemma norm_max_ne_ze {x y z : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖ ∧ ‖z�
   have z_eq_ze : z = 0 := by
     rw [norm_le_zero_iff] at maxz
     exact maxz
-  have htriv : (x,y,z) = (0,0,0) := by
-    simp only [Prod.mk.injEq]
+  have htriv : ¬(x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0) := by
+    simp only [ne_eq, not_or, not_not]
     constructor
     · exact this
     · constructor
@@ -98,9 +98,10 @@ lemma norm_max_ne_ze {x y z : ℚ_[p]} (h_x_max : ‖y‖ ≤ ‖x‖ ∧ ‖z�
       · exact z_eq_ze
   contradiction
 
+
 /-- helper lemma: if `p` is a prime and `x ∈ ℚ_[p]` is nonzero, then
 `‖x * p ^ (-x.valuation)‖ = 1` -/
-lemma x_mul_p_to_neg_val {x : ℚ_[p]} (x_ne_ze: x ≠ 0) : ‖x * p ^ (-x.valuation)‖ = 1 := by
+lemma x_mul_p_to_neg_val {x : ℚ_[p]} (x_ne_ze : x ≠ 0) : ‖x * p ^ (-x.valuation)‖ = 1 := by
   simp only [zpow_neg, norm_mul, norm_inv, norm_p_zpow, inv_inv]
   rw [norm_eq_zpow_neg_valuation (x_ne_ze)]
   apply zpow_neg_mul_zpow_self x.valuation (NeZero.out)
@@ -109,7 +110,7 @@ lemma x_mul_p_to_neg_val {x : ℚ_[p]} (x_ne_ze: x ≠ 0) : ‖x * p ^ (-x.valua
 `ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same
 equation with `z', y',x' ∈ ℤ_[p]`, and at least one is a unit -/
 lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
-    (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
+    (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' x' : ℤ_[p],
       z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0
       ∧ (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
@@ -163,12 +164,9 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
             constructor
             · exact norm_y_ge_norm_x
             · exact h_1
-          have y_ne_ze : y ≠ 0 := by -- make this into its own lemma too
-            have hynontriv : (y,x,z) ≠ (0,0,0) := by
-              simp only [ne_eq, Prod.mk.injEq, not_and]
-              simp only [ne_eq, Prod.mk.injEq, not_and] at hnontriv
-              exact fun a a_1 ↦ Ne.symm fun a_2 ↦ hnontriv a_1 a (id (Eq.symm a_2))
-            apply norm_max_ne_ze (h_y_max) (hynontriv)
+          have y_ne_ze : y ≠ 0 := by
+            rw [or_left_comm] at hnontriv
+            apply norm_max_ne_ze (h_y_max) (hnontriv)
           let x' := x * p ^ (-y.valuation)
           let y' := y * p ^ (-y.valuation)
           let z' := z * p ^(-y.valuation)
@@ -214,11 +212,8 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
             · exact norm_z_ge_norm_x
             · exact Std.le_of_lt h_1
           have z_ne_ze : z ≠ 0 := by
-            have hznontriv : (z,x,y) ≠ (0,0,0) := by
-              simp only [ne_eq, Prod.mk.injEq, not_and]
-              simp only [ne_eq, Prod.mk.injEq, not_and] at hnontriv
-              exact fun a a_1 ↦ Ne.symm fun a_2 ↦ hnontriv a_1 (id (Eq.symm a_2)) a
-            apply norm_max_ne_ze (h_z_max) (hznontriv)
+            rw [← or_assoc, or_right_comm, or_assoc, or_left_comm] at hnontriv
+            apply norm_max_ne_ze (h_z_max) (hnontriv)
           let x' := x * p ^ (-z.valuation)
           let y' := y * p ^ (-z.valuation)
           let z' := z * p ^(-z.valuation)
@@ -252,7 +247,7 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
 `z', y'` units in `ℤ_[p]ˣ` and `x'` in `ℤ_[p]`. -/
 lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
-    (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
+    (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℤ_[p]) ^ 2 - p * (x') ^ 2 - v * (y' : ℤ_[p]) ^ 2 = 0 := by
   obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_sol hnontriv hsol
