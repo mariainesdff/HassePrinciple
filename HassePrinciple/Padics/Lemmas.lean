@@ -106,6 +106,25 @@ lemma x_mul_p_to_neg_val {x : ℚ_[p]} (x_ne_ze : x ≠ 0) : ‖x * p ^ (-x.valu
   rw [norm_eq_zpow_neg_valuation (x_ne_ze)]
   apply zpow_neg_mul_zpow_self x.valuation (NeZero.out)
 
+/-- helper lemma:  if `x, y, z ∈ ℚ_[p]` and `(‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) ∧ ‖z‖ ≤ ‖y‖,` then
+`‖x‖ ≤ ‖y‖ ∧ ‖z‖ ≤ ‖y‖.`-/
+lemma max_norm {x y z : ℚ_[p]} (hx_notmax : (‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖)) (hy_max : ‖z‖ ≤ ‖y‖) :
+  ‖x‖ ≤ ‖y‖ ∧ ‖z‖ ≤ ‖y‖ := by
+  have norm_y_ge_norm_x : ‖x‖ ≤ ‖y‖ := by
+    by_contra
+    simp only [not_le] at this
+    have h_z_min : ‖z‖ < ‖x‖ := by
+      exact Std.lt_of_le_of_lt hy_max this
+    have hnot : ¬(‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) := by
+      simp only [not_or, not_lt]
+      constructor
+      · exact Std.le_of_lt this
+      · exact Std.le_of_lt h_z_min
+    contradiction
+  constructor
+  · exact norm_y_ge_norm_x
+  · exact hy_max
+
 /-- If `p` is a prime, `x, y, z ∈ ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v in`
 `ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same
 equation with `z', y',x' ∈ ℤ_[p]`, and at least one is a unit -/
@@ -116,20 +135,18 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
       ∧ (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
       by_cases (‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖)
       · expose_names
-        have x_ne_ze : x ≠ 0 := by
-          apply norm_max_ne_ze (h) (hnontriv)
         let x' := x * p ^ (-x.valuation)
         let y' := y * p ^ (-x.valuation)
         let z' := z * p ^(-x.valuation)
         have x'_unit : ‖x'‖ = 1 := by
           unfold x'
-          exact x_mul_p_to_neg_val (x_ne_ze)
+          exact x_mul_p_to_neg_val (by apply norm_max_ne_ze (h) (hnontriv))
         have y'_int : ‖y'‖ ≤ 1 := by
           unfold y'
-          exact mul_by_max_norm_is_int (h.left) (x_ne_ze)
+          exact mul_by_max_norm_is_int (h.left) (by apply norm_max_ne_ze (h) (hnontriv))
         have z'_int : ‖z'‖ ≤ 1 := by
           unfold z'
-          exact mul_by_max_norm_is_int (h.right) (x_ne_ze)
+          exact mul_by_max_norm_is_int (h.right) (by apply norm_max_ne_ze (h) (hnontriv))
         let z'' : ℤ_[p] := ⟨z',z'_int⟩
         let y'' : ℤ_[p] := ⟨y',y'_int⟩
         let x'' : ℤ_[p] := ⟨x', (by exact Std.le_of_eq x'_unit)⟩
@@ -137,7 +154,7 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
         constructor
         · unfold z'' y'' x''
           refine PadicInt.coe_eq_zero.mp ?_
-          have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
+          have hnewsol : ((z' : ℚ_[p]) ^ 2 - p * (x' : ℚ_[p]) ^ 2
             - v * (y' : ℚ_[p])^2 = 0) := by
             unfold x' y' z'
             grind
@@ -149,43 +166,29 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
         simp only [not_and_or, not_le] at h
         by_cases (‖z‖ ≤ ‖y‖)
         · expose_names
-          have norm_y_ge_norm_x : ‖x‖ ≤ ‖y‖ := by
-            by_contra
-            simp only [not_le] at this
-            have h_z_min : ‖z‖ < ‖x‖ := by
-              exact Std.lt_of_le_of_lt h_1 this
-            have hnot : ¬ (‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) := by
-              simp only [not_or, not_lt]
-              constructor
-              · exact Std.le_of_lt this
-              · exact Std.le_of_lt h_z_min
-            contradiction
-          have h_y_max : (‖x‖ ≤ ‖y‖ ∧ ‖z‖ ≤ ‖y‖) := by -- can make this its own lemma
-            constructor
-            · exact norm_y_ge_norm_x
-            · exact h_1
-          have y_ne_ze : y ≠ 0 := by
-            rw [or_left_comm] at hnontriv
-            apply norm_max_ne_ze (h_y_max) (hnontriv)
+          rw [or_left_comm] at hnontriv
           let x' := x * p ^ (-y.valuation)
           let y' := y * p ^ (-y.valuation)
           let z' := z * p ^(-y.valuation)
           have y'_unit : ‖y'‖ = 1 := by
             unfold y'
-            exact x_mul_p_to_neg_val (y_ne_ze)
+            exact x_mul_p_to_neg_val
+              (by apply norm_max_ne_ze (by exact max_norm (h) (h_1)) (hnontriv))
           have x'_int : ‖x'‖ ≤ 1 := by
             unfold x'
-            exact mul_by_max_norm_is_int (h_y_max.left) (y_ne_ze)
+            exact mul_by_max_norm_is_int (by exact (max_norm (h) (h_1)).left)
+              (by apply norm_max_ne_ze (by exact max_norm (h) (h_1)) (hnontriv))
           have z'_int : ‖z'‖ ≤ 1 := by
             unfold z'
-            exact mul_by_max_norm_is_int (h_y_max.right) (y_ne_ze)
+            exact mul_by_max_norm_is_int (by exact (max_norm (h) (h_1)).right)
+             (by apply norm_max_ne_ze (by exact max_norm (h) (h_1)) (hnontriv))
           let z'' : ℤ_[p] := ⟨z',z'_int⟩
           let y'' : ℤ_[p] := ⟨y',(by exact Std.le_of_eq y'_unit)⟩
           let x'' : ℤ_[p] := ⟨x', x'_int⟩
           use z'', y'', x''
           constructor
           · unfold z'' y'' x''
-            refine PadicInt.coe_eq_zero.mp ?_ -- probably this too
+            refine PadicInt.coe_eq_zero.mp ?_
             have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
               - v * (y' : ℚ_[p])^2 = 0) := by
               unfold x' y' z'
@@ -196,43 +199,30 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
             exact PadicInt.isUnit_iff.mpr y'_unit
         · expose_names
           simp only [not_le] at h_1
-          have norm_z_ge_norm_x : ‖x‖ ≤ ‖z‖ := by
-            by_contra
-            simp only [not_le] at this
-            have h_y_min : ‖y‖ < ‖x‖ := by
-              exact lt_trans h_1 this
-            have hnot : ¬ (‖x‖ < ‖y‖ ∨ ‖x‖ < ‖z‖) := by
-              simp only [not_or, not_lt]
-              constructor
-              · exact Std.le_of_lt h_y_min
-              · exact Std.le_of_lt this
-            contradiction
-          have h_z_max : (‖x‖ ≤ ‖z‖ ∧ ‖y‖ ≤ ‖z‖) := by
-            constructor
-            · exact norm_z_ge_norm_x
-            · exact Std.le_of_lt h_1
-          have z_ne_ze : z ≠ 0 := by
-            rw [← or_assoc, or_right_comm, or_assoc, or_left_comm] at hnontriv
-            apply norm_max_ne_ze (h_z_max) (hnontriv)
+          rw [or_comm] at h
+          rw [← or_assoc, or_right_comm, or_assoc, or_left_comm] at hnontriv
           let x' := x * p ^ (-z.valuation)
           let y' := y * p ^ (-z.valuation)
           let z' := z * p ^(-z.valuation)
           have z'_unit : ‖z'‖ = 1 := by
             unfold z'
-            exact x_mul_p_to_neg_val (z_ne_ze)
+            exact x_mul_p_to_neg_val
+              (by apply norm_max_ne_ze (by exact max_norm (h) (by exact le_of_lt (h_1))) (hnontriv))
           have x'_int : ‖x'‖ ≤ 1 := by
             unfold x'
-            exact mul_by_max_norm_is_int (h_z_max.left) (z_ne_ze)
+            exact mul_by_max_norm_is_int (by exact (max_norm (h) (by exact le_of_lt (h_1))).left)
+              (by apply norm_max_ne_ze (by exact max_norm (h) (by exact le_of_lt (h_1))) (hnontriv))
           have y'_int : ‖y'‖ ≤ 1 := by
             unfold y'
-            exact mul_by_max_norm_is_int (h_z_max.right) (z_ne_ze)
+            exact mul_by_max_norm_is_int (by exact (max_norm (h) (by exact le_of_lt (h_1))).right)
+              (by apply norm_max_ne_ze (by exact max_norm (h) (by exact le_of_lt (h_1))) (hnontriv))
           let z'' : ℤ_[p] := ⟨z',(by exact Std.le_of_eq z'_unit)⟩
           let y'' : ℤ_[p] := ⟨y', y'_int⟩
           let x'' : ℤ_[p] := ⟨x', x'_int⟩
           use z'', y'', x''
           constructor
           · unfold z'' y'' x''
-            refine PadicInt.coe_eq_zero.mp ?_ -- probably this too
+            refine PadicInt.coe_eq_zero.mp ?_
             have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
               - v * (y' : ℚ_[p])^2 = 0) := by
               unfold x' y' z'
@@ -242,11 +232,10 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
             exact PadicInt.isUnit_iff.mpr z'_unit
 
 
---better name?
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
 `z', y'` units in `ℤ_[p]ˣ` and `x'` in `ℤ_[p]`. -/
-lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
+lemma exists_nontrivial_units_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℤ_[p]) ^ 2 - p * (x') ^ 2 - v * (y' : ℤ_[p]) ^ 2 = 0 := by
@@ -256,12 +245,9 @@ lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
     rw [PadicInt.not_isUnit_iff, PadicInt.norm_lt_one_iff_dvd, dvd_def] at this
     obtain ⟨c, hc⟩ := this
     have hy'_norm_ne_one : ‖y'‖ < 1 := by
-      have vy'_sq_eq : v * (y' : ℤ_[p]) ^ 2 = (z' : ℤ_[p]) ^ 2
-      - p * (x') ^ 2 := by
-        rw [sub_eq_zero] at hnewsol
-        rw [← hnewsol]
+      rw [sub_eq_zero] at hnewsol
       have vy'_sq_norm_ne_one : ‖(v) * (y' : ℤ_[p]) ^ 2‖ < 1 := by
-        rw [vy'_sq_eq, hc, PadicInt.norm_lt_one_iff_dvd]
+        rw [← hnewsol, hc, PadicInt.norm_lt_one_iff_dvd]
         use (↑p * c ^ 2 - x' ^ 2)
         ring
       simp only [norm_mul, norm_pow, PadicInt.norm_units, one_mul, sq_lt_one_iff_abs_lt_one,
@@ -286,10 +272,8 @@ lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
         obtain ⟨d,hd⟩ := px'_div_p2
         use d
         have p_ne_zediv : (p : ℤ_[p]) ∈ nonZeroDivisors ℤ_[p] := by
-          have p_ne_ze : (p : ℤ_[p]) ≠ 0 := by
-            rw [Nat.cast_ne_zero]
-            exact Ne.symm (NeZero.ne' p)
-          refine mem_nonZeroDivisors_of_ne_zero (p_ne_ze)
+          refine mem_nonZeroDivisors_of_ne_zero
+            (by apply Nat.cast_ne_zero.mpr (Ne.symm (NeZero.ne' p)))
         nth_rw 2 [pow_two] at hd
         rw [← mul_cancel_left_mem_nonZeroDivisors (p_ne_zediv), ← mul_assoc]
         exact hd
@@ -323,11 +307,9 @@ lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
       exact z'_sq_norm_ne_one
     have hx'_norm_ne_one : ‖x'‖ < 1 := by
       rw [PadicInt.norm_lt_one_iff_dvd]
-      have vx'_sq_eq : (z' : ℤ_[p]) ^ 2 - v * (y' : ℤ_[p]) ^ 2 = ↑p * (x') ^ 2 := by
-        rw [sub_right_comm, sub_eq_zero] at hnewsol
-        exact hnewsol
       have  px'_div_p2 : (p : ℤ_[p]) ^ 2 ∣ (p : ℤ_[p]) * (x') ^ 2 := by
-        rw [← vx'_sq_eq]
+        rw [sub_right_comm, sub_eq_zero] at hnewsol
+        rw [← hnewsol]
         rw [PadicInt.norm_lt_one_iff_dvd,dvd_def] at hz'_norm_ne_one
         obtain ⟨c', hc'⟩ := hz'_norm_ne_one
         rw [hc, hc']
@@ -340,10 +322,8 @@ lemma exists_nontrivial_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
         obtain ⟨d,hd⟩ := px'_div_p2
         use d
         have p_ne_zediv : (p : ℤ_[p]) ∈ nonZeroDivisors ℤ_[p] := by
-          have p_ne_ze : (p : ℤ_[p]) ≠ 0 := by
-            rw [Nat.cast_ne_zero]
-            exact Ne.symm (NeZero.ne' p)
-          refine mem_nonZeroDivisors_of_ne_zero (p_ne_ze)
+          refine mem_nonZeroDivisors_of_ne_zero
+            (by apply Nat.cast_ne_zero.mpr (Ne.symm (NeZero.ne' p)))
         nth_rw 2 [pow_two] at hd
         rw [← mul_cancel_left_mem_nonZeroDivisors (p_ne_zediv), ← mul_assoc]
         exact hd
