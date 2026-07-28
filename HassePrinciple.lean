@@ -1,5 +1,6 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
+public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
 public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
 public import HassePrinciple.ForMathlib.LinearAlgebra.Determinant
 public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
