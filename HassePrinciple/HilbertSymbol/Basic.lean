@@ -239,6 +239,11 @@ theorem right_minus_self_mul (ha : a ≠ 1) :
     hilbertSym a ((1 - a) * b) = hilbertSym a b := by
   by_cases hzero : a = 0 <;> aesop
 
+/-- Hilbert symbol with 1 is 1. Needed for the n = 1 base case in Hilbert reciprocity -/
+lemma one_right {k : Type*} [Field k] {a : k} (ha : a ≠ 0) :
+    hilbertSym a 1 = 1 := by
+  rw [← one_pow 2, right_square_eq_one ha one_ne_zero]
+
 section Bilin
 
 variable (k) in
@@ -430,13 +435,6 @@ lemma hilbertSym_special_eq_one {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
     hilbertSym (x : ℚ_[p]) y = 1 := by
   simp [← Rat.intCast_eq_one_iff, padic_odd_eq hp2 hx hy, hvx, hvy]
 
-/-- `atP x 1 p = 1', needed for the n = 1 base case -/
-lemma hilbertSym_one_right {p : ℕ} [Fact (Nat.Prime p)]
-    {x : ℚ} (hx : (x : ℚ_[p]) ≠ 0) :
-    hilbertSym (x : ℚ_[p]) 1 = 1 := by
-  unfold hilbertSym
-  rw [if_neg (not_or.mpr ⟨hx, by norm_num⟩), if_pos ⟨1, 0, 1, by simp, by ring⟩]
-
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
     ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
@@ -487,7 +485,7 @@ theorem almost_all_one (a b : ℚˣ) :
             rcases Int.sign_trichotomy (N*D) with htrich1 | htrich2 | htrich3
             · rw [htrich1]
               refine Filter.Eventually.of_forall (fun q => ?_)
-              apply hilbertSym_one_right; aesop
+              apply one_right; aesop
             · exact absurd (Int.sign_eq_zero_iff_zero.mp htrich2) hND_nonzero
             · rw [htrich3]
               have hcast : ((-1 : ℤ) : ℚ) = ((-1 : ℚˣ) : ℚ) := by simp
@@ -502,7 +500,7 @@ theorem almost_all_one (a b : ℚˣ) :
               rw [Nat.cast_one]
               refine Filter.Eventually.of_forall (fun q => ?_)
               have hqprime : Fact (Nat.Prime (q : ℕ)) := ⟨q.2⟩
-              exact hilbertSym_one_right (by exact_mod_cast Units.ne_zero c₀)
+              exact one_right (by exact_mod_cast Units.ne_zero c₀)
             | h₃ m p' hm1 hp' hm2 =>
               have hcombo := hm2 hm1
               have hBase : ∀ᶠ q : Nat.Primes in Filter.cofinite,
