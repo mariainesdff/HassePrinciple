@@ -410,35 +410,24 @@ lemma padicValRat_special_eq_zero {p : ℕ} [Fact (Nat.Prime p)]
     {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
     padicValRat p x = 0 := by
   rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
-  · simp only [padicValRat.neg, padicValRat.one]
-  · have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
-    rw [← padicValRat_of_nat]
-    norm_cast
-    exact padicValNat_primes hpr
+  · simp
+  · have : Fact (Nat.Prime r) := ⟨hr⟩
+    simp [padicValNat_primes hpr]
 
 /-- `x ≠ 0' in `ℚ_[p]' when `x' is `-1' or a prime -/
 lemma special_ne_zero {p : ℕ} [Fact (Nat.Prime p)]
     {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r) :
     (x : ℚ_[p]) ≠ 0 := by
   rcases hx with rfl | ⟨r, hr, rfl⟩
-  · simp only [Rat.cast_neg, Rat.cast_one, ne_eq, neg_eq_zero, one_ne_zero, not_false_eq_true]
-  · simp only [ne_eq, Rat.cast_eq_zero]
-    exact_mod_cast hr.ne_zero
+  · simp
+  · simp [hr.ne_zero]
 
 /-- the actual Hilbert symbol computation, once both valuations vanish. -/
 lemma hilbertSym_special_eq_one {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
     {x y : ℚ} (hx : (x : ℚ_[p]) ≠ 0) (hy : (y : ℚ_[p]) ≠ 0)
-    (hvx : padicValRat p x = 0) (hvy : padicValRat p y = 0) :
+    (hvx : (x : ℚ_[p]).valuation = 0) (hvy : (y : ℚ_[p]).valuation = 0) :
     hilbertSym (x : ℚ_[p]) y = 1 := by
-  have hval_cast_x : Padic.valuation (x : ℚ_[p]) = 0 := by
-    rw [Padic.valuation_ratCast, hvx]
-  have hval_cast_y : Padic.valuation (y : ℚ_[p]) = 0 := by
-    rw [Padic.valuation_ratCast, hvy]
-  have castkey : (hilbertSym (x : ℚ_[p]) (y : ℚ_[p]) : ℚ) = 1 := by
-    rw [padic_odd_eq hp2 hx hy, hval_cast_x, hval_cast_y]
-    simp only [mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self,
-      Int.negOnePow_zero, Units.val_one, Int.cast_one, zpow_zero]
-  exact_mod_cast castkey
+  simp [← Rat.intCast_eq_one_iff, padic_odd_eq hp2 hx hy, hvx, hvy]
 
 /-- `atP x 1 p = 1', needed for the n = 1 base case -/
 lemma hilbertSym_one_right {p : ℕ} [Fact (Nat.Prime p)]
@@ -610,21 +599,10 @@ theorem almost_all_one (a b : ℚˣ) :
 
 
 /-- Right-multiplicativity over ℚ_p, nonzero arguments. -/
-lemma hilbertSym_padic_mul_right {p : ℕ} [hp: Fact (Nat.Prime p)]
+lemma hilbertSym_padic_mul_right {p : ℕ} [hp : Fact (Nat.Prime p)]
     {a b b' : ℚ_[p]} (ha : a ≠ 0) (hb : b ≠ 0) (hb' : b' ≠ 0) :
     hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
-  rcases eq_or_ne p 2 with h2 | hodd
-  · subst h2
-    sorry
-  · have castkey: ((hilbertSym a (b * b') : ℤ) : ℚ)
-         = ((hilbertSym a b * hilbertSym a b' : ℤ) : ℚ) := by
-      push_cast
-      rw [padic_odd_eq hodd ha (mul_ne_zero hb hb'),
-          padic_odd_eq hodd ha hb, padic_odd_eq hodd ha hb']
-      --   valuation_mul, unitPart_mul, legendreSym mult, pow_add, Int.negOnePow_add
-      simp only [mul_ite, PadicInt.val_mkUnits, mul_zero, mul_one, Int.coe_negOnePow, Units.mk0_mul]
-      sorry
-    exact_mod_cast castkey
+sorry
 
 /-- Right-multiplicativity over ℝ, nonzero arguments. -/
 lemma hilbertSym_real_mul_right {a b b' : ℝ}
