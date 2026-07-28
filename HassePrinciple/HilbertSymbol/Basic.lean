@@ -406,9 +406,10 @@ open Nat
 scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
 /-- valuation is `0' at `p' when `x' is `-1' or a prime `≠ p' -/
-lemma padicValRat_special_eq_zero {p : ℕ} [Fact (Nat.Prime p)]
+lemma Padic.valuation_eq_zero_of_neg_one_or_prime {p : ℕ} [Fact (Nat.Prime p)]
     {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
-    padicValRat p x = 0 := by
+    (x : ℚ_[p]).valuation = 0 := by
+  rw [Padic.valuation_ratCast]
   rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
   · simp
   · have : Fact (Nat.Prime r) := ⟨hr⟩
@@ -552,7 +553,8 @@ theorem almost_all_one (a b : ℚˣ) :
        have hfact : Fact (Nat.Prime p) := ⟨hp⟩
        apply hexception (hilbertSym_special_eq_one hp2
         (special_ne_zero (Or.inl rfl)) (special_ne_zero (Or.inl rfl))
-        (padicValRat_special_eq_zero (Or.inl rfl)) (padicValRat_special_eq_zero (Or.inl rfl)))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl)))
      · have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
        rw [hc]
        refine Set.Finite.subset (Set.toFinite
@@ -565,8 +567,8 @@ theorem almost_all_one (a b : ℚˣ) :
        have hfact : Fact (Nat.Prime p) := ⟨hp⟩
        exact hexception (hilbertSym_special_eq_one hp2
         (special_ne_zero (Or.inl rfl)) (special_ne_zero (Or.inr ⟨q, hq, hdq⟩))
-        (padicValRat_special_eq_zero (Or.inl rfl))
-        (padicValRat_special_eq_zero (Or.inr ⟨q, hq, hdq, hpq⟩)))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨q, hq, hdq, hpq⟩)))
      · have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
        rw [hd]
        refine Set.Finite.subset (Set.toFinite
@@ -579,8 +581,8 @@ theorem almost_all_one (a b : ℚˣ) :
        have hfact : Fact (Nat.Prime p) := ⟨hp⟩
        exact hexception (hilbertSym_special_eq_one hp2
         (special_ne_zero (Or.inr ⟨r, hr, hcr⟩)) (special_ne_zero (Or.inl rfl))
-        (padicValRat_special_eq_zero (Or.inr ⟨r, hr, hcr, hpr⟩))
-        (padicValRat_special_eq_zero (Or.inl rfl)))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨r, hr, hcr, hpr⟩))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl)))
      · have hfactq : Fact (Nat.Prime q) := ⟨hq⟩
        have hfactr : Fact (Nat.Prime r) := ⟨hr⟩
        refine Set.Finite.subset (Set.toFinite
@@ -594,15 +596,15 @@ theorem almost_all_one (a b : ℚˣ) :
        have hfact : Fact (Nat.Prime p) := ⟨hp⟩
        exact hexception (hilbertSym_special_eq_one hp2
         (special_ne_zero (Or.inr ⟨r, hr, hcr⟩)) (special_ne_zero (Or.inr ⟨q, hq, hdq⟩))
-        (padicValRat_special_eq_zero (Or.inr ⟨r, hr, hcr, hpr⟩))
-        (padicValRat_special_eq_zero (Or.inr ⟨q, hq, hdq, hpq⟩)))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨r, hr, hcr, hpr⟩))
+        (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨q, hq, hdq, hpq⟩)))
 
 
 /-- Right-multiplicativity over ℚ_p, nonzero arguments. -/
 lemma hilbertSym_padic_mul_right {p : ℕ} [hp : Fact (Nat.Prime p)]
     {a b b' : ℚ_[p]} (ha : a ≠ 0) (hb : b ≠ 0) (hb' : b' ≠ 0) :
     hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
-sorry
+  sorry
 
 /-- Right-multiplicativity over ℝ, nonzero arguments. -/
 lemma hilbertSym_real_mul_right {a b b' : ℝ}
