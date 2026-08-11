@@ -240,8 +240,7 @@ theorem right_minus_self_mul (ha : a ≠ 1) :
   by_cases hzero : a = 0 <;> aesop
 
 /-- Hilbert symbol with 1 is 1. Needed for the n = 1 base case in Hilbert reciprocity -/
-lemma one_right {k : Type*} [Field k] {a : k} (ha : a ≠ 0) :
-    hilbertSym a 1 = 1 := by
+lemma one_right (ha : a ≠ 0) : hilbertSym a 1 = 1 := by
   rw [← one_pow 2, right_square_eq_one ha one_ne_zero]
 
 section Bilin
