@@ -602,6 +602,31 @@ lemma hilbertSym_real_mul_right {a b b' : ℝ}
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
     (∏ᶠ (p : Nat.Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
-  sorry
+  -- part 1 apply almost_all_one to confirm there is a finite set where symbol is -1
+  -- feed almost_all_one into finprod_mul_distrib
+  -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/BigOperators/Finprod.html#finprod_mul_distrib
+  -- part 2: simplify to the four cases again
+  -- part 3: Tackle each case
+  -- part 3a: If a=b=-1, then the only times the symbol is -1 is at infinity and 2.
+  -- Since this is even, the product is 1.
+  -- part 3b: If a=-1, b=l odd prime, then symbol at 2 and l are both (-1)^e(l) and all others are 1
+  -- here e(l) is the class modulo 2 of (u-1)/2 where u is viewed as a 2-adic unit
+  -- case 3b': If a=-1, b=2 then the symbol is always 1 by two_adic_eq.
+  -- part 3c: Symmetric argument to 3b for a=l prime, b=-1
+  -- part 3d: need more cases! If one of them is 2, we have a different argument
+  -- at 2: use two_adic_eq and at k: use padic_odd_eq
+  -- part 3d': If a and b are different primes j and k both not 2, use QR argument.
+  -- part 3d'': If a and b are the same prime, (j,j)=(-1,j) always (use right_neg_self_eq_one).
+  -- Then we're in 3c.
+   sorry
+
+-- https://leanprover-community.github.io/mathlib4_docs/Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.html
+-- for 3b and 3c: theorem legendreSym.at_neg_one{p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) :
+-- legendreSym p (-1) = ZMod.χ₄ ↑p
+-- for 3d: legendreSym.at_two{p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) :
+-- legendreSym p 2 = ZMod.χ₈ ↑p
+-- for 3d' legendreSym.quadratic_reciprocity{p q : ℕ} [Fact (Nat.Prime p)] [Fact (Nat.Prime q)]
+-- (hp : p ≠ 2) (hq : q ≠ 2) (hpq : p ≠ q) :
+-- legendreSym q ↑p * legendreSym p ↑q = (-1) ^ (p / 2 * (q / 2))
 
 end hilbertSym
