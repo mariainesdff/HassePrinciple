@@ -31,20 +31,20 @@ theorem approximation' {S : Finset Nat.Primes} {ε : ℝ} (hε : ε > 0)
     ∃ x : ℚ, ‖y.1 - x‖ + Finset.sum (Finset.attach S) (fun n ↦ ‖y.2 n - x‖) < ε := by
   sorry
 
-/-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
-(which includes ℝ). -/
-abbrev finiteEmbedding (S : Finset Nat.Primes) (x : ℚ) : ℝ × (Π p : S, ℚ_[p]) :=
-  ⟨algebraMap ℚ ℝ x, fun p ↦ (algebraMap ℚ ℚ_[p]) x⟩
+-- /-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
+-- (which includes ℝ). -/
+-- abbrev finiteEmbedding (S : Finset Nat.Primes) (x : ℚ) : ℝ × (Π p : S, ℚ_[p]) :=
+--   ⟨algebraMap ℚ ℝ x, fun p ↦ (algebraMap ℚ ℚ_[p]) x⟩
 
-/-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
-theorem approximation (S : Finset Nat.Primes) :
-    Dense (Set.range (finiteEmbedding S)) := by
-  sorry
+-- /-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
+-- theorem approximation (S : Finset Nat.Primes) :
+--     Dense (Set.range (finiteEmbedding S)) := by
+--   sorry
 
 
--- maybe we need this now
-
-/-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
+-- -- maybe we need this now
+--TODO: remove the ''
+/-- The finite embedding of ℚˣ into the product of the completions of ℚ at a finite set of places
 (which includes ℝ). -/
 abbrev finiteEmbedding'' (S : Finset Nat.Primes) (x : ℚˣ) : ℝˣ × Π p : S, ℚ_[p]ˣ :=
   ⟨Units.map (algebraMap ℚ ℝ) x, fun p ↦ Units.map (algebraMap ℚ ℚ_[p]) x⟩
