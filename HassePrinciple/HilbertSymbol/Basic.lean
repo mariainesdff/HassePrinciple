@@ -419,7 +419,7 @@ lemma Padic.valuation_eq_zero_of_neg_one_or_prime {p : ℕ} [Fact (Nat.Prime p)]
   · have : Fact (Nat.Prime r) := ⟨hr⟩
     simp [padicValNat_primes hpr]
 
-def IsNegOneOrPrime (a : ℚ) : Prop := a = -1 ∨ ∃ r : ℕ, r.Prime ∧ (a : ℚ) = r
+abbrev IsNegOneOrPrime (a : ℚ) : Prop := a = -1 ∨ ∃ r : ℕ, r.Prime ∧ (a : ℚ) = r
 
 /-- `x ≠ 0' in `ℚ_[p]' when `x' is `-1' or a prime -/
 lemma IsNegOneOrPrime.valuation_ne_zero {p : ℕ} [Fact (Nat.Prime p)]
@@ -487,8 +487,10 @@ theorem natCast {a : ℚˣ}
     filter_upwards [Filter.eventually_and.mpr ⟨hm2 hm1, hBase⟩] with q ⟨hq1, hq2⟩
     simp [right_mul_eq_of_eq_one hq2, hq1]
 
+namespace eventually_one
+
 /-- For all but finitely many primes, the Hilbert symbol of -1 and -1 is 1. -/
-theorem almost_all_one_of_neg_one_of_neg_one :
+theorem of_neg_one_of_neg_one :
     ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) ((-1 : ℚ)) = 1 := by
   apply (Set.finite_singleton ⟨2, Nat.prime_two⟩).subset
   intro ⟨p, hp⟩ hne
@@ -502,7 +504,7 @@ theorem almost_all_one_of_neg_one_of_neg_one :
     (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl)))
 
 /-- Fix b a prime. For all but finitely many primes, the Hilbert symbol of -1 and b is 1. -/
-theorem almost_all_one_of_neg_one_of_prime (b : ℕ) [hb : Fact (Nat.Prime b)] :
+theorem of_neg_one_of_prime (b : ℕ) [hb : Fact (Nat.Prime b)] :
     ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
   refine (Set.toFinite ({⟨2, Nat.prime_two⟩, ⟨b, hb.out⟩} : Set Nat.Primes)).subset ?_
   intro ⟨p, hp⟩ hne
@@ -517,7 +519,7 @@ theorem almost_all_one_of_neg_one_of_prime (b : ℕ) [hb : Fact (Nat.Prime b)] :
     (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨b, hb.out, rfl, hpr⟩)))
 
 /-- Given primes a and b, for all but finitely many primes, the Hilbert symbol of a and b is 1. -/
-theorem almost_all_one_of_prime_of_prime (a b : ℕ) [ha : Fact (Nat.Prime a)]
+theorem of_prime_of_prime (a b : ℕ) [ha : Fact (Nat.Prime a)]
     [hb : Fact (Nat.Prime b)] :
     ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((a : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
   refine (Set.toFinite ({⟨2, prime_two⟩, ⟨a, ha.out⟩, ⟨b, hb.out⟩} : Set Primes)).subset  ?_
@@ -535,19 +537,19 @@ theorem almost_all_one_of_prime_of_prime (a b : ℕ) [ha : Fact (Nat.Prime a)]
 
 /-- Suppose a and b are each either -1 or prime. Then for all but finitely many primes,
 the Hilbert symbol of a and b is 1. -/
-theorem almost_all_one_of_IsNegOneOrPrime {a b : ℚˣ} (ha : IsNegOneOrPrime a)
+theorem of_IsNegOneOrPrime {a b : ℚˣ} (ha : IsNegOneOrPrime a)
 (hb : IsNegOneOrPrime b) : ∀ᶠ (p : Nat.Primes) in Filter.cofinite,
 hilbertSym (a : ℚ_[p]) b = 1 := by
   rcases ha with ha | ⟨r, hr, ha⟩ <;> rcases hb with hb | ⟨q, hq, hb⟩
-  · simpa [ha, hb] using almost_all_one_of_neg_one_of_neg_one
-  · simpa [ha, hb] using almost_all_one_of_neg_one_of_prime q (hb := ⟨hq⟩)
-  · simpa [ha, hb, comm] using @almost_all_one_of_neg_one_of_prime r ⟨hr⟩
-  · simpa [ha, hb] using @almost_all_one_of_prime_of_prime r q ⟨hr⟩ ⟨hq⟩
+  · simpa [ha, hb] using of_neg_one_of_neg_one
+  · simpa [ha, hb] using of_neg_one_of_prime q (hb := ⟨hq⟩)
+  · simpa [ha, hb, comm] using @of_neg_one_of_prime r ⟨hr⟩
+  · simpa [ha, hb] using @of_prime_of_prime r q ⟨hr⟩ ⟨hq⟩
 
 /-- Let a and b be rational units. Suppose given d either -1 or prime,
  the Hilbert symbol of a and d is 1 for all but finitely many primes. Then, for all but finitely
  many primes, the Hilbert symbol of b and a is 1. -/
-theorem almost_all_one_left {a : ℚˣ}
+theorem left {a : ℚˣ}
     (ha : ∀ (d : ℚˣ), (IsNegOneOrPrime d) →
       ∀ᶠ (p : Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
     ∀ᶠ (p : Primes) in Filter.cofinite, hilbertSym (b : ℚ_[p]) (a : ℚ_[p]) = 1 := by
@@ -574,12 +576,14 @@ theorem almost_all_one (a b : ℚˣ) :
     have one_reduced_general {c₀ : ℚˣ}
         (hc : ∀ d : ℚˣ, (IsNegOneOrPrime d) → ∀ᶠ p : Nat.Primes in Filter.cofinite,
         hilbertSym (↑c₀ : ℚ_[p]) ↑d = 1) (b' : ℚˣ) : ∀ᶠ p : Nat.Primes in Filter.cofinite,
-        hilbertSym (b' : ℚ_[p]) c₀ = 1 := almost_all_one_left hc b'
+        hilbertSym (b' : ℚ_[p]) c₀ = 1 := left hc b'
     have hbase_b (d : ℚˣ) (hd: IsNegOneOrPrime d) :
         ∀ᶠ p : Nat.Primes in Filter.cofinite, hilbertSym (↑b : ℚ_[p]) ↑d = 1 := by
-      exact almost_all_one_left (fun _ he ↦ hreduction _ _ hd he) b
+      exact left (fun _ he ↦ hreduction _ _ hd he) b
     exact one_reduced_general hbase_b a
-  · apply almost_all_one_of_IsNegOneOrPrime
+  · apply of_IsNegOneOrPrime
+
+end eventually_one
 
 /-- Right-multiplicativity over ℚ_p, nonzero arguments. -/
 lemma hilbertSym_padic_mul_right {p : ℕ} [hp : Fact (Nat.Prime p)]
