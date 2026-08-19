@@ -451,48 +451,53 @@ theorem num_mul_den (K : Type*) [Field K] [CharZero K] (a b : ℚˣ) :
       simp [h]
     _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
 
+open Int
+open Filter
+
 /-- Let a and b be rational units. Suppose given d either -1 or prime, the Hilbert symbol of a and d
  is 1 for all but finitely many primes. Then, for all but finitely many primes, the Hilbert symbol
  of a and (numerator of b)*(denominator of b) is 1. -/
 theorem sign_mul_num_den {a : ℚˣ}
     (ha : ∀ (d : ℚˣ), (IsNegOneOrPrime d) →
-      ∀ᶠ (p : Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
-    ∀ᶠ (q : Primes) in Filter.cofinite,
-      hilbertSym (a : ℚ_[q]) ((Int.sign (b.1.num * b.1.den : ℤ) : ℤ) : ℚ) = 1 := by
-  rcases Int.sign_trichotomy (b.1.num * b.1.den) with h1 | h0 | hneg1
+      ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
+    ∀ᶠ (q : Primes) in cofinite,
+      hilbertSym (a : ℚ_[q]) ((sign (b.1.num * b.1.den : ℤ) : ℤ) : ℚ) = 1 := by
+  rcases sign_trichotomy (b.1.num * b.1.den) with h1 | h0 | hneg1
   · simp only [h1, Int.cast_one, Rat.cast_one]
-    exact Filter.Eventually.of_forall (fun q ↦ one_right (by simp))
-  · exact absurd (Int.sign_eq_zero_iff_zero.mp h0) (by simp [(b : ℚ).den_ne_zero])
+    exact Eventually.of_forall (fun q ↦ one_right (by simp))
+  · exact absurd (sign_eq_zero_iff_zero.mp h0) (by simp [(b : ℚ).den_ne_zero])
   · simpa [hneg1] using ha (-1) (Or.inl rfl)
 
 /-- Let a be a rational unit and b ∈ ℕ be nonzero. Suppose given d either -1 or prime,
  the Hilbert symbol of a and d is 1 for all but finitely many primes. Then, for all but finitely
  many primes, the Hilbert symbol of a and b is 1. -/
 theorem natCast {a : ℚˣ}
-    (ha : ∀ (d : ℚˣ), (IsNegOneOrPrime d) → ∀ᶠ (p : Primes) in Filter.cofinite,
-    hilbertSym (a : ℚ_[p]) d = 1) {b : ℕ} (hb : b ≠ 0) : ∀ᶠ (p : Primes) in Filter.cofinite,
+    (ha : ∀ (d : ℚˣ), (IsNegOneOrPrime d) → ∀ᶠ (p : Primes) in cofinite,
+    hilbertSym (a : ℚ_[p]) d = 1) {b : ℕ} (hb : b ≠ 0) : ∀ᶠ (p : Primes) in cofinite,
     hilbertSym (a : ℚ_[p]) b = 1 := by
   induction b using UniqueFactorizationMonoid.induction_on_prime with
   | h₁ => tauto
   | h₂ x hx =>
     obtain rfl : x = 1 := Nat.isUnit_iff.mp hx
-    refine Filter.Eventually.of_forall (fun q ↦ ?_)
+    refine Eventually.of_forall (fun q ↦ ?_)
     have : Fact (Nat.Prime (q : ℕ)) := ⟨q.2⟩
     exact one_right (by simp [a.ne_zero])
   | h₃ m p' hm1 hp' hm2 =>
-    have hBase : ∀ᶠ q : Nat.Primes in Filter.cofinite,
+    have hBase : ∀ᶠ q : Nat.Primes in cofinite,
         hilbertSym (a : ℚ_[q]) p' = 1 :=
       ha (Units.mk0 (p' : ℚ) (by exact_mod_cast hp'.ne_zero))
             (Or.inr ⟨p', Nat.prime_iff.mpr hp', by simp⟩)
-    filter_upwards [Filter.eventually_and.mpr ⟨hm2 hm1, hBase⟩] with q ⟨hq1, hq2⟩
+    filter_upwards [eventually_and.mpr ⟨hm2 hm1, hBase⟩] with q ⟨hq1, hq2⟩
     simp [right_mul_eq_of_eq_one hq2, hq1]
 
 namespace eventually_one
 
+open Nat
+
 /-- For all but finitely many primes, the Hilbert symbol of -1 and -1 is 1. -/
 theorem of_neg_one_of_neg_one :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) ((-1 : ℚ)) = 1 := by
-  apply (Set.finite_singleton ⟨2, Nat.prime_two⟩).subset
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) ((-1 : ℚ)) = 1 := by
+  apply (Set.finite_singleton ⟨2, prime_two⟩).subset
   intro ⟨p, hp⟩ hne
   by_contra hcon
   have hp2 : p ≠ 2 := by aesop
@@ -505,8 +510,8 @@ theorem of_neg_one_of_neg_one :
 
 /-- Fix b a prime. For all but finitely many primes, the Hilbert symbol of -1 and b is 1. -/
 theorem of_neg_one_of_prime (b : ℕ) [hb : Fact (Nat.Prime b)] :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
-  refine (Set.toFinite ({⟨2, Nat.prime_two⟩, ⟨b, hb.out⟩} : Set Nat.Primes)).subset ?_
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
+  refine (Set.toFinite ({⟨2, prime_two⟩, ⟨b, hb.out⟩} : Set Primes)).subset ?_
   intro ⟨p, hp⟩ hne
   by_contra hcon
   have hpr : p ≠ b := fun h ↦ hcon (by subst h; simp)
@@ -521,7 +526,7 @@ theorem of_neg_one_of_prime (b : ℕ) [hb : Fact (Nat.Prime b)] :
 /-- Given primes a and b, for all but finitely many primes, the Hilbert symbol of a and b is 1. -/
 theorem of_prime_of_prime (a b : ℕ) [ha : Fact (Nat.Prime a)]
     [hb : Fact (Nat.Prime b)] :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym ((a : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((a : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
   refine (Set.toFinite ({⟨2, prime_two⟩, ⟨a, ha.out⟩, ⟨b, hb.out⟩} : Set Primes)).subset  ?_
   intro ⟨p, hp⟩ hne
   by_contra hcon
@@ -538,7 +543,7 @@ theorem of_prime_of_prime (a b : ℕ) [ha : Fact (Nat.Prime a)]
 /-- Suppose a and b are each either -1 or prime. Then for all but finitely many primes,
 the Hilbert symbol of a and b is 1. -/
 theorem of_IsNegOneOrPrime {a b : ℚˣ} (ha : IsNegOneOrPrime a)
-(hb : IsNegOneOrPrime b) : ∀ᶠ (p : Nat.Primes) in Filter.cofinite,
+(hb : IsNegOneOrPrime b) : ∀ᶠ (p : Primes) in cofinite,
 hilbertSym (a : ℚ_[p]) b = 1 := by
   rcases ha with ha | ⟨r, hr, ha⟩ <;> rcases hb with hb | ⟨q, hq, hb⟩
   · simpa [ha, hb] using of_neg_one_of_neg_one
@@ -551,34 +556,34 @@ hilbertSym (a : ℚ_[p]) b = 1 := by
  many primes, the Hilbert symbol of b and a is 1. -/
 theorem left {a : ℚˣ}
     (ha : ∀ (d : ℚˣ), (IsNegOneOrPrime d) →
-      ∀ᶠ (p : Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
-    ∀ᶠ (p : Primes) in Filter.cofinite, hilbertSym (b : ℚ_[p]) (a : ℚ_[p]) = 1 := by
+      ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (b : ℚ_[p]) (a : ℚ_[p]) = 1 := by
   set N := (b : ℚ).num with hN
   set D := (b : ℚ).den with hD
   have hND_nonzero : N * D ≠ 0 := mul_ne_zero (Rat.num_ne_zero.mpr b.ne_zero)
-    (Int.ofNat_ne_zero.mpr (b : ℚ).den_ne_zero)
+    (ofNat_ne_zero.mpr (b : ℚ).den_ne_zero)
   simp only [← num_mul_den]
-  have h_nat : ∀ᶠ p : Nat.Primes in Filter.cofinite,
+  have h_nat : ∀ᶠ p : Primes in cofinite,
       hilbertSym (a : ℚ_[p]) ((N * D).natAbs : ℚ) = 1 :=
-    natCast ha (Int.natAbs_ne_zero.mpr hND_nonzero)
+    natCast ha (natAbs_ne_zero.mpr hND_nonzero)
   filter_upwards [sign_mul_num_den ha b, h_nat] with p hsignND hnatND
   have hpprime: Fact (Nat.Prime (p : ℕ)) := ⟨p.2⟩
-  have hsplitQ : ((N * D : ℤ) : ℚ) = ((Int.sign (N*D) : ℤ) : ℚ) * ((N * D).natAbs : ℚ) := by
-    rw [← Int.cast_natCast (R := ℚ), ← Int.cast_mul, Int.sign_mul_natAbs]
+  have hsplitQ : ((N * D : ℤ) : ℚ) = ((sign (N*D) : ℤ) : ℚ) * ((N * D).natAbs : ℚ) := by
+    rw [← cast_natCast (R := ℚ), ← Int.cast_mul, sign_mul_natAbs]
   rw [hsplitQ, Rat.cast_mul, comm, right_mul_eq_of_eq_one hsignND, hnatND]
 
 
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
   suffices hreduction : ∀ c d : ℚˣ, (IsNegOneOrPrime c) → (IsNegOneOrPrime d) →
-      (∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (c : ℚ_[p]) d = 1) by
+      (∀ᶠ (p : Primes) in cofinite, hilbertSym (c : ℚ_[p]) d = 1) by
     have one_reduced_general {c₀ : ℚˣ}
-        (hc : ∀ d : ℚˣ, (IsNegOneOrPrime d) → ∀ᶠ p : Nat.Primes in Filter.cofinite,
-        hilbertSym (↑c₀ : ℚ_[p]) ↑d = 1) (b' : ℚˣ) : ∀ᶠ p : Nat.Primes in Filter.cofinite,
+        (hc : ∀ d : ℚˣ, (IsNegOneOrPrime d) → ∀ᶠ p : Primes in cofinite,
+        hilbertSym (↑c₀ : ℚ_[p]) ↑d = 1) (b' : ℚˣ) : ∀ᶠ p : Primes in cofinite,
         hilbertSym (b' : ℚ_[p]) c₀ = 1 := left hc b'
     have hbase_b (d : ℚˣ) (hd: IsNegOneOrPrime d) :
-        ∀ᶠ p : Nat.Primes in Filter.cofinite, hilbertSym (↑b : ℚ_[p]) ↑d = 1 := by
+        ∀ᶠ p : Primes in cofinite, hilbertSym (↑b : ℚ_[p]) ↑d = 1 := by
       exact left (fun _ he ↦ hreduction _ _ hd he) b
     exact one_reduced_general hbase_b a
   · apply of_IsNegOneOrPrime
@@ -601,7 +606,7 @@ lemma hilbertSym_real_mul_right {a b b' : ℝ}
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    (∏ᶠ (p : Nat.Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
+    (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
   -- part 1 apply almost_all_one to confirm there is a finite set where symbol is -1
   -- feed almost_all_one into finprod_mul_distrib
   -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/BigOperators/Finprod.html#finprod_mul_distrib
