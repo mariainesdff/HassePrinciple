@@ -433,7 +433,6 @@ lemma isSquare_of_zmodPow {m : ℤ_[2]} (hm : ¬ (2 : ℤ_[2]) ∣ m) (hmod : Is
 
 /-! ## Multivariable Hensel's Lemma -/
 
-
 /-- Serre's generalization of Hensel's lemma to a multivariable polynomial over ℤ_[p]. If a
 polynomial f in m variables has a solution a modulo p^n, and a is a zero modulo p^k of one of its
 partial derivatives, with 0 < 2k < n, then there exists a solution in ℤ_[p], which is congruent to
