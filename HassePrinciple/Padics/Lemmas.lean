@@ -126,7 +126,7 @@ lemma max_norm {x y z : ℚ_[p]} (hx_notmax : (‖x‖ < ‖y‖ ∨ ‖x‖ < �
 
 /-- If `p` is a prime, `x, y, z ∈ ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v in`
 `ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same
-equation with `z', y',x' ∈ ℤ_[p]`, and at least one is a unit -/
+equation with `z', y', x' ∈ ℤ_[p]`, and at least one is a unit -/
 lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
   (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
   ∃ z' y' x' : ℤ_[p], z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0
@@ -167,21 +167,10 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
           (norm_max_ne_ze (max_norm h (le_of_lt h_1)) hnontriv)
         have y'_int : ‖y'‖ ≤ 1 := mul_by_max_norm_is_int (le_of_lt h_1) (norm_max_ne_ze (max_norm h
           (le_of_lt h_1)) hnontriv)
-        --- keep doing the same thing below
-        let z'' : ℤ_[p] := ⟨z',(by exact Std.le_of_eq z'_unit)⟩
-        let y'' : ℤ_[p] := ⟨y', y'_int⟩
-        let x'' : ℤ_[p] := ⟨x', x'_int⟩
-        use z'', y'', x''
-        constructor
-        · unfold z'' y'' x''
-          refine PadicInt.coe_eq_zero.mp ?_
-          have hnewsol : ((z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2
-            - v * (y' : ℚ_[p])^2 = 0) := by
-            unfold x' y' z'
-            grind
-          exact hnewsol
-        · left
-          exact PadicInt.isUnit_iff.mpr z'_unit
+        exact ⟨⟨z', le_of_eq z'_unit⟩, ⟨y', y'_int⟩, ⟨x', x'_int⟩,
+          ⟨PadicInt.coe_eq_zero.mp (by grind : z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0),
+          Or.inl (PadicInt.isUnit_iff.mpr z'_unit)⟩⟩
+
 
 
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
@@ -242,6 +231,9 @@ lemma exists_nontrivial_units_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
           · rw [← PadicInt.not_isUnit_iff] at hx'_norm_ne_one
             exact hx'_norm_ne_one
       contradiction
+
+
+
     have hy'_unit : IsUnit y' := by
       by_contra
       rw [PadicInt.not_isUnit_iff, PadicInt.norm_lt_one_iff_dvd, dvd_def] at this
@@ -292,13 +284,11 @@ lemma exists_nontrivial_units_zero {v : (ℤ_[p])ˣ} {x y z : ℚ_[p]}
           · rw [← PadicInt.not_isUnit_iff] at hx'_norm_ne_one
             exact hx'_norm_ne_one
       contradiction
+    -- maybe try to get rid of these rewrites
     rw [PadicInt.isUnit_iff] at hz'_unit
-    let z'' : ℤ_[p]ˣ := PadicInt.mkUnits hz'_unit
     rw [PadicInt.isUnit_iff] at hy'_unit
-    let y'' : ℤ_[p]ˣ := PadicInt.mkUnits hy'_unit
-    let x'' : ℤ_[p] := x'
-    use z'', y'', x''
-    exact hnewsol
+    exact ⟨⟨z', z'.inv, PadicInt.mul_inv hz'_unit, PadicInt.inv_mul hz'_unit⟩, ⟨y', y'.inv, PadicInt.mul_inv hy'_unit, PadicInt.inv_mul hy'_unit⟩,
+      x', hnewsol⟩
 
 lemma common_root_tfae {σ ι : Type*} {f : ι → MvPolynomial σ ℤ_[p]}
     (hf : ∀ i, (f i).IsHomogeneous (f i).totalDegree) :
