@@ -44,6 +44,15 @@ lemma valuation_units (a : ℤ_[p]ˣ) : (a : ℤ_[p]).valuation = 0 := by
     (Nat.cast_nonneg' p) (by exact_mod_cast (Nat.Prime.ne_one Fact.out))] at h₁
   simpa only [neg_eq_zero, Int.natCast_eq_zero] using h₁
 
+/-- valuation is `0' at `p' when `x' is `-1' or a prime `≠ p' -/
+lemma valuation_eq_zero_of_neg_one_or_prime {p : ℕ} [Fact (Nat.Prime p)]
+    {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
+    (x : ℚ_[p]).valuation = 0 := by
+  rw [Padic.valuation_ratCast]
+  rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
+  · simp
+  · have : Fact (Nat.Prime r) := ⟨hr⟩
+    simp [padicValNat_primes hpr]
 
 /-- The map that sends a padic integer to its unit part in ℤ_[p]ˣ is the natural inclusion. -/
 lemma map_unitPart (a : ℤ_[p]ˣ) :
