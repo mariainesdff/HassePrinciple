@@ -30,7 +30,7 @@ lemma isSquare_of_dist_one_lt_one {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) 
     exact (z + 1).isSquare_of_zmod hp (by simp [dvd_add_right hx, ← PadicInt.norm_lt_one_iff_dvd])
       (by simp [hz0])
   obtain ⟨r, hr⟩ := hz1
-  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr, z]⟩
+  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr]; aesop⟩
 
 lemma isSquare_of_dist_one_lt_pow {x : ℚ_[2]} (hx : dist x 1 < 2 ^ (-(2 : ℤ))) : IsSquare x := by
   have hx1 : ‖x - 1‖ ≤ 1 := le_trans hx.le (by norm_num)
@@ -48,7 +48,7 @@ lemma isSquare_of_dist_one_lt_pow {x : ℚ_[2]} (hx : dist x 1 < 2 ^ (-(2 : ℤ)
       ← PadicInt.norm_lt_one_iff_dvd]
     simp
   obtain ⟨r, hr⟩ := hz1
-  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr, z]⟩
+  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr]; aesop⟩
 
 lemma exists_pow_isSquare_of_dist_one_lt (p : ℕ) [Fact (Nat.Prime p)] :
     ∃ (n : ℕ), ∀ (x : ℚ_[p]), dist x 1 < p ^ (-(n : ℤ)) → IsSquare x := by
@@ -62,12 +62,12 @@ open Pointwise Set
 lemma isOpen_squares_sdiff_zero : IsOpen ({x : ℚ_[p] | IsSquare x} \ {0}) := by
   rw [isOpen_iff_forall_mem_open]
   intro x ⟨hx, hx0⟩
-  simp only [mem_setOf_eq, mem_singleton_iff] at hx hx0
+  simp only [mem_ofPred_eq, mem_singleton_iff] at hx hx0
   obtain ⟨n, hn⟩ := exists_pow_isSquare_of_dist_one_lt p
   refine ⟨x • (Metric.ball (1 : ℚ_[p]) (p ^ (-(n : ℤ)))), fun y hy ↦ ?_, by
     simp [smul_ball hx0, Metric.isOpen_ball], mem_smul_set.mpr ⟨1,
       Metric.mem_ball_self (zpow_pos (Nat.cast_pos.mpr (Nat.pos_of_neZero p)) _), by simp⟩⟩
-  simp only [← image_smul, mem_image, Metric.mem_ball, mem_sdiff, mem_setOf_eq,
+  simp only [← image_smul, mem_image, Metric.mem_ball, mem_sdiff, mem_ofPred_eq,
     mem_singleton_iff] at hy ⊢
   obtain ⟨u, hup, hu⟩ := hy
   simp only [← hu, smul_eq_mul, mul_eq_zero, not_or]
@@ -87,7 +87,7 @@ def unitSquares : OpenSubgroup ℚ_[p]ˣ where
   isOpen'              := by
     have h : (Units.val '' {x : ℚ_[p]ˣ | IsSquare x}) = {x : ℚ_[p] | IsSquare x} \ {0} := by
       ext x
-      simp only [mem_image, mem_setOf_eq, mem_sdiff, mem_singleton_iff]
+      simp only [mem_image, mem_ofPred_eq, mem_sdiff, mem_singleton_iff]
       refine ⟨fun ⟨u, hu2, hux⟩ ↦ ?_, fun ⟨hxs, hx0⟩ ↦ ?_⟩
       · simp only [← hux, Units.ne_zero, not_false_eq_true, and_true]
         obtain ⟨v, hv⟩ := hu2

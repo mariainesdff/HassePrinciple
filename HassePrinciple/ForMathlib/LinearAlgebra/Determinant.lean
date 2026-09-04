@@ -7,9 +7,9 @@ module
 
 public import Mathlib.LinearAlgebra.Determinant
 
-@[expose] public section
-
 /-! # Determinants of linear maps -/
+
+@[expose] public section
 
 lemma LinearEquiv.det_toMatrix_ne_zero {ι R M N : Type*} [DecidableEq ι] [Fintype ι]
     [CommRing R] [Nontrivial R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]

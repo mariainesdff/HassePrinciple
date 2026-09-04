@@ -9,8 +9,6 @@ public import HassePrinciple.QuadraticForm.Basic
 public import Mathlib.Algebra.CharP.Invertible
 public import Mathlib.Analysis.RCLike.Basic
 public import Mathlib.NumberTheory.Padics.PadicNumbers
-public import HassePrinciple.ForMathlib.Data.Nat.Factorization.Defs
-public import HassePrinciple.ForMathlib.NumberTheory.Padics.PadicVal.Basic
 
 /-! # Quadratic forms over ℚ -/
 
@@ -118,14 +116,15 @@ lemma isotropic_of_rank_two [FiniteDimensional ℚ V] (hr : finrank ℚ V = 2) (
     exact ⟨(x 1)⁻¹ * x 0, coeff_ratio_isSquare_of_represents_zero (w := fun i ↦ (w i : ℚ)) (by simp)
       (comp_ne_zero_of_nondegenerate hx0 hx).2 hx⟩
   -- Represents 0 over ℚ_[p] implies that the `p`-adic valuation of - (w 0)⁻¹ * w 1 is even
-  have hf (p : ℕ) [Fact (Nat.Prime p)] : Even (padicValRat p (- (w 0 : ℚ)⁻¹ * w 1)) := by
+  have hf (p : ℕ) (hp : p.Prime) : Even (padicValRat p (- (w 0 : ℚ)⁻¹ * w 1)) := by
+    have : Fact (p.Prime) := ⟨hp⟩
     obtain ⟨x, hx⟩ := hQ'fw p
     rw [← Padic.valuation_ratCast, coeff_ratio_isSquare_of_represents_zero (w := fun i ↦ (w i : ℚ))
       (by simp) (comp_ne_zero_of_nondegenerate hx.2 hx.1).2 hx.1]
     simp
   -- A nonnegative rational number with even `p`-adic valuation for all `p` is a square
   obtain ⟨x, hx⟩ : ∃ (x : ℚ), - (w 0 : ℚ)⁻¹ * w 1 = x * x :=
-    Rat.isSquare_of_even_factorization hR' hf
+    Rat.isSquare_iff_even_factorization.mpr ⟨hR', hf⟩
   exact ⟨![x, 1], by simp [pow_two, ← hx, Units.smul_def], by simp⟩
 
 end EverywhereLocallyIsotropic

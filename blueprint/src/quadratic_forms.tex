@@ -46,13 +46,86 @@ A quadratic form $f : M \to A$ is called \emph{isotropic} if there exists a nonz
 \leanok
 \uses{def:represents, def:isotropic, lem:represents_zero}
 Let $Q$ and $Q'$ be two equivalent quadratic forms over $R$ and let $r \in $. Then $Q$ represents $r$ if and only if $Q'$ represents $r$. In particular, $Q$ is isotropic if and only if $Q'$ is isotropic.
-
 \end{lemma}
 
 \begin{proof}
 \leanok
 By Lemma \ref{lem:represents_zero}, it suffices to prove the first claim, which follows from the definition of equivalence of quadratic forms.
 \end{proof}
+
+\subsection{Orthogonality}\label{subsec:ortho}
+
+Let $R$ be a commutative ring, let $V$ be an $R$-module and let $Q$ be a quadratic form on $V$.
+
+\begin{definition}\label{def:ortho_compl}
+\lean{QuadraticForm.orthoCompl}
+\leanok
+Let $S$ be a subset of $V$. The \emph{$Q$-orthogonal complement of $U$} is the $R$-submodule $U^o$ of $V$ consisting of all elements $v \in V$ that are $Q$-orthogonal to every $s \in S$.
+\end{definition}
+
+\begin{definition}\label{def:to_dual}
+\lean{QuadraticForm.toDual}
+\leanok
+Let $U$ be an $R$-submodule of $V$. We define $q_U : V \to U^*$ as the $R$-linear map sending $v \in V$ to the linear form $(u \in U) \mapsto v \cdot u$.
+\end{definition}
+
+\begin{lemma}\label{lem:ker_to_dual}
+Let $U$ be an $R$-submodule of $V$. Then the kernel of $q_U$ is $U^o$. In particular, the kernel of $q_V$ is equal to the radical of $Q$.
+\lean{QuadraticForm.orthoCompl_eq_ker_toDual, QuadraticForm.radical_eq_orthoCompl_top}
+\leanok
+\uses{def:ortho_compl, def:to_dual}
+\end{lemma}
+\begin{proof}
+\leanok
+Follows by expanding the definitions.
+\end{proof}
+
+From now on, we assume that $R$ is a field.
+
+\begin{lemma}\label{lem:nondegenerate_iff_to_dual_bijective}
+\lean{QuadraticForm.nondegenerate_iff_toDual_bijective}
+\uses{def:to_dual}
+\leanok
+$Q$ is nondegenerate if and only if $q_V$ is bijective.
+\end{lemma}
+\begin{proof}
+\uses{lem:ker_to_dual}
+\leanok
+This follows from Lemma \ref{lem:ker_to_dual} and the fact that a quadratic form is nondegenerate if and only if its radical is trivial.
+\end{proof}
+
+\begin{lemma}\label{lem:to_dual_surjective}
+Let $U$ be an $R$-vector subspace of $V$. If $Q$ is nondegenerate, then $q_U$ is surjective.
+\lean{QuadraticForm.toDual_surjective}
+\leanok
+\uses{def:to_dual}
+\end{lemma}
+\begin{proof}
+\uses{lem:nondegenerate_iff_to_dual_bijective}
+\leanok
+$q_U$ is equal to the composition of $q_V : V \to V^*$, which is surjective by Lemma \ref{lem:nondegenerate_iff_to_dual_bijective} because $Q$ is nondegenerate, and the canonical surjection $V^* \to U^*$.
+\end{proof}
+
+We need to introduce some notation before the next proposition. Let $S$ be a commutative ring, let $V$ and $W$ be $S$-modules and let $Q$ and $Q'$ be quadratic forms on $V$ and $W$, respectively. Then $Q \dotplus Q'$ denotes the quadratic form on $V \times W$ obtained by applying $Q$ on $V$ and $Q'$ on $W$. This is available in \mathlib as \texttt{QuadraticMap.prod}. Similarly, $Q \dotminus Q'$ denotes the form $Q \dotplus (-Q')$ on $V \times W$.
+
+\begin{proposition}\label{prop:ortho_compl_properties}
+\lean{QuadraticForm.finrank_eq_add, QuadraticForm.orthoCompl_orthoCompl, QuadraticForm.radical_restrict_eq_inf, QuadraticForm.nondegenerate_orthoCompl_iff, QuadraticForm.orthoCompl_isCompl, Submodule.prodOrthoComplEquiv}
+\leanok
+\uses{def:ortho_compl}
+Let $U$ be an $R$-vector subspace of $V$ and suppose that $Q$ is nondegenerate. Denote by $Q_U$ the restriction of $Q$ to $U$. Then :
+\begin{enumerate}[(i)]
+\item $\dim U + \dim U^o = \dim V$.
+\item $U^{oo} = U$.
+\item $\text{rad}(U) = \text{rad}(U^o) = U \cap U^o$.
+\item $Q_U$ is nondegenerate if and only if $Q_{U^o}$ is nondegenerate, in which case $V = U \oplus U^o$ and $Q$ is equivalent to $Q_U \dotplus Q_{U^o}$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+\leanok
+\uses{lem:to_dual_surjective}
+See Proposition 2 in \S IV.1.2 of \cite{Ser73}.
+\end{proof}
+
 \subsection{Orthogonal basis}\label{subsec:ortho_basis}
 
 Let $K$ be a field in which $2$ is invertible and let $V$ be a $K$-vector space.
@@ -97,36 +170,37 @@ There exists $x \in K$ such that $b_x := b_1' + x b_2'$ is nonisotropic and gene
 
 \subsection{Translations}\label{subsec:translations}
 
-Let $R$ be a commutative ring, let $V$ and $W$ be $R$-modules and let $Q$ and $Q'$ be quadratic forms on $V$ and $W$, respectively. Then $Q \dotplus Q'$ denotes the quadratic form on $V \times W$ obtained by applying $Q$ on $V$ and $Q'$ on $W$. This is available in \mathlib as \texttt{QuadraticMap.prod}. Similarly, $Q \dotminus Q'$ denotes the form $Q \dotplus (-Q')$ on $V \times W$.
-
 \begin{definition}\label{def:hyperbolic}
 \lean{QuadraticForm.IsHyperbolic}
 \leanok
-A quadratic form is \emph{hyperbolic} if it is equivalent to the form $X^2 - Y^2$.
+A quadratic form is \emph{hyperbolic} if it is equivalent to the form $XY$.
 \end{definition}
 
-\begin{lemma}\label{lem:XY_hyperbolic}
-\lean{QuadraticForm.XY_isHyperbolic}
+\begin{lemma}\label{lem:represents_of_hyperbolic}
+\lean{QuadraticForm.represents_of_isHyperbolic}
 \leanok
-\uses{def:hyperbolic}
-The quadratic form $XY$ is hyperbolic.
+\uses{def:hyperbolic, def:represents}
+An hyperbolic quadratic form represents all elements of $R$.
 \end{lemma}
-
 \begin{proof}
-TODO.
+\leanok
+\uses{lem:represents_iff}
+By Lemma \ref{lem:represents_iff}, it suffices to prove this for the quadratic form $XY$, which holds since for each $r \in R$, we have $XY(r, 1) = 0$.
 \end{proof}
 
 
-% NOTE: if needed, assume $R$ is a field.
 \begin{proposition}\label{prop:sum_hyperbolic}
-\lean{QuadraticForm.equivalent_hyperbolic_add}
+\lean{QuadraticForm.equivalent_isHyperbolic_add, QuadraticForm.represents_of_isotropic_of_nondegenerate}
 \leanok
-\uses{lem:XY_hyperbolic, def:represents}
-Let $R$ be a commutative ring. If a quadratic form $Q$ on an $R$-module $V$ represents $0$ and is nondegenerate, then $Q$ is equivalent to $H + Q'$, where $H$ is hyperbolic. Moreover, $f$ represents all elements of $R$.
+\uses{def:represents, def:hyperbolic}
+Let $K$ be a field. If a quadratic form $Q$ on an $K$-vector space $V$ represents $0$ and is nondegenerate, then $Q$ is equivalent to $H + Q'$, where $H$ is hyperbolic. Moreover, $f$ represents all elements of $K$.
 \end{proposition}
 \begin{proof}
-Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = 2z - (z\cdot z)x$ is isotropic and $x \cdot y = 2$.
-The restriction of $Q$ to the submodule $U := Rx \oplus Ry$ is the desired hyperbolic form $H$.
+\leanok
+\uses{lem:represents_of_hyperbolic, prop:ortho_compl_properties}
+Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = z - 1/2 \cdot(z\cdot z)x$ is isotropic and $x \cdot y = 1$.
+The restriction of $Q$ to the submodule $U := Kx \oplus Ky$ is the desired hyperbolic form $H$. Take $Q'$ to be the restriction of $Q'$ to the orthogonal complement of $U$; then $Q$ is equivalent to $H + Q'$ by Proposition \ref{prop:ortho_compl_properties}(iv).
+Since $H$ represents all elements of $K$ by Lemma \ref{lem:represents_of_hyperbolic}, so does $Q = H + Q'$.
 \end{proof}
 
 \begin{corollary}\label{cor:represents_iff_sub_sub}
@@ -209,7 +283,7 @@ Each term in the product is equal to $\pm 1$.
 \begin{lemma}\label{lem:represents_zero_iff_rk_3}
 \lean{QuadraticForm.represents_zero_iff_of_rank_three}
 \leanok
-\uses{lem:HM_inv_well_defined}
+\uses{lem:HM_inv_well_defined, thm:bilinear}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $3$ over $k$. Then $f$ represents $0$ if and only if $(-1, -d(f)) = \epsilon(f)$.
 \end{lemma}
 

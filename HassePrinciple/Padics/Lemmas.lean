@@ -50,6 +50,7 @@ lemma map_unitPart (a : ℤ_[p]ˣ) :
     unitPart (Units.map (algebraMap ℤ_[p] ℚ_[p]) a) = a := by
   ext
   simp [unitPart, valuation_units a]
+  norm_cast
 
 /-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
 noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
@@ -312,7 +313,6 @@ lemma isSquare_of_zmodPow {m : ℤ_[2]} (hm : ¬ (2 : ℤ_[2]) ∣ m) (hmod : Is
   exact ⟨z, by simp [← hz0, pow_two]⟩
 
 /-! ## Multivariable Hensel's Lemma -/
-
 
 /-- Serre's generalization of Hensel's lemma to a multivariable polynomial over ℤ_[p]. If a
 polynomial f in m variables has a solution a modulo p^n, and a is a zero modulo p^k of one of its

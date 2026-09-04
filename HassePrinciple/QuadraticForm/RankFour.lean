@@ -40,7 +40,7 @@ private theorem weightedSumSquares_equiv_prod (w : Fin 4 → ℚˣ) :
     simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, finFourLinearEquivProd,
       AddHom.toFun_eq_coe, AddHom.coe_mk, QuadraticMap.prod_apply, weightedSumSquares_apply,
       Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-      QuadraticMap.neg_apply, Units.neg_smul, neg_add_rev, neg_neg, Fin.sum_univ_four]
+      neg_apply, Units.neg_smul, neg_add_rev, neg_neg, Fin.sum_univ_four]
     ring⟩
 
 open hilbertSym

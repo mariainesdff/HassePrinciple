@@ -14,8 +14,7 @@ public import Mathlib.LinearAlgebra.TensorProduct.Prod
 namespace TensorProduct
 
 lemma prodRight_fst {R A M₁ M₂ : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    [Invertible (2 : R)] [Invertible (2 : A)] [AddCommGroup M₁] [AddCommGroup M₂] [Module R M₁]
-    [Module R M₂] (x : A ⊗[R] (M₁ × M₂)) :
+    [AddCommGroup M₁] [AddCommGroup M₂] [Module R M₁] [Module R M₂] (x : A ⊗[R] (M₁ × M₂)) :
     ((prodRight R A A M₁ M₂) x).1 = (LinearMap.baseChange A (LinearMap.fst R M₁ M₂)) x := by
   induction x using TensorProduct.induction_on with
   | zero => simp
@@ -23,8 +22,7 @@ lemma prodRight_fst {R A M₁ M₂ : Type*} [CommRing R] [CommRing A] [Algebra R
   | add x y hx hy => simp [hx, hy]
 
 lemma prodRight_snd {R A M₁ M₂ : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    [Invertible (2 : R)] [Invertible (2 : A)] [AddCommGroup M₁] [AddCommGroup M₂] [Module R M₁]
-    [Module R M₂] (x : A ⊗[R] (M₁ × M₂)) :
+    [AddCommGroup M₁] [AddCommGroup M₂] [Module R M₁] [Module R M₂] (x : A ⊗[R] (M₁ × M₂)) :
     ((prodRight R A A M₁ M₂) x).2 = (LinearMap.baseChange A (LinearMap.snd R M₁ M₂)) x := by
   induction x using TensorProduct.induction_on with
   | zero => simp

@@ -45,7 +45,7 @@ variable {k : Type*} [Field k] {a b a' b' : k}
 
 lemma eq_one_or_neg_one_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) :
     hilbertSym a b = 1 ∨ hilbertSym a b = -1 := by
-  simp only [hilbertSym, ha, hb, false_or, if_false]
+  simp only [hilbertSym, ha, hb, false_or, ite_false]
   split_ifs <;> tauto
 
 /-- If `a` and `b` are nonzero, then `hilbertSym a b` is nonzero. -/
@@ -64,7 +64,7 @@ lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
     · simp [hb]
     · simp only [mul_eq_zero, ha, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff,
         false_or, hb, Prod.mk.injEq, not_and, Int.reduceNeg, or_self, ↓reduceIte]
-      rw [if_neg (by aesop)]
+      rw [ite_eq_right (by aesop)]
       split_ifs with h h' h'
       · rfl
       · obtain ⟨z, x, y, h0, heq⟩ := h
@@ -111,7 +111,7 @@ lemma comm : hilbertSym a b = hilbertSym b a := by
   quadratic algebra `QuadraticAlgebra k b 0`. -/
 theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
     hilbertSym a b = 1 ↔ ∃ t : QuadraticAlgebra k b 0, a = QuadraticAlgebra.norm t := by
-  rw [hilbertSym, if_neg (by simp [ha, hb])]
+  rw [hilbertSym, ite_eq_right (by simp [ha, hb])]
   refine ⟨fun hhilb ↦ ?_, fun hnorm ↦ ?_⟩
   · simp only [ne_eq, Prod.mk.injEq, not_and, Int.reduceNeg, ite_eq_left_iff, not_exists,
       reduceCtorEq, imp_false, not_forall, not_not] at hhilb
@@ -130,7 +130,7 @@ theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
       _ = a := by
         rw [← heq, sub_sub_cancel]
         field_simp
-  · rw [if_pos]
+  · rw [ite_eq_left]
     obtain ⟨⟨p, q⟩, hnorm'⟩ := hnorm
     use p, 1, q, by aesop
     simp only [QuadraticAlgebra.norm_def, zero_mul, add_zero] at hnorm'
@@ -140,14 +140,14 @@ theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if b is a square. -/
 @[simp]
 theorem right_square_eq_one (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a (b ^ 2) = 1 := by
-  rw [hilbertSym, if_neg (by aesop), if_pos]
+  rw [hilbertSym, ite_eq_right (by aesop), ite_eq_left]
   use b, 0, 1
   aesop
 
 /-- The Hilbert symbol of a and -a, with a nonzero, equals 1. -/
 @[simp]
 theorem right_neg_self_eq_one (ha : a ≠ 0) : hilbertSym a (-a) = 1 := by
-  rw [hilbertSym, if_neg (by simp [ha]), if_pos]
+  rw [hilbertSym, ite_eq_right (by simp [ha]), ite_eq_left]
   use 0, 1, 1
   aesop
 
@@ -155,7 +155,7 @@ theorem right_neg_self_eq_one (ha : a ≠ 0) : hilbertSym a (-a) = 1 := by
 @[simp]
 theorem right_one_minus_self_eq_one (ha0 : a ≠ 0) (ha1 : a ≠ 1) :
     hilbertSym a (1 - a) = 1 := by
-  rw [hilbertSym, if_neg (by simp [ha0, sub_ne_zero.mpr ha1.symm]), if_pos]
+  rw [hilbertSym, ite_eq_right (by simp [ha0, sub_ne_zero.mpr ha1.symm]), ite_eq_left]
   use 1, 1, 1
   aesop
 
@@ -207,7 +207,7 @@ theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
           field_simp
           rw [← map_mul]
           grind
-        rw [← eq_one_iff hb' hanzero ha, hilbertSym, if_neg (by aesop)] at this
+        rw [← eq_one_iff hb' hanzero ha, hilbertSym, ite_eq_right (by aesop)] at this
         grind
       · have ⟨t', ht'⟩ : ∃ t' : QuadraticAlgebra k a 0, b' = QuadraticAlgebra.norm t' := by
           rw [← eq_one_iff, hilbertSym]
@@ -216,7 +216,7 @@ theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
         have : ∃ tt' : QuadraticAlgebra k a 0, b * b' = QuadraticAlgebra.norm tt' := by
           use t * t'
           simp [map_mul, ht, ht']
-        rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, if_neg (by aesop)] at this
+        rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, ite_eq_right (by aesop)] at this
         simp only [ite_eq_left_iff] at this
         grind
 
