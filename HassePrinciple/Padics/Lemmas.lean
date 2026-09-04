@@ -48,7 +48,7 @@ lemma valuation_units (a : ℤ_[p]ˣ) : (a : ℤ_[p]).valuation = 0 := by
 lemma valuation_eq_zero_of_neg_one_or_prime {p : ℕ} [Fact (Nat.Prime p)]
     {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
     (x : ℚ_[p]).valuation = 0 := by
-  rw [Padic.valuation_ratCast]
+  rw [valuation_ratCast]
   rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
   · simp
   · have : Fact (Nat.Prime r) := ⟨hr⟩
