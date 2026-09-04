@@ -49,6 +49,7 @@ lemma map_unitPart (a : ℤ_[p]ˣ) :
     unitPart (Units.map (algebraMap ℤ_[p] ℚ_[p]) a) = a := by
   ext
   simp [unitPart, valuation_units a]
+  norm_cast
 
 /-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
 noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=

@@ -59,15 +59,15 @@ Let $R$ be a commutative ring, let $V$ be an $R$-module and let $Q$ be a quadrat
 
 \begin{definition}\label{def:ortho_compl}
 \lean{QuadraticForm.orthoCompl}
-\leanok 
+\leanok
 Let $S$ be a subset of $V$. The \emph{$Q$-orthogonal complement of $U$} is the $R$-submodule $U^o$ of $V$ consisting of all elements $v \in V$ that are $Q$-orthogonal to every $s \in S$.
-\end{definition} 
+\end{definition}
 
 \begin{definition}\label{def:to_dual}
 \lean{QuadraticForm.toDual}
-\leanok 
+\leanok
 Let $U$ be an $R$-submodule of $V$. We define $q_U : V \to U^*$ as the $R$-linear map sending $v \in V$ to the linear form $(u \in U) \mapsto v \cdot u$.
-\end{definition} 
+\end{definition}
 
 \begin{lemma}\label{lem:ker_to_dual}
 Let $U$ be an $R$-submodule of $V$. Then the kernel of $q_U$ is $U^o$. In particular, the kernel of $q_V$ is equal to the radical of $Q$.
@@ -102,14 +102,14 @@ Let $U$ be an $R$-vector subspace of $V$. If $Q$ is nondegenerate, then $q_U$ is
 \end{lemma}
 \begin{proof}
 \uses{lem:nondegenerate_iff_to_dual_bijective}
-\leanok 
+\leanok
 $q_U$ is equal to the composition of $q_V : V \to V^*$, which is surjective by Lemma \ref{lem:nondegenerate_iff_to_dual_bijective} because $Q$ is nondegenerate, and the canonical surjection $V^* \to U^*$.
 \end{proof}
 
 We need to introduce some notation before the next proposition. Let $S$ be a commutative ring, let $V$ and $W$ be $S$-modules and let $Q$ and $Q'$ be quadratic forms on $V$ and $W$, respectively. Then $Q \dotplus Q'$ denotes the quadratic form on $V \times W$ obtained by applying $Q$ on $V$ and $Q'$ on $W$. This is available in \mathlib as \texttt{QuadraticMap.prod}. Similarly, $Q \dotminus Q'$ denotes the form $Q \dotplus (-Q')$ on $V \times W$.
 
 \begin{proposition}\label{prop:ortho_compl_properties}
-\lean{QuadraticForm.finrank_eq_add, QuadraticForm.orthoCompl_orthoCompl, QuadraticForm.radical_restrict_eq_inf, QuadraticForm.nondegenerate_orthoCompl_iff, QuadraticForm.orthoCompl_isCompl, Submodule.prodOrthoComplEquiv} 
+\lean{QuadraticForm.finrank_eq_add, QuadraticForm.orthoCompl_orthoCompl, QuadraticForm.radical_restrict_eq_inf, QuadraticForm.nondegenerate_orthoCompl_iff, QuadraticForm.orthoCompl_isCompl, Submodule.prodOrthoComplEquiv}
 \leanok
 \uses{def:ortho_compl}
 Let $U$ be an $R$-vector subspace of $V$ and suppose that $Q$ is nondegenerate. Denote by $Q_U$ the restriction of $Q$ to $U$. Then :
@@ -183,7 +183,7 @@ A quadratic form is \emph{hyperbolic} if it is equivalent to the form $XY$.
 An hyperbolic quadratic form represents all elements of $R$.
 \end{lemma}
 \begin{proof}
-\leanok 
+\leanok
 \uses{lem:represents_iff}
 By Lemma \ref{lem:represents_iff}, it suffices to prove this for the quadratic form $XY$, which holds since for each $r \in R$, we have $XY(r, 1) = 0$.
 \end{proof}
@@ -200,7 +200,7 @@ Let $K$ be a field. If a quadratic form $Q$ on an $K$-vector space $V$ represent
 \uses{lem:represents_of_hyperbolic, prop:ortho_compl_properties}
 Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = z - 1/2 \cdot(z\cdot z)x$ is isotropic and $x \cdot y = 1$.
 The restriction of $Q$ to the submodule $U := Kx \oplus Ky$ is the desired hyperbolic form $H$. Take $Q'$ to be the restriction of $Q'$ to the orthogonal complement of $U$; then $Q$ is equivalent to $H + Q'$ by Proposition \ref{prop:ortho_compl_properties}(iv).
-Since $H$ represents all elements of $K$ by Lemma \ref{lem:represents_of_hyperbolic}, so does $Q = H + Q'$. 
+Since $H$ represents all elements of $K$ by Lemma \ref{lem:represents_of_hyperbolic}, so does $Q = H + Q'$.
 \end{proof}
 
 \begin{corollary}\label{cor:represents_iff_sub_sub}
@@ -241,7 +241,7 @@ Note that \mathlib contains \code{QuadraticForm.discr}, as an element of $\Q_p$.
 
 \begin{definition}\label{def:HM_inv}
 \uses{def:Hilbert_symbol}
-\lean{QuadraticForm.hasseMinkoskiInv}
+\lean{QuadraticForm.hasseMinkowskiInv}
 \leanok
 Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p$. Take a diagonal quadratic form $a_1X_1^2 + \cdots + a_nX_n^2$ which is equivalent to $f$; then the \emph{Hasse--Minkowski invariant} of $f$ is the element
 \[ \epsilon(f) := \prod_{i < j}(a_i, a_j).\]
@@ -249,7 +249,7 @@ Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p
 
 \begin{lemma}\label{lem:HM_inv_well_defined}
 \uses{def:HM_inv, thm:exists_chain}
-\lean{QuadraticForm.hasseMinkoskiInv.eq_of_equivalent}
+\lean{QuadraticForm.hasseMinkowskiInv.eq_of_equivalent}
 \leanok
 The value $\epsilon(f)$ does not depend on the choice of diagonal quadratic form equivalent to $f$.
 \end{lemma}
@@ -271,7 +271,7 @@ The result follows by combining $a_1 = a_1'$ and the induction hypothesis applie
 \iffalse
 \begin{lemma}\label{lem:HM_inv_pm_one}
 \uses{def:HM_inv}
-\lean{QuadraticForm.hasseMinkoskiInv.eq_one_or_neg_one}
+\lean{QuadraticForm.hasseMinkowskiInv.eq_one_or_neg_one}
 \leanok
 For every quadratic form $f$, we have $\epsilon(f) = \pm 1$.
 \end{lemma}
@@ -283,7 +283,7 @@ Each term in the product is equal to $\pm 1$.
 \begin{lemma}\label{lem:represents_zero_iff_rk_3}
 \lean{QuadraticForm.represents_zero_iff_of_rank_three}
 \leanok
-\uses{lem:HM_inv_well_defined}
+\uses{lem:HM_inv_well_defined, thm:bilinear}
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $3$ over $k$. Then $f$ represents $0$ if and only if $(-1, -d(f)) = \epsilon(f)$.
 \end{lemma}
 
@@ -306,7 +306,8 @@ or equivalently, $(-1, -d(f)) = \epsilon(f)$.
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $2$ over $k$, and let $a \in k^\times / {k^\times}^2$. Then $f$ represents $a$ if and only if $(a, -d(f)) = \epsilon(f)$.
 \end{lemma}
 \begin{proof}
-Up to equivalence, we may assume $f = X^2 + bY^2$ for some $b \in k^\times$. By Corollary \ref{cor:prod_isotropic_iff}, $f$ represents $a$ if and only if $f_a := f \dotminus aZ^2$ represents $0$, which by Lemma \ref{lem:represents_zero_iff_rk_3} is equivalent to $(-1, -d(f_a)) = \epsilon(f_a)$.
+\leanok
+Up to equivalence, we may assume $f = X^2 + bY^2$ for some $b \in k^\times$. By Corollary \ref{cor:represents_iff_sub_sub}, $f$ represents $a$ if and only if $f_a := f \dotminus aZ^2$ represents $0$, which by Lemma \ref{lem:represents_zero_iff_rk_3} is equivalent to $(-1, -d(f_a)) = \epsilon(f_a)$.
 
 A computation shows that $d(f_a) = -a d(f)$ and $\epsilon(f_a) = (a, -d(f)) \epsilon (f)$. Combining this with Proposition \ref{prop:hilbert_symbol_properties}, we conclude the result.
 \end{proof}
