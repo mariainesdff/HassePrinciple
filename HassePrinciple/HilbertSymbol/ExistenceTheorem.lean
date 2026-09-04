@@ -398,7 +398,7 @@ private lemma square_approx [Nonempty I] :
           continuous_toFun := by continuity
           continuous_invFun := by continuity }
       rw [← Homeomorph.isOpen_preimage f]
-      simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_setOf_eq, val_mul,
+      simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
         val_mk0, f]
       have : xp p ≠ 0 := xp_ne_zero p
       field_simp [this]
@@ -411,13 +411,13 @@ private lemma square_approx [Nonempty I] :
         refine ⟨Units.mk0 b b_ne_zero, by aesop⟩
       simp_rw [this]
       exact OpenSubgroup.isOpen (Padic.unitSquares p)
-    · simp only [Set.prod, Set.mem_setOf_eq, Set.mem_pi, Set.mem_univ, forall_const,
+    · simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
         Subtype.forall] at hs
-      simp only [Set.mem_setOf_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
+      simp only [Set.mem_ofPred_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
         true_and]
       exact fun _ h ↦ Set.mem_preimage.mp h
   have hUnonempty : U.Nonempty := by
-    simp only [Set.prod, Set.mem_setOf_eq, Set.mem_pi, Set.mem_univ, forall_const,
+    simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
       Subtype.forall, U]
     refine ⟨(Units.mk0 xr xr_ne_zero, fun p ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
   --Any rational point in U satisfies the desired properties.
@@ -425,7 +425,7 @@ private lemma square_approx [Nonempty I] :
   simp only [U] at hz
   simp only [Rat.finiteEmbedding'', algebraMap] at hy
   rw [← hy] at hz
-  simp only [Set.prod, Set.mem_setOf_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall,
+  simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall,
     Units.coe_map, MonoidHom.coe_coe, eq_ratCast] at hz
   refine ⟨x', fun p hp ↦ by simp [xp, hz.2 p hp], by simp; linarith⟩
 
