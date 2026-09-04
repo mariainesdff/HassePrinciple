@@ -128,7 +128,7 @@ lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
     hasseMinkoskiInv
       ((nondegenerate_associated_iff.mpr
         (nondegenerate_baseChange (A := A) (nondegenerate_weightedSumSquares w))).1) =
-      hilbertSym (algebraMap R A (w ⟨0, by omega⟩)) ( algebraMap R A (w ⟨1, by omega⟩)) := by
+      hilbertSym (algebraMap R A (w ⟨0, by omega⟩)) (algebraMap R A (w ⟨1, by omega⟩)) := by
   have h2 : finrank A (A ⊗[R] (Fin 2 → R)) = 2 := by simp
   rw [hasseMinkoskiInv.eq_of_equivalent_weightedSumSquares
     (w := ![Units.map (algebraMap R A) (w ⟨0, by omega⟩),
