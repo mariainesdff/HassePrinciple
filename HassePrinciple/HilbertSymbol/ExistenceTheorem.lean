@@ -38,7 +38,8 @@ private lemma necessary_cond (x : ℚˣ)
     (∀ p : Primes, ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
     ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i :=
   ⟨fun i ↦ by
-    simp only [← h i, eventually_cofinite]; exact almost_all_one x (mk0 (a i) (by simp [ha])),
+    simp only [← h i, eventually_cofinite]
+    exact eventually_one.almost_all_one x (mk0 (a i) (by simp [ha])),
     fun i ↦ by simp only [← h i]; exact prod_eq_one x (mk0 (a i) (by simp [ha])),
     fun p ↦ ⟨x, by simp [h]⟩, x, by simp [h]⟩
 
@@ -73,7 +74,7 @@ lemma all_but_one_places_suffice (q : Primes) (x : ℚˣ)
     · apply hprod.resolve_right
       rw [finprod_cond_ne _ _ (h1 i), ← ne_eq, prod_ne_zero_iff]
       grind
-    · exact almost_all_one x (afun i)
+    · exact eventually_one.almost_all_one x (afun i)
   · exact (h4 i).1 p hpq
 
 variable [Finite I]
