@@ -380,13 +380,21 @@ private lemma square_approx [Nonempty I] :
   have xr_ne_zero := xr_ne_zero hereal h3
   --The rationals are dense in the product of the reals and the p-adics for p ∈ S, so
   --every nonempty open set contains a rational number.
-  have approx := dense_iff_inter_open.mp (Rat.approximation'' (S a))
+  have approx := (IsDenseEmbedding.subtype (Rat.approximation (S a)) IsUnit).dense
+  rw [DenseRange, dense_iff_inter_open] at approx
   --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝ
   --and y_p/xp is a square in ℚ_[p] for all p in S.
-  set U : Set (ℝˣ × Π p : S a, ℚ_[p]ˣ) := Set.prod {x : ℝˣ | 0 < x.val / xr}
-    ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
-  have hUopen : IsOpen U := by
-    simp only [isOpen_prod_iff, U]
+  have :  { x // x ∈ closure (Rat.finiteEmbedding (S a) '' {x | IsUnit x}) } =
+      (ℝˣ × Π p : S a, ℚ_[p]ˣ) := by
+    sorry
+  set U' := Set.prod {x : ℝˣ | 0 < x.val / xr}
+      ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
+  set U : Set { x // x ∈ closure (Rat.finiteEmbedding (S a) '' {x | IsUnit x}) } := by
+    rw [this]
+    exact Set.prod {x : ℝˣ | 0 < x.val / xr} ((Set.univ (α := S a)).pi fun p ↦
+      {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
+  have hUopen' : IsOpen U' := by
+    simp only [U', isOpen_prod_iff]
     refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
       isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
     · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
@@ -416,19 +424,22 @@ private lemma square_approx [Nonempty I] :
       simp only [Set.mem_ofPred_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
         true_and]
       exact fun _ h ↦ Set.mem_preimage.mp h
-  have hUnonempty : U.Nonempty := by
+  have hUnonempty' : U'.Nonempty := by
     simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-      Subtype.forall, U]
+      Subtype.forall, U']
     refine ⟨(Units.mk0 xr xr_ne_zero, fun p ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
   --Any rational point in U satisfies the desired properties.
+  have hUopen : IsOpen U := sorry
+  have hUnonempty : U.Nonempty := sorry
   obtain ⟨z, hz, x', hy⟩ := approx U hUopen hUnonempty
   simp only [U] at hz
-  simp only [Rat.finiteEmbedding'', algebraMap] at hy
+  simp only [IsDenseEmbedding.subtypeEmb, Rat.finiteEmbedding, algebraMap] at hy
   rw [← hy] at hz
-  simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall,
-    Units.coe_map, MonoidHom.coe_coe, eq_ratCast] at hz
-  refine ⟨x', fun p hp ↦ by simp [xp, hz.2 p hp], by simp; linarith⟩
-
+  simp only [eq_mpr_eq_cast, eq_ratCast] at hz
+  set x'' : ℚˣ := IsUnit.unit x'.2
+  refine ⟨x'', fun p hp ↦ ?_, ?_⟩
+  · sorry
+  · sorry
 
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
