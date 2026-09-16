@@ -6,7 +6,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 module
 
 public import Mathlib.NumberTheory.Padics.PadicNumbers
-public import Mathlib.NumberTheory.PrimeCounting
+--public import Mathlib.NumberTheory.PrimeCounting
 
 /-! # Approximation theorem. -/
 
@@ -18,8 +18,7 @@ noncomputable section
 namespace Rat
 
 
-/-- The instance that the nth prime number is prime. -/
-local instance fact_prime_nth_prime (p : Nat.Primes) : Fact (Nat.Prime p) :=
+local instance (p : Nat.Primes) : Fact (Nat.Prime p) :=
   fact_iff.mpr p.2
 
 open Padic
@@ -31,19 +30,17 @@ theorem approximation' {S : Finset Nat.Primes} {ε : ℝ} (hε : ε > 0)
     ∃ x : ℚ, ‖y.1 - x‖ + Finset.sum (Finset.attach S) (fun n ↦ ‖y.2 n - x‖) < ε := by
   sorry
 
--- /-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
--- (which includes ℝ). -/
--- abbrev finiteEmbedding (S : Finset Nat.Primes) (x : ℚ) : ℝ × (Π p : S, ℚ_[p]) :=
---   ⟨algebraMap ℚ ℝ x, fun p ↦ (algebraMap ℚ ℚ_[p]) x⟩
+/-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
+(which includes ℝ). -/
+abbrev finiteEmbedding (S : Finset Nat.Primes) (x : ℚ) : ℝ × (Π p : S, ℚ_[p]) :=
+  ⟨algebraMap ℚ ℝ x, fun p ↦ (algebraMap ℚ ℚ_[p]) x⟩
 
--- /-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
--- theorem approximation (S : Finset Nat.Primes) :
---     Dense (Set.range (finiteEmbedding S)) := by
---   sorry
+/-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
+theorem approximation (S : Finset Nat.Primes) :
+    Dense (Set.range (finiteEmbedding S)) := by
+  sorry
 
 
--- -- maybe we need this now
---TODO: remove the ''
 /-- The finite embedding of ℚˣ into the product of the completions of ℚ at a finite set of places
 (which includes ℝ). -/
 abbrev finiteEmbedding'' (S : Finset Nat.Primes) (x : ℚˣ) : ℝˣ × Π p : S, ℚ_[p]ˣ :=
@@ -52,7 +49,47 @@ abbrev finiteEmbedding'' (S : Finset Nat.Primes) (x : ℚˣ) : ℝˣ × Π p : S
 /-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
 theorem approximation'' (S : Finset Nat.Primes) :
     Dense (Set.range (finiteEmbedding'' S)) := by
+  have := approximation S
+  simp only [Dense, closure, Set.range, finiteEmbedding, eq_ratCast, Set.mem_sInter,
+    Set.mem_ofPred_eq, and_imp, Prod.forall, finiteEmbedding''] at this ⊢
+  intro a b T hclosed
+  specialize this a.val (fun p ↦ b p)
+
+
+
+
+
+
+
+
+
+  -- set f := fun x : T ↦ ((x.val.1.val, fun p ↦ (x.val.2 p).val) : ℝ × (Π p : S, ℚ_[p]))
+  -- set T' : Set (ℝ × ((p : S) → ℚ_[p])) :=
+  --   closure (Set.range f)
+  -- specialize this T'
+  -- have later : T' ∈ {t | IsClosed t ∧ Set.range (finiteEmbedding S) ⊆ t} := sorry
+  -- specialize this later
+
+
+
+
+
   sorry
+  --
+  -- have hclosed' : IsClosed T' := by simp [T']
+  -- specialize this hclosed'
+  -- have hsset' : Set.range (finiteEmbedding S) ⊆ T' := sorry
+  -- specialize this hsset'
+  -- simp only [closure_eq_self_union_frontier, Set.range, Subtype.exists, exists_prop, Prod.exists,
+  --   Set.mem_union, Set.mem_ofPred_eq, Prod.mk.injEq, T', f] at this
+  -- rcases this with self | front
+  -- · obtain ⟨a',b',h,h',h''⟩ := self
+  --   rw_mod_cast [← h']
+  --   have : b = fun p ↦ b p := by simp
+  --   rw_mod_cast [this]
+
+  --   sorry
+  -- · sorry
 
 
 
