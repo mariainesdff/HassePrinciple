@@ -433,21 +433,6 @@ theorem isotropic_iff_weightedSumSquares_squarefree_units_of_nondegenerate {V : 
 
 end NormalizedWeightedSumSquares
 
--- Condition (ii) seems annoying to state, can we avoid it?
-lemma represents_iff_sub_isotropic {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) (r : Kˣ) :
-    Q.represents r ↔
-      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
-
-lemma prod_isotropic_iff {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
-    (hQ' : Q'.Nondegenerate) :
-    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ, Q.represents r ∧ Q'.represents r := sorry
-
-lemma prod_isotropic_iff' {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
-    (hQ' : Q'.Nondegenerate) :
-    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ,
-      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic ∧
-      (Q'.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
-
 end Field
 
 section Hyperbolic
@@ -736,6 +721,41 @@ lemma represents_of_isotropic_of_nondegenerate (hQ : Q.Isotropic) (hQ' : Q.Nonde
   simp only [represents, ne_eq, QuadraticMap.prod_apply] at hr ⊢
   obtain ⟨x, hxr, hx0⟩ := hr
   exact ⟨(x, 0), by simp [hxr], by simp [hx0]⟩
+
+-- Condition (ii) seems annoying to state, can we avoid it?
+lemma represents_iff_sub_isotropic {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) (r : Kˣ) :
+    Q.represents r ↔
+      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
+
+variable {W : Type*} [AddCommGroup W] [Module K W]
+
+private theorem represent_of_ne_zero (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
+    (hQ' : Q'.Nondegenerate) (hrep : represents (Q.prod (-Q')) 0) {v : V × W}
+    (hv : Q v.1 + -Q' v.2 = 0) (h0 : ¬v.1 = 0) :
+    ∃ r, represents Q ↑r ∧ represents Q' ↑r := by
+  by_cases h1 : Q v.1 = 0
+  · obtain ⟨w, hw⟩ : ∃ w : W, Q' w ≠ 0 := sorry
+    exact ⟨Units.mk0 (Q' w) hw, represents_of_isotropic_of_nondegenerate
+      (represents_zero_iff_isotropic.mp ⟨v.1, h1, h0⟩) hQ _, ⟨w, by simp, by aesop⟩⟩
+  · exact ⟨Units.mk0 (Q v.1) h1, ⟨v.1, rfl, by aesop⟩, ⟨v.2, by grind [Units.val_mk0], by aesop⟩⟩
+
+lemma prod_isotropic_iff {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
+    (hQ' : Q'.Nondegenerate) :
+    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ, Q.represents r ∧ Q'.represents r := by
+  rw [← represents_zero_iff_isotropic]
+  refine ⟨fun ⟨v, hv, hv0⟩ ↦ ?_,
+    fun ⟨r, ⟨v, hvr, hv0⟩, w, hwr, hw0⟩ ↦ ⟨(v, w), by simp [hvr, hwr], by simp [hv0, hw0]⟩⟩
+  simp only [QuadraticMap.prod_apply, _root_.neg_apply] at hv
+  simp only [ne_eq, Prod.ext_iff, Prod.fst_zero, Prod.snd_zero, not_and_or] at hv0
+  rcases hv0 with h0 | h0
+  · sorry
+  · sorry
+
+lemma prod_isotropic_iff' {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
+    (hQ' : Q'.Nondegenerate) :
+    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ,
+      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic ∧
+      (Q'.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
 
 end Finite
 
