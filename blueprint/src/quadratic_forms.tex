@@ -241,7 +241,7 @@ Note that \mathlib contains \code{QuadraticForm.discr}, as an element of $\Q_p$.
 
 \begin{definition}\label{def:HM_inv}
 \uses{def:Hilbert_symbol}
-\lean{QuadraticForm.hasseMinkoskiInv}
+\lean{QuadraticForm.hasseMinkowskiInv}
 \leanok
 Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p$. Take a diagonal quadratic form $a_1X_1^2 + \cdots + a_nX_n^2$ which is equivalent to $f$; then the \emph{Hasse--Minkowski invariant} of $f$ is the element
 \[ \epsilon(f) := \prod_{i < j}(a_i, a_j).\]
@@ -249,7 +249,7 @@ Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p
 
 \begin{lemma}\label{lem:HM_inv_well_defined}
 \uses{def:HM_inv, thm:exists_chain}
-\lean{QuadraticForm.hasseMinkoskiInv.eq_of_equivalent}
+\lean{QuadraticForm.hasseMinkowskiInv.eq_of_equivalent}
 \leanok
 The value $\epsilon(f)$ does not depend on the choice of diagonal quadratic form equivalent to $f$.
 \end{lemma}
@@ -271,7 +271,7 @@ The result follows by combining $a_1 = a_1'$ and the induction hypothesis applie
 \iffalse
 \begin{lemma}\label{lem:HM_inv_pm_one}
 \uses{def:HM_inv}
-\lean{QuadraticForm.hasseMinkoskiInv.eq_one_or_neg_one}
+\lean{QuadraticForm.hasseMinkowskiInv.eq_one_or_neg_one}
 \leanok
 For every quadratic form $f$, we have $\epsilon(f) = \pm 1$.
 \end{lemma}
@@ -306,7 +306,8 @@ or equivalently, $(-1, -d(f)) = \epsilon(f)$.
 Let $k$ be either $\Q_p$ or $\R$. Let $f$ be a quadratic form of rank $2$ over $k$, and let $a \in k^\times / {k^\times}^2$. Then $f$ represents $a$ if and only if $(a, -d(f)) = \epsilon(f)$.
 \end{lemma}
 \begin{proof}
-Up to equivalence, we may assume $f = X^2 + bY^2$ for some $b \in k^\times$. By Corollary \ref{cor:prod_isotropic_iff}, $f$ represents $a$ if and only if $f_a := f \dotminus aZ^2$ represents $0$, which by Lemma \ref{lem:represents_zero_iff_rk_3} is equivalent to $(-1, -d(f_a)) = \epsilon(f_a)$.
+\leanok
+Up to equivalence, we may assume $f = X^2 + bY^2$ for some $b \in k^\times$. By Corollary \ref{cor:represents_iff_sub_sub}, $f$ represents $a$ if and only if $f_a := f \dotminus aZ^2$ represents $0$, which by Lemma \ref{lem:represents_zero_iff_rk_3} is equivalent to $(-1, -d(f_a)) = \epsilon(f_a)$.
 
 A computation shows that $d(f_a) = -a d(f)$ and $\epsilon(f_a) = (a, -d(f)) \epsilon (f)$. Combining this with Proposition \ref{prop:hilbert_symbol_properties}, we conclude the result.
 \end{proof}
