@@ -33,12 +33,10 @@ theorem prodUnits_isOpenEmbedding {M N : Type*} [Monoid M] [TopologicalSpace M]
     (prodUnits M N).injective
     (prodUnits M N).toHomeomorph.isOpenMap
 
-instance (M N : Type*) [Group M] [TopologicalSpace M] [IsTopologicalGroup M] [hM : IsOpenUnits M]
-    [Group N] [TopologicalSpace N] [IsTopologicalGroup N] [hN : IsOpenUnits N] :
-    IsOpenUnits (M × N) := by
+instance prod_units_isOpenUnits {M N : Type*} [Monoid M] [TopologicalSpace M] [Monoid N]
+    [TopologicalSpace N] [hM : IsOpenUnits M] [hN : IsOpenUnits N] :  IsOpenUnits (M × N) := by
   rw [isOpenUnits_iff] at *
-  exact (Topology.IsOpenEmbedding.of_comp_iff _ (hM.prodMap hN)).mpr
-    prodUnits_isOpenEmbedding
+  exact (Topology.IsOpenEmbedding.of_comp_iff _ (hM.prodMap hN)).mpr prodUnits_isOpenEmbedding
 
 theorem piUnits_isOpenEmbedding {I : Type*} {f : I → Type _}
     [(i : I) → Monoid (f i)] [(i : I) → TopologicalSpace (f i)] :
@@ -48,7 +46,7 @@ theorem piUnits_isOpenEmbedding {I : Type*} {f : I → Type _}
     (ContinuousMulEquiv.injective piUnits)
     (piUnits (M := f)).toHomeomorph.isOpenMap
 
-instance {I : Type*} [Finite I] {f : I → Type _} [(i : I) → Monoid (f i)]
+instance pi_units_isOpenUnits {I : Type*} [Finite I] {f : I → Type _} [(i : I) → Monoid (f i)]
     [(i : I) → TopologicalSpace (f i)] [(i : I) → IsOpenUnits (f i)] :
       IsOpenUnits ((i : I) → f i) := by
   simp_rw [isOpenUnits_iff] at *
