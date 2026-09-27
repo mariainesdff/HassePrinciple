@@ -7,6 +7,7 @@ module
 
 public import Mathlib.NumberTheory.Padics.PadicNumbers
 public import HassePrinciple.ForMathlib.Topology.Algebra.Group.Units
+public import HassePrinciple.ForMathlib.Topology.Algebra.IsOpenUnits
 
 /-! # Approximation theorem. -/
 
@@ -42,14 +43,9 @@ theorem approximation (S : Finset Nat.Primes) :
     Dense (Set.range (finiteEmbedding S)) := by
   sorry
 
-local instance : IsOpenUnits ℝ := instIsOpenUnitsOfContinuousInv₀OfT1Space
-local instance (S : Finset Nat.Primes) : IsOpenUnits ((p : ↥S) → ℚ_[p]) := pi_units_isOpenUnits
-local instance (S : Finset Nat.Primes) : IsOpenUnits (ℝ × ((p : ↥S) → ℚ_[p])) :=
-  prod_units_isOpenUnits
-
 theorem approximation_units (S : Finset Nat.Primes) :
     Dense (Set.range (Units.map (finiteEmbedding S).toMonoidHom)) := by
-  have : IsOpenUnits (ℝ × ((p : ↥S) → ℚ_[p])) := by infer_instance
+  have : IsOpenUnits (ℝ × ((p : ↥S) → ℚ_[p])) := inferInstance
   rw [isOpenUnits_iff] at this
   have hd := approximation S
   simp only [Dense, RingHom.coe_mk, eq_ratCast, MonoidHom.coe_mk, OneHom.coe_mk,

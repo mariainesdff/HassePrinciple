@@ -381,54 +381,70 @@ private lemma square_approx [Nonempty I] :
   have xr_ne_zero := xr_ne_zero hereal h3
   --The rationals are dense in the product of the reals and the p-adics for p ∈ S, so
   --every nonempty open set contains a rational number.
-  have approx := dense_iff_inter_open.mp (Rat.approximation'' (S a))
-  --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝ
-  --and y_p/xp is a square in ℚ_[p] for all p in S.
-  set U : Set (ℝˣ × Π p : S a, ℚ_[p]ˣ) := Set.prod {x : ℝˣ | 0 < x.val / xr}
-    ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
-  have hUopen : IsOpen U := by
-    simp only [isOpen_prod_iff, U]
-    refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
-      isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
-    · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
-      let f : ℚ_[p]ˣ ≃ₜ ℚ_[p]ˣ :=
-        { toFun := fun x ↦ x * Units.mk0 (xp p) (xp_ne_zero p)
-          invFun := fun x ↦ x / Units.mk0 (xp p) (xp_ne_zero p)
-          left_inv := fun x ↦ by simp [div_eq_mul_inv]
-          right_inv := fun x ↦ by simp [div_eq_mul_inv]
-          continuous_toFun := by continuity
-          continuous_invFun := by continuity }
-      rw [← Homeomorph.isOpen_preimage f]
-      simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
-        val_mk0, f]
-      have : xp p ≠ 0 := xp_ne_zero p
-      field_simp [this]
-      have (a : ℚ_[p]ˣ) : IsSquare (a : ℚ_[p]) ↔ IsSquare a := by
-        refine ⟨fun  ⟨b, hb⟩ ↦ ?_, fun ⟨b,hb⟩ ↦ ⟨b.val, by simp [hb]⟩⟩
-        have b_ne_zero : b ≠ 0 := by
-          intro hb0
-          have : (a : ℚ_[p]) = 0 := by aesop
-          exact (Units.ne_zero a this)
-        refine ⟨Units.mk0 b b_ne_zero, by aesop⟩
-      simp_rw [this]
-      exact OpenSubgroup.isOpen (Padic.unitSquares p)
-    · simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-        Subtype.forall] at hs
-      simp only [Set.mem_ofPred_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
-        true_and]
-      exact fun _ h ↦ Set.mem_preimage.mp h
-  have hUnonempty : U.Nonempty := by
-    simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-      Subtype.forall, U]
-    refine ⟨(Units.mk0 xr xr_ne_zero, fun p ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
+  have approx := dense_iff_inter_open.mp (Rat.approximation_units (S a))
+  --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝˣ
+  --and y_p/xp is a square in ℚ_[p]ˣ for all p in S.
+  set U : Set (ℝ × Π p : S a, ℚ_[p])ˣ :=
+    (MulEquiv.prodUnits.symm ∘ (fun x ↦ ⟨x.1, MulEquiv.piUnits.symm x.2⟩)) '' Set.prod {x : ℝˣ | 0 < x.val / xr}
+      ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
+
+  have hUopen : IsOpen U := by sorry
+    -- simp [isOpen_prod_iff, f, U, U']
+    -- refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
+    --   isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
+    -- · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
+    --   let f : ℚ_[p]ˣ ≃ₜ ℚ_[p]ˣ :=
+    --     { toFun := fun x ↦ x * Units.mk0 (xp p) (xp_ne_zero p)
+    --       invFun := fun x ↦ x / Units.mk0 (xp p) (xp_ne_zero p)
+    --       left_inv := fun x ↦ by simp [div_eq_mul_inv]
+    --       right_inv := fun x ↦ by simp [div_eq_mul_inv]
+    --       continuous_toFun := by continuity
+    --       continuous_invFun := by continuity }
+    --   rw [← Homeomorph.isOpen_preimage f]
+    --   simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
+    --     val_mk0, f]
+    --   have : xp p ≠ 0 := xp_ne_zero p
+    --   field_simp [this]
+    --   have (a : ℚ_[p]ˣ) : IsSquare (a : ℚ_[p]) ↔ IsSquare a := by
+    --     refine ⟨fun  ⟨b, hb⟩ ↦ ?_, fun ⟨b,hb⟩ ↦ ⟨b.val, by simp [hb]⟩⟩
+    --     have b_ne_zero : b ≠ 0 := by
+    --       intro hb0
+    --       have : (a : ℚ_[p]) = 0 := by aesop
+    --       exact (Units.ne_zero a this)
+    --     refine ⟨Units.mk0 b b_ne_zero, by aesop⟩
+    --   simp_rw [this]
+    --   exact OpenSubgroup.isOpen (Padic.unitSquares p)
+    -- · simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
+    --     Subtype.forall] at hs
+    --   simp only [Set.mem_ofPred_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
+    --     true_and]
+    --   exact fun _ h ↦ Set.mem_preimage.mp h
+  have hUnonempty : U.Nonempty := by sorry
+    -- simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
+    --   Subtype.forall, U]
+    -- refine ⟨(Units.mk0 xr xr_ne_zero, fun p ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
   --Any rational point in U satisfies the desired properties.
-  obtain ⟨z, hz, x', hy⟩ := approx U hUopen hUnonempty
-  simp only [U] at hz
-  simp only [Rat.finiteEmbedding'', algebraMap] at hy
-  rw [← hy] at hz
-  simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall,
-    Units.coe_map, MonoidHom.coe_coe, eq_ratCast] at hz
-  refine ⟨x', fun p hp ↦ by simp [xp, hz.2 p hp], by simp; linarith⟩
+  obtain ⟨z, ⟨z', ⟨hz1, hz2⟩⟩, x', hy⟩ := approx U hUopen hUnonempty
+  simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
+    Subtype.forall] at hz1
+  obtain ⟨hz1real, hz1padic⟩ := hz1
+  use x'
+  constructor
+  · intro p hp
+    specialize hz1padic p hp
+    simp only [comp_apply, f] at hz2
+    have : (x'.val : ℚ_[p]) = z'.2 ⟨p, hp⟩ := by
+      rw [← hz2] at hy
+      simp only [eq_ratCast] at hy
+
+
+      sorry
+    rw [this]
+    exact hz1padic
+  · have : (x'.val : ℝ) = z'.1 := by
+      sorry
+    simp [this]
+    linarith
 
 
 include ha hep hereal in
@@ -529,7 +545,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Nonempty I] :
     have ⟨xeta, hxeta⟩ := existence_disjoint ha hetap1 heta1 heta2 heta3 etadisjoint_ST
       etainfty_not_mem_T
     exact ⟨xeta * x', fun i ↦ ⟨fun p ↦ by simp [mul_left_eq, hxeta i, etap]; grind only,
-      by simp [mul_left_eq, hxeta i, etainfty_not_mem_T i, hilbertSym_agree_on_infty i]⟩⟩
+      by simp [hxeta i, etainfty_not_mem_T i, hilbertSym_agree_on_infty i]⟩⟩
 
 end Integer
 

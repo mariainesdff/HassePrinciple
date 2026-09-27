@@ -7,12 +7,22 @@ module
 
 public import Mathlib.Topology.Algebra.IsOpenUnits
 
+/-!
+# Topological properties of units
+
+This file contains results about units in topological monoids, namely the isomorphism of topological
+groups between the units of a product of two groups and the product of the units and the facts that
+the units of a (finite or infinite) product of topological monoids embeds to an open in the prodict.
+-/
+
 @[expose] public section
 
 open Topology ContinuousMulEquiv
 
 namespace ContinuousMulEquiv
 
+/-- The isomorphism of topological monoids between the units of a product of two monoids and
+the product of the units. -/
 def prodUnits (M N : Type*) [Monoid M] [TopologicalSpace M]
     [Monoid N] [TopologicalSpace N] :
     (M × N)ˣ ≃ₜ* Mˣ × Nˣ where
@@ -25,33 +35,18 @@ def prodUnits (M N : Type*) [Monoid M] [TopologicalSpace M]
       continuous_prodMk.mpr ⟨Units.continuous_coe_inv.comp continuous_fst,
         Units.continuous_coe_inv.comp continuous_snd⟩⟩
 
+/-- Given two topological monoids M and N, (M × N)ˣ → M × N is an open embedding. -/
 theorem prodUnits_isOpenEmbedding {M N : Type*} [Monoid M] [TopologicalSpace M]
     [Monoid N] [TopologicalSpace N] :
-    IsOpenEmbedding (prodUnits M N) := by
-  exact IsOpenEmbedding.of_continuous_injective_isOpenMap
-    (map_continuous (prodUnits M N))
-    (prodUnits M N).injective
-    (prodUnits M N).toHomeomorph.isOpenMap
+    IsOpenEmbedding (prodUnits M N) :=
+  IsOpenEmbedding.of_continuous_injective_isOpenMap
+    (map_continuous (prodUnits M N)) (prodUnits M N).injective (prodUnits M N).isOpenMap
 
-instance prod_units_isOpenUnits {M N : Type*} [Monoid M] [TopologicalSpace M] [Monoid N]
-    [TopologicalSpace N] [hM : IsOpenUnits M] [hN : IsOpenUnits N] :  IsOpenUnits (M × N) := by
-  rw [isOpenUnits_iff] at *
-  exact (Topology.IsOpenEmbedding.of_comp_iff _ (hM.prodMap hN)).mpr prodUnits_isOpenEmbedding
-
+/-- Given a family of topological monoids M_i, (Π M_i)ˣ → Π M_i is an open embedding. -/
 theorem piUnits_isOpenEmbedding {I : Type*} {f : I → Type _}
     [(i : I) → Monoid (f i)] [(i : I) → TopologicalSpace (f i)] :
-    IsOpenEmbedding (piUnits (M := f)) := by
-  refine IsOpenEmbedding.of_continuous_injective_isOpenMap
-    (map_continuous piUnits)
-    (ContinuousMulEquiv.injective piUnits)
-    (piUnits (M := f)).toHomeomorph.isOpenMap
-
-instance pi_units_isOpenUnits {I : Type*} [Finite I] {f : I → Type _} [(i : I) → Monoid (f i)]
-    [(i : I) → TopologicalSpace (f i)] [(i : I) → IsOpenUnits (f i)] :
-      IsOpenUnits ((i : I) → f i) := by
-  simp_rw [isOpenUnits_iff] at *
-  expose_names
-  exact (Topology.IsOpenEmbedding.of_comp_iff _ (Topology.IsOpenEmbedding.piMap inst_3)).mpr
-    piUnits_isOpenEmbedding
+    IsOpenEmbedding (piUnits (M := f)) :=
+  IsOpenEmbedding.of_continuous_injective_isOpenMap
+    (map_continuous piUnits) (ContinuousMulEquiv.injective piUnits) piUnits.isOpenMap
 
 end ContinuousMulEquiv
