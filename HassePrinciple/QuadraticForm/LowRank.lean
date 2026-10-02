@@ -7,6 +7,7 @@ module
 
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.QuadraticForm.Basic
+public import Mathlib.Algebra.CharP.Invertible
 
 /-! # Quadratic forms of low rank -/
 
@@ -59,3 +60,4 @@ lemma weightedSumSquares_isotropic_iff_hilbertSym_eq_one {R : Type*} [Field R] (
 end Rank3
 
 end QuadraticForm
+#min_imports

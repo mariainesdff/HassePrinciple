@@ -5,11 +5,11 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.Padics.Lemmas
 public import HassePrinciple.Padics.Legendre
+public import HassePrinciple.Padics.Lemmas
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
-public import Mathlib.NumberTheory.PrimeCounting
-public import Mathlib.NumberTheory.LSeries.PrimesInAP
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.RingTheory.UniqueFactorizationDomain.Nat
 
 /-! # The Hilbert symbol -/
 
@@ -427,8 +427,8 @@ lemma eq_one_of_valuation_zero {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
   simp [← Rat.intCast_eq_one_iff, padic_odd_eq hp2 ha hb, hva, hvb]
 
 /-- The Hilbert symbol of (numerator of a)*(denominator of a) and b is that of a and b. -/
-theorem num_mul_den (K : Type*) [Field K] [CharZero K] (a b : ℚˣ) :
-    hilbertSym (((a.1.num * a.1.den : ℤ) : ℚ) : K) b = hilbertSym (a : K) b := by
+theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a b : ℚ) :
+    hilbertSym (((a.num * a.den : ℤ) : ℚ) : K) b = hilbertSym (a : K) b := by
   set N := (a : ℚ).num with hN
   set D := (a : ℚ).den with hD
   calc
@@ -439,6 +439,25 @@ theorem num_mul_den (K : Type*) [Field K] [CharZero K] (a b : ℚˣ) :
         (cast_ne_zero.mpr (a : ℚ).den_ne_zero) one_ne_zero
     _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
 
+theorem num_mul_den_right {K : Type*} [Field K] [CharZero K] (a b : ℚ) :
+     hilbertSym (a : K) ((b.num * b.den : ℤ) : ℚ) = hilbertSym (a : K) b := by
+  rw [comm, num_mul_den_left, comm]
+
+theorem num_mul_den_left' {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
+    hilbertSym ((a.num * a.den : ℤ) : K) b = hilbertSym (a : K) b := by
+  set N := (a : ℚ).num with hN
+  set D := (a : ℚ).den with hD
+  calc
+    _ = hilbertSym ((((N / D) * D ^ 2) : ℚ) : K) b := by
+      congr 1; push_cast; field_simp
+    _ = hilbertSym (((N / D) : ℚ) : K) b := by
+      simpa using mul_square_eq (b := (b : K)) (a' := D)
+        (cast_ne_zero.mpr (a : ℚ).den_ne_zero) one_ne_zero
+    _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
+
+theorem num_mul_den_right' {K : Type*} [Field K] [CharZero K] (a : K) (b : ℚ) :
+    hilbertSym (a : K) ((b.num * b.den : ℤ) : K) = hilbertSym (a : K) b := by
+  rw [comm, num_mul_den_left', comm]
 
 /-- Let a and b be rational units. Suppose given d either -1 or prime, the Hilbert symbol of a and d
 is 1 for all but finitely many primes. Then, for all but finitely many primes, the Hilbert symbol
@@ -541,7 +560,7 @@ theorem almost_all_one_left {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPri
   filter_upwards [sign_mul_num_den ha b, h_nat] with p hsignND hnatND
   have hsplitQ : ((N * D : ℤ) : ℚ) = ((sign (N * D) : ℤ) : ℚ) * ((N * D).natAbs : ℚ) := by
     rw [← cast_natCast (R := ℚ), ← Int.cast_mul, sign_mul_natAbs]
-  rw [comm, ← num_mul_den, hsplitQ, Rat.cast_mul, comm, right_mul_eq_of_eq_one hsignND, hnatND]
+  rw [← num_mul_den_right, hsplitQ, Rat.cast_mul, right_mul_eq_of_eq_one hsignND, hnatND]
 
 end eventually_one
 
