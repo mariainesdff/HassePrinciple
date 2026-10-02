@@ -5,14 +5,11 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
-public import HassePrinciple.ForMathlib.Topology.Algebra.Group.Units
-public import HassePrinciple.ForMathlib.Topology.Algebra.IsOpenUnits
+public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import HassePrinciple.Padics.Squares
-public import Mathlib.Topology.Algebra.IsOpenUnits
-public import Mathlib.Topology.Maps.Basic
+public import Mathlib.NumberTheory.LSeries.PrimesInAP
 
 /-!
 # Existence theorem
@@ -588,25 +585,9 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  have Ifin : Fintype I := Fintype.ofFinite I
-  let d := ∏ i, (a i).1.den
-  have hd : d ≠ 0 := by simp [d, Finset.prod_ne_zero_iff]
-  have heq (i : I) : ((a i).1 * d ^ 2).den = 1 := by
-    classical
-    simp only [cast_prod, d]
-    rw [Finset.prod_eq_mul_prod_sdiff_singleton i _ (by simp)]
-    simp only [mul_pow, pow_two ((a i).1.den : ℚ), ← mul_assoc, Rat.mul_den_eq_num]
-    norm_cast
-  simp_rw [Rat.den_eq_one_iff] at heq
-  set b : I → ℤ := fun i ↦ ((a i).1 * d ^ 2).num with hb
-  have hb0 (i : I) : ((a i).1 * d ^ 2).num ≠ 0 := by simp [hd]
-  have hp (p : Primes) (i : I) (x : ℚ_[p]) : hilbertSym x (a i) = hilbertSym x (b i : ℚ) := by
-    rw [hb, heq, Rat.cast_mul, Rat.cast_pow, hilbertSym.mul_right_square_eq (by simp [hd])]
-  have hr (i : I) (x : ℝ) : hilbertSym x (a i) = hilbertSym x (b i : ℚ) := by
-    rw [hb, heq, Rat.cast_mul, Rat.cast_pow, hilbertSym.mul_right_square_eq (by simp [hd])]
-  simp_rw [hp, hr]
-  exact exists_rat_with_finite_prescribed_hilbertSym_of_int hb0 hep hereal
-
+  simp_rw [← num_mul_den_right']
+  exact exists_rat_with_finite_prescribed_hilbertSym_of_int
+    (a := fun i ↦ ((a i).1.num * (a i).1.den : ℤ)) (fun _ ↦ by aesop) hep hereal
 
 theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Primes → ℤ} {er er' : ℤ}
     (hep : ∀ p : Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Primes, ep' p = 1 ∨ ep' p = -1)
