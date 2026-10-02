@@ -9,7 +9,6 @@ public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.QuadraticForm.Basic
 public import Mathlib.Algebra.CharP.Invertible
 
-
 /-! # Quadratic forms of low rank -/
 
 @[expose] public section
