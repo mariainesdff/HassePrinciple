@@ -7,8 +7,12 @@ module
 
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
+public import HassePrinciple.ForMathlib.Topology.Algebra.Group.Units
+public import HassePrinciple.ForMathlib.Topology.Algebra.IsOpenUnits
 public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import HassePrinciple.Padics.Squares
+public import Mathlib.Topology.Algebra.IsOpenUnits
+public import Mathlib.Topology.Maps.Basic
 
 /-!
 # Existence theorem
@@ -367,6 +371,48 @@ private lemma xr_ne_zero [Nonempty I] : xr h3 ≠ 0 := by
     simp only [← this] at h
     grind
 
+-- I did not find this in Mathlib, shall we PR it?
+private lemma isSquare_unit_iff {K : Type*} [Field K] (a : Kˣ) : IsSquare (a : K) ↔ IsSquare a :=
+  ⟨fun ⟨b, hb⟩ ↦ ⟨Units.mk0 b (fun hb0 ↦ Units.ne_zero a (by aesop : (a : K) = 0)), by aesop⟩,
+    fun ⟨b, hb⟩ ↦ ⟨b.val, by simp [hb]⟩⟩
+
+open ContinuousMulEquiv Topology
+
+private noncomputable def F {R : Finset Nat.Primes} :
+    (ℝ × ((p : R) → ℚ_[p]))ˣ ≃ₜ* ℝˣ × ((p : R) → ℚ_[p]ˣ) where
+  __ := ((MulEquiv.prodUnits :
+      (ℝ × ((p : R) → ℚ_[p]))ˣ ≃* ℝˣ × ((p : R) → ℚ_[p])ˣ)).trans
+    { toFun := fun x ↦ (x.1, piUnits x.2)
+      invFun := fun x ↦ (x.1, piUnits.symm x.2)
+      left_inv := fun x ↦ by simp
+      right_inv := fun x ↦ by simp
+      map_mul' := fun x y ↦ by simp }
+  continuous_toFun := by
+    simp only [MulEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe, MulEquiv.coe_trans,
+      MulEquiv.coe_mk, Equiv.coe_fn_mk]
+    exact Continuous.comp (continuous_prodMk.mpr
+      ⟨continuous_fst, Continuous.comp (map_continuous piUnits) continuous_snd⟩)
+        (Continuous.prodMk (Units.continuous_map continuous_fst)
+          (Units.continuous_map continuous_snd))
+  continuous_invFun := by
+    simp only [MulEquiv.toEquiv_eq_coe, Equiv.invFun_as_coe,
+      MulEquiv.coe_toEquiv_symm]
+    apply (Equiv.continuous_symm_iff _).mpr
+    simp only [MulEquiv.toEquiv_eq_coe, EquivLike.coe_coe, MulEquiv.coe_trans, MulEquiv.coe_mk,
+      Equiv.coe_fn_mk]
+    exact IsOpenMap.comp
+      (IsOpenMap.prodMap IsOpenMap.id (piUnits (M := fun p : R ↦ ℚ_[p])).isOpenMap)
+      (ContinuousMulEquiv.prodUnits ℝ ((p : R) → ℚ_[p])).isOpenMap
+
+private lemma open_in_units {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ))) :
+    IsOpen U ↔ IsOpen (Set.preimage (F (R := R)) U) := IsOpenEmbedding.isOpen_iff_preimage_isOpen
+      (IsOpenEmbedding.of_continuous_injective_isOpenMap (map_continuous F) F.injective F.isOpenMap)
+        (Set.subset_range_of_surjective (ContinuousMulEquiv.surjective F) U)
+
+private lemma mem_U {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ)))
+    (x : ℝˣ × ((p : R) → ℚ_[p]ˣ)) : F.symm x ∈ Set.preimage (F (R := R)) U ↔ x ∈ U := by
+  simp [Set.preimage]
+
 include hep hereal in
 /-- The following lemma uses the Approximation Theorem to show that there exists a rational number
 x' such that x'/xp is a square in ℚ_[p] for all p ∈ S and x'/xr is a square in ℝ. -/
@@ -384,68 +430,51 @@ private lemma square_approx [Nonempty I] :
   have approx := dense_iff_inter_open.mp (Rat.approximation_units (S a))
   --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝˣ
   --and y_p/xp is a square in ℚ_[p]ˣ for all p in S.
-  set U : Set (ℝ × Π p : S a, ℚ_[p])ˣ :=
-    (MulEquiv.prodUnits.symm ∘ (fun x ↦ ⟨x.1, MulEquiv.piUnits.symm x.2⟩)) '' Set.prod {x : ℝˣ | 0 < x.val / xr}
-      ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
-
-  have hUopen : IsOpen U := by sorry
-    -- simp [isOpen_prod_iff, f, U, U']
-    -- refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
-    --   isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
-    -- · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
-    --   let f : ℚ_[p]ˣ ≃ₜ ℚ_[p]ˣ :=
-    --     { toFun := fun x ↦ x * Units.mk0 (xp p) (xp_ne_zero p)
-    --       invFun := fun x ↦ x / Units.mk0 (xp p) (xp_ne_zero p)
-    --       left_inv := fun x ↦ by simp [div_eq_mul_inv]
-    --       right_inv := fun x ↦ by simp [div_eq_mul_inv]
-    --       continuous_toFun := by continuity
-    --       continuous_invFun := by continuity }
-    --   rw [← Homeomorph.isOpen_preimage f]
-    --   simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
-    --     val_mk0, f]
-    --   have : xp p ≠ 0 := xp_ne_zero p
-    --   field_simp [this]
-    --   have (a : ℚ_[p]ˣ) : IsSquare (a : ℚ_[p]) ↔ IsSquare a := by
-    --     refine ⟨fun  ⟨b, hb⟩ ↦ ?_, fun ⟨b,hb⟩ ↦ ⟨b.val, by simp [hb]⟩⟩
-    --     have b_ne_zero : b ≠ 0 := by
-    --       intro hb0
-    --       have : (a : ℚ_[p]) = 0 := by aesop
-    --       exact (Units.ne_zero a this)
-    --     refine ⟨Units.mk0 b b_ne_zero, by aesop⟩
-    --   simp_rw [this]
-    --   exact OpenSubgroup.isOpen (Padic.unitSquares p)
-    -- · simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-    --     Subtype.forall] at hs
-    --   simp only [Set.mem_ofPred_eq, hs, Set.mem_pi, Set.mem_univ, imp_self, implies_true,
-    --     true_and]
-    --   exact fun _ h ↦ Set.mem_preimage.mp h
-  have hUnonempty : U.Nonempty := by sorry
-    -- simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-    --   Subtype.forall, U]
-    -- refine ⟨(Units.mk0 xr xr_ne_zero, fun p ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
+  set U : Set ((ℝ × ((p : S a) → ℚ_[p]))ˣ) := Set.preimage (F (R := S a))
+    (Set.prod {x : ℝˣ | 0 < x.val / xr}
+      ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)}))
+  have hUopen : IsOpen U := by
+    rw [← open_in_units (R := S a), isOpen_prod_iff]
+    refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
+      isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
+    · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
+      let f : ℚ_[p]ˣ ≃ₜ ℚ_[p]ˣ :=
+        { toFun := fun x ↦ x * Units.mk0 (xp p) (xp_ne_zero p)
+          invFun := fun x ↦ x / Units.mk0 (xp p) (xp_ne_zero p)
+          left_inv := fun x ↦ by simp [div_eq_mul_inv]
+          right_inv := fun x ↦ by simp [div_eq_mul_inv]
+          continuous_toFun := by continuity
+          continuous_invFun := by continuity }
+      rw [← Homeomorph.isOpen_preimage f]
+      simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
+        val_mk0, f]
+      have : xp p ≠ 0 := xp_ne_zero p
+      field_simp
+      simp_rw [isSquare_unit_iff]
+      exact OpenSubgroup.isOpen (Padic.unitSquares p)
+    · simp only [Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall]
+      simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
+        Subtype.forall] at hs
+      exact ⟨hs.1, hs.2, fun x ↦ by simp [Set.prod]⟩
+  have hUnonempty : U.Nonempty := by
+    refine ⟨F.symm (Units.mk0 xr xr_ne_zero, fun p : S a ↦ Units.mk0 (xp p) (xp_ne_zero p)), ?_⟩
+    rw [mem_U, Set.prod]
+    refine ⟨by simp; grind, ?_⟩
+    simp only [Set.mem_pi, Set.mem_univ, Set.mem_ofPred_eq, val_mk0, forall_const, Subtype.forall]
+    exact fun p hp ↦ by
+      rw [div_self (xp_ne_zero p)]
+      exact ⟨1, by aesop⟩
   --Any rational point in U satisfies the desired properties.
-  obtain ⟨z, ⟨z', ⟨hz1, hz2⟩⟩, x', hy⟩ := approx U hUopen hUnonempty
-  simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
-    Subtype.forall] at hz1
-  obtain ⟨hz1real, hz1padic⟩ := hz1
+  obtain ⟨z, hz, x', hy⟩ := approx U hUopen hUnonempty
   use x'
-  constructor
-  · intro p hp
-    specialize hz1padic p hp
-    simp only [comp_apply, f] at hz2
-    have : (x'.val : ℚ_[p]) = z'.2 ⟨p, hp⟩ := by
-      rw [← hz2] at hy
-      simp only [eq_ratCast] at hy
-
-
-      sorry
-    rw [this]
-    exact hz1padic
-  · have : (x'.val : ℝ) = z'.1 := by
-      sorry
-    simp [this]
-    linarith
-
+  rw [← hy] at hz
+  simp only [F, MulEquiv.prodUnits, Units.map, MonoidHom.coe_fst, inv_eq_val_inv,
+    val_inv_eq_inv_val, Prod.fst_inv, MonoidHom.coe_snd, Prod.snd_inv, piUnits, coe_mk,
+    MulEquiv.coe_trans, MulEquiv.coe_mk, Equiv.coe_fn_mk, Set.prod, Set.mem_ofPred_eq, Set.mem_pi,
+    Set.mem_univ, forall_const, Subtype.forall, Set.preimage_ofPred_eq, comp_apply,
+    MonoidHom.prod_apply, MonoidHom.mk'_apply, MulEquiv.val_piUnits_apply, eq_ratCast,
+    MonoidHom.coe_mk, OneHom.coe_mk, Rat.cast_inv, U] at hz
+  exact ⟨hz.2, by simp; linarith⟩
 
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
