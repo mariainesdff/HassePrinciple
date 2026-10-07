@@ -5,8 +5,11 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
+public import HassePrinciple.HilbertSymbol.Basic
+public import HassePrinciple.NumberTheory.ApproximationTheorem
+public import HassePrinciple.Padics.Squares
+public import Mathlib.NumberTheory.LSeries.PrimesInAP
 
 /-!
 # Existence theorem
@@ -15,7 +18,7 @@ public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
 
 namespace hilbertSym
 
-open Filter Finset Nat Units
+open Filter Finset Nat Units Function hilbertSym.HasBilinHilbertSym
 
 section Integer
 
@@ -332,6 +335,144 @@ private lemma existence_disjoint (infty_not_mem_T : ∀ i : I, ereal i = 1) :
         Set.Finite.mem_toFinset, Set.mem_ofPred_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [val_x, is_unit_ai_of_p_notMem_S ha hpS,] using (Int.cast_inj.mpr (hpT i).symm)
 
+private noncomputable abbrev xp := fun (p : Primes) ↦ (h3.1 p).choose
+
+omit [Finite I] in
+private lemma xp_eq : ∀ p : Primes, ∀ (i : I), hilbertSym (xp h3 p) (a i) = ep i p := fun p ↦
+    Exists.choose_spec (h3.1 p)
+
+omit [Finite I] in
+include hep in
+private lemma xp_ne_zero [Nonempty I] : ∀ p : Primes, xp h3 p ≠ 0 := by
+    intro p hp
+    have := xp_eq h3 p
+    simp only [hilbertSym, hp, Int.cast_eq_zero, true_or, ↓reduceIte] at this
+    let i : I := Classical.arbitrary I
+    have h := hep i p
+    simp only [← this] at h
+    grind
+
+private noncomputable abbrev xr := h3.2.choose
+
+omit [Finite I] in
+private lemma xr_eq : ∀ (i : I), hilbertSym (xr h3) (a i) = ereal i := Exists.choose_spec h3.2
+
+omit [Finite I] in
+include hereal in
+private lemma xr_ne_zero [Nonempty I] : xr h3 ≠ 0 := by
+    intro hr
+    have := xr_eq h3
+    simp only [hilbertSym, hr, Int.cast_eq_zero, true_or, ↓reduceIte] at this
+    let i : I := Classical.arbitrary I
+    have h := hereal i
+    simp only [← this] at h
+    grind
+
+-- I did not find this in Mathlib, shall we PR it?
+private lemma isSquare_unit_iff {K : Type*} [Field K] (a : Kˣ) : IsSquare (a : K) ↔ IsSquare a :=
+  ⟨fun ⟨b, hb⟩ ↦ ⟨Units.mk0 b (fun hb0 ↦ Units.ne_zero a (by aesop : (a : K) = 0)), by aesop⟩,
+    fun ⟨b, hb⟩ ↦ ⟨b.val, by simp [hb]⟩⟩
+
+open ContinuousMulEquiv Topology
+
+private noncomputable def F {R : Finset Nat.Primes} :
+    (ℝ × ((p : R) → ℚ_[p]))ˣ ≃ₜ* ℝˣ × ((p : R) → ℚ_[p]ˣ) where
+  __ := ((MulEquiv.prodUnits :
+      (ℝ × ((p : R) → ℚ_[p]))ˣ ≃* ℝˣ × ((p : R) → ℚ_[p])ˣ)).trans
+    { toFun := fun x ↦ (x.1, piUnits x.2)
+      invFun := fun x ↦ (x.1, piUnits.symm x.2)
+      left_inv := fun x ↦ by simp
+      right_inv := fun x ↦ by simp
+      map_mul' := fun x y ↦ by simp }
+  continuous_toFun := by
+    simp only [MulEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe, MulEquiv.coe_trans,
+      MulEquiv.coe_mk, Equiv.coe_fn_mk]
+    exact Continuous.comp (continuous_prodMk.mpr
+      ⟨continuous_fst, Continuous.comp (map_continuous piUnits) continuous_snd⟩)
+        (Continuous.prodMk (Units.continuous_map continuous_fst)
+          (Units.continuous_map continuous_snd))
+  continuous_invFun := by
+    simp only [MulEquiv.toEquiv_eq_coe, Equiv.invFun_as_coe,
+      MulEquiv.coe_toEquiv_symm]
+    apply (Equiv.continuous_symm_iff _).mpr
+    simp only [MulEquiv.toEquiv_eq_coe, EquivLike.coe_coe, MulEquiv.coe_trans, MulEquiv.coe_mk,
+      Equiv.coe_fn_mk]
+    exact IsOpenMap.comp
+      (IsOpenMap.prodMap IsOpenMap.id (piUnits (M := fun p : R ↦ ℚ_[p])).isOpenMap)
+      (ContinuousMulEquiv.prodUnits ℝ ((p : R) → ℚ_[p])).isOpenMap
+
+private lemma open_in_units {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ))) :
+    IsOpen U ↔ IsOpen (Set.preimage (F (R := R)) U) := IsOpenEmbedding.isOpen_iff_preimage_isOpen
+      (IsOpenEmbedding.of_continuous_injective_isOpenMap (map_continuous F) F.injective F.isOpenMap)
+        (Set.subset_range_of_surjective (ContinuousMulEquiv.surjective F) U)
+
+private lemma mem_U {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ)))
+    (x : ℝˣ × ((p : R) → ℚ_[p]ˣ)) : F.symm x ∈ Set.preimage (F (R := R)) U ↔ x ∈ U := by
+  simp [Set.preimage]
+
+include hep hereal in
+/-- The following lemma uses the Approximation Theorem to show that there exists a rational number
+x' such that x'/xp is a square in ℚ_[p] for all p ∈ S and x'/xr is a square in ℝ. -/
+private lemma square_approx [Nonempty I] :
+    ∃ x' : ℚˣ, (∀ p : Primes, p ∈ S a → IsSquare (x' / (xp h3 p) : ℚ_[p]))
+    ∧ IsSquare (x' / xr h3) := by
+  set xp := xp h3
+  have xp_eq := xp_eq h3
+  have xp_ne_zero := xp_ne_zero hep h3
+  set xr := xr h3
+  have xr_eq := xr_eq h3
+  have xr_ne_zero := xr_ne_zero hereal h3
+  --The rationals are dense in the product of the reals and the p-adics for p ∈ S, so
+  --every nonempty open set contains a rational number.
+  have approx := dense_iff_inter_open.mp (Rat.approximation_units (S a))
+  --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝˣ
+  --and y_p/xp is a square in ℚ_[p]ˣ for all p in S.
+  set U : Set ((ℝ × ((p : S a) → ℚ_[p]))ˣ) := Set.preimage (F (R := S a))
+    (Set.prod {x : ℝˣ | 0 < x.val / xr}
+      ((Set.univ (α := S a)).pi fun p ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)}))
+  have hUopen : IsOpen U := by
+    rw [← open_in_units (R := S a), isOpen_prod_iff]
+    refine fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
+      isOpen_lt continuous_const (Continuous.mul_const continuous_val xr⁻¹), ?_, ?_⟩
+    · refine isOpen_set_pi Set.finite_univ fun p hp ↦ ?_
+      let f : ℚ_[p]ˣ ≃ₜ ℚ_[p]ˣ :=
+        { toFun := fun x ↦ x * Units.mk0 (xp p) (xp_ne_zero p)
+          invFun := fun x ↦ x / Units.mk0 (xp p) (xp_ne_zero p)
+          left_inv := fun x ↦ by simp [div_eq_mul_inv]
+          right_inv := fun x ↦ by simp [div_eq_mul_inv]
+          continuous_toFun := by continuity
+          continuous_invFun := by continuity }
+      rw [← Homeomorph.isOpen_preimage f]
+      simp only [Homeomorph.homeomorph_mk_coe, Equiv.coe_fn_mk, Set.preimage_ofPred_eq, val_mul,
+        val_mk0, f]
+      have : xp p ≠ 0 := xp_ne_zero p
+      field_simp
+      simp_rw [isSquare_unit_iff]
+      exact OpenSubgroup.isOpen (Padic.unitSquares p)
+    · simp only [Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const, Subtype.forall]
+      simp only [Set.prod, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, forall_const,
+        Subtype.forall] at hs
+      exact ⟨hs.1, hs.2, fun x ↦ by simp [Set.prod]⟩
+  have hUnonempty : U.Nonempty := by
+    refine ⟨F.symm (Units.mk0 xr xr_ne_zero, fun p : S a ↦ Units.mk0 (xp p) (xp_ne_zero p)), ?_⟩
+    rw [mem_U, Set.prod]
+    refine ⟨by simp; grind, ?_⟩
+    simp only [Set.mem_pi, Set.mem_univ, Set.mem_ofPred_eq, val_mk0, forall_const, Subtype.forall]
+    exact fun p hp ↦ by
+      rw [div_self (xp_ne_zero p)]
+      exact ⟨1, by aesop⟩
+  --Any rational point in U satisfies the desired properties.
+  obtain ⟨z, hz, x', hy⟩ := approx U hUopen hUnonempty
+  use x'
+  rw [← hy] at hz
+  simp only [F, MulEquiv.prodUnits, Units.map, MonoidHom.coe_fst, inv_eq_val_inv,
+    val_inv_eq_inv_val, Prod.fst_inv, MonoidHom.coe_snd, Prod.snd_inv, piUnits, coe_mk,
+    MulEquiv.coe_trans, MulEquiv.coe_mk, Equiv.coe_fn_mk, Set.prod, Set.mem_ofPred_eq, Set.mem_pi,
+    Set.mem_univ, forall_const, Subtype.forall, Set.preimage_ofPred_eq, comp_apply,
+    MonoidHom.prod_apply, MonoidHom.mk'_apply, MulEquiv.val_piUnits_apply, eq_ratCast,
+    MonoidHom.coe_mk, OneHom.coe_mk, Rat.cast_inv, U] at hz
+  exact ⟨hz.2, by simp; linarith⟩
+
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
 there exists a rational number `x` such that the Hilbert symbols `(x,a_i)_v` at each place `v`
@@ -345,7 +486,92 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Nonempty I] :
       (∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) ∧
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
-      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by sorry
+      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
+  have := Fintype.ofFinite I
+  refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1, h2, h3⟩ ↦ ?_⟩
+  by_cases disjoint_ST : Disjoint (S a) (T hep h1) ∧
+      ∀ i : I, ereal i = 1
+  · exact existence_disjoint ha hep h1 h2 h3 disjoint_ST.1 disjoint_ST.2
+  · set xp := xp h3
+    set xr := xr h3
+    obtain ⟨x', ⟨hxp, hxreal⟩⟩ := square_approx hep hereal h3
+    have almost_all_one_x' (i : I) := almost_all_one x' (Units.mk0 (a i) (by simp [ha]))
+    have prod_eq_one_x' (i : I) : (∏ᶠ (p : Primes), hilbertSym (x' : ℚ_[p]) (a i)) *
+        hilbertSym (x' : ℝ) (a i) = 1 := prod_eq_one x' (Units.mk0 (a i) (by simp [ha]))
+    have hilbertSym_agree_on_S :
+        ∀ (i : I), ∀ (p : Primes), p ∈ (S a) → hilbertSym (x' : ℚ_[p]) (a i) = ep i p := by
+      intro i p hpS
+      have : hilbertSym (x' : ℚ_[p]) (a i) = hilbertSym (xp p) (a i) := by
+        have ⟨c, hc⟩ : ∃ c, x' = xp p * c ^ 2 := by
+          specialize hxp p hpS
+          obtain ⟨c', hc'⟩ := hxp
+          use c'
+          rw [pow_two, ← hc']
+          field_simp [xp_ne_zero]
+          simp [xp]
+        rw [hc, mul_left_square_eq]
+        intro hc0
+        have : (x' : ℚ_[p]) = 0 := by rw [hc, hc0]; ring_nf
+        simp at this
+      simp only [this, xp]
+      exact (Int.mul_eq_mul_left_iff (ha i)).mp (congrArg (HMul.hMul (a i)) (xp_eq h3 p i))
+    have hilbertSym_agree_on_infty :
+        ∀ (i : I), hilbertSym (x' : ℝ) (a i) = ereal i := by
+      intro i
+      have : hilbertSym (x' : ℝ) (a i) = hilbertSym (xr) (a i) := by
+        have ⟨c, hc⟩ : ∃ c, x' = xr * c ^ 2 := by
+          obtain ⟨c', hc'⟩ := hxreal
+          use c'
+          rw [pow_two, ← hc']
+          field_simp [xr_ne_zero]
+          simp [xr]
+        rw [hc, mul_left_square_eq (by aesop)]
+      simp [this]
+      grind
+    set etap : I → Primes → ℤ := fun i p ↦ (ep i p) * hilbertSym (x' : ℚ_[p]) (a i)
+    have hetap1 : ∀ i : I, ∀ p : Primes, etap i p = 1 ∨ etap i p = -1 := by
+      intro i p
+      have := eq_one_or_neg_one_of_ne_zero (by simp : (x'.1 : ℚ_[p]) ≠ 0)
+        (by simp [ha] : ((a i) : ℚ_[p]) ≠ 0)
+      grind
+    set etareal : I → ℤ := fun i ↦ (ereal i) * hilbertSym (x' : ℝ) (a i)
+    have heta1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, etap i p = 1 := by
+      intro i
+      let F := {p : Primes | ¬hilbertSym (x' : ℚ_[p]) (a i) = 1} ∪ {p | ¬ep i p = 1}
+      have finiteF : F.Finite := by
+        specialize h1 i
+        simp only [eventually_cofinite, Units.val_mk0, Rat.cast_intCast] at h1 almost_all_one_x' i
+        simp only [Set.finite_union, F]
+        exact ⟨almost_all_one_x' i, h1⟩
+      exact Set.Finite.subset finiteF (fun p ↦ by grind)
+    have heta2 : ∀ i : I, (∏ᶠ (p : Primes), etap i p) * etareal i = 1 := by
+      intro i
+      simp only [etap, etareal]
+      rw [finprod_mul_distrib (h1 i)]
+      · calc _
+        _ = ((∏ᶠ (p : Primes), ep i p) * ereal i) * ((∏ᶠ (p : Primes), hilbertSym (x' : ℚ_[p])
+          (a i)) * hilbertSym (x' : ℝ) (a i)) := by ring
+        _ = 1 * 1 := by rw [h2 i, prod_eq_one_x' i]
+      · exact almost_all_one_x' i
+    have heta3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = etap i p)) ∧
+        ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = etareal i := by
+      refine ⟨fun p ↦ ⟨x' * xp p, fun i ↦
+        (by simp [xp, mul_left_eq, xp_eq, etap]; ring)⟩, ⟨x' * h3.2.choose,
+          (by simp [etareal, mul_left_eq]; grind)⟩⟩
+    have etadisjoint_ST : Disjoint (S a) (T hetap1 heta1) := by
+      suffices ∀ i : I, ∀ p ∈ S a, etap i p = 1 by
+        rw [Finset.disjoint_left]
+        exact fun p hpS ↦ by rw [ep_eq_one_iff_not_mem_T]; grind
+      intro i p hpS
+      simp [etap, hilbertSym_agree_on_S i p hpS]
+      grind
+    have etainfty_not_mem_T : ∀ i : I, etareal i = 1 := by
+      simp [etareal, hilbertSym_agree_on_infty]
+      grind
+    have ⟨xeta, hxeta⟩ := existence_disjoint ha hetap1 heta1 heta2 heta3 etadisjoint_ST
+      etainfty_not_mem_T
+    exact ⟨xeta * x', fun i ↦ ⟨fun p ↦ by simp [mul_left_eq, hxeta i, etap]; grind only,
+      by simp [hxeta i, etainfty_not_mem_T i, hilbertSym_agree_on_infty i]⟩⟩
 
 end Integer
 
@@ -359,25 +585,9 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  have Ifin : Fintype I := Fintype.ofFinite I
-  let d := ∏ i, (a i).1.den
-  have hd : d ≠ 0 := by simp [d, Finset.prod_ne_zero_iff]
-  have heq (i : I) : ((a i).1 * d ^ 2).den = 1 := by
-    classical
-    simp only [cast_prod, d]
-    rw [Finset.prod_eq_mul_prod_sdiff_singleton i _ (by simp)]
-    simp only [mul_pow, pow_two ((a i).1.den : ℚ), ← mul_assoc, Rat.mul_den_eq_num]
-    norm_cast
-  simp_rw [Rat.den_eq_one_iff] at heq
-  set b : I → ℤ := fun i ↦ ((a i).1 * d ^ 2).num with hb
-  have hb0 (i : I) : ((a i).1 * d ^ 2).num ≠ 0 := by simp [hd]
-  have hp (p : Primes) (i : I) (x : ℚ_[p]) : hilbertSym x (a i) = hilbertSym x (b i : ℚ) := by
-    rw [hb, heq, Rat.cast_mul, Rat.cast_pow, hilbertSym.mul_right_square_eq (by simp [hd])]
-  have hr (i : I) (x : ℝ) : hilbertSym x (a i) = hilbertSym x (b i : ℚ) := by
-    rw [hb, heq, Rat.cast_mul, Rat.cast_pow, hilbertSym.mul_right_square_eq (by simp [hd])]
-  simp_rw [hp, hr]
-  exact exists_rat_with_finite_prescribed_hilbertSym_of_int hb0 hep hereal
-
+  simp_rw [← num_mul_den_right']
+  exact exists_rat_with_finite_prescribed_hilbertSym_of_int
+    (a := fun i ↦ ((a i).1.num * (a i).1.den : ℤ)) (fun _ ↦ by aesop) hep hereal
 
 theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Primes → ℤ} {er er' : ℤ}
     (hep : ∀ p : Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Primes, ep' p = 1 ∨ ep' p = -1)
