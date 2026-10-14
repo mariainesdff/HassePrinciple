@@ -11,8 +11,9 @@ public import Mathlib.Topology.Algebra.IsOpenUnits
 # Topological properties of units
 
 This file contains results about units in topological monoids, namely the isomorphism of topological
-groups between the units of a product of two groups and the product of the units and the facts that
-the units of a (finite or infinite) product of topological monoids embeds to an open in the prodict.
+monoids between the units of a product of two monoids and the product of the units and the facts
+that the units of a (finite or infinite) product of topological monoids embeds to an open in the
+product.
 -/
 
 @[expose] public section

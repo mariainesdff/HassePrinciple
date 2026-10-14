@@ -427,7 +427,7 @@ lemma eq_one_of_valuation_zero {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
   simp [← Rat.intCast_eq_one_iff, padic_odd_eq hp2 ha hb, hva, hvb]
 
 /-- The Hilbert symbol of (numerator of a)*(denominator of a) and b is that of a and b. -/
-theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a b : ℚ) :
+theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
     hilbertSym (((a.num * a.den : ℤ) : ℚ) : K) b = hilbertSym (a : K) b := by
   set N := (a : ℚ).num with hN
   set D := (a : ℚ).den with hD
@@ -439,25 +439,17 @@ theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a b : ℚ) :
         (cast_ne_zero.mpr (a : ℚ).den_ne_zero) one_ne_zero
     _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
 
-theorem num_mul_den_right {K : Type*} [Field K] [CharZero K] (a b : ℚ) :
+theorem num_mul_den_right {K : Type*} [Field K] [CharZero K] (a : K) (b : ℚ) :
      hilbertSym (a : K) ((b.num * b.den : ℤ) : ℚ) = hilbertSym (a : K) b := by
   rw [comm, num_mul_den_left, comm]
 
 theorem num_mul_den_left' {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
     hilbertSym ((a.num * a.den : ℤ) : K) b = hilbertSym (a : K) b := by
-  set N := (a : ℚ).num with hN
-  set D := (a : ℚ).den with hD
-  calc
-    _ = hilbertSym ((((N / D) * D ^ 2) : ℚ) : K) b := by
-      congr 1; push_cast; field_simp
-    _ = hilbertSym (((N / D) : ℚ) : K) b := by
-      simpa using mul_square_eq (b := (b : K)) (a' := D)
-        (cast_ne_zero.mpr (a : ℚ).den_ne_zero) one_ne_zero
-    _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
+  simp [← num_mul_den_left]
 
 theorem num_mul_den_right' {K : Type*} [Field K] [CharZero K] (a : K) (b : ℚ) :
     hilbertSym (a : K) ((b.num * b.den : ℤ) : K) = hilbertSym (a : K) b := by
-  rw [comm, num_mul_den_left', comm]
+  simp [← num_mul_den_right]
 
 /-- Let a and b be rational units. Suppose given d either -1 or prime, the Hilbert symbol of a and d
 is 1 for all but finitely many primes. Then, for all but finitely many primes, the Hilbert symbol

@@ -60,4 +60,3 @@ lemma weightedSumSquares_isotropic_iff_hilbertSym_eq_one {R : Type*} [Field R] (
 end Rank3
 
 end QuadraticForm
-#min_imports

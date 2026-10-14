@@ -80,6 +80,8 @@ lemma all_but_one_places_suffice (q : Primes) (x : ℚˣ)
     · exact almost_all_one x (afun i)
   · exact (h4 i).1 p hpq
 
+section Finite
+
 variable [Finite I]
 
 variable (a) in
@@ -335,29 +337,25 @@ private lemma existence_disjoint (infty_not_mem_T : ∀ i : I, ereal i = 1) :
         Set.Finite.mem_toFinset, Set.mem_ofPred_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [val_x, is_unit_ai_of_p_notMem_S ha hpS,] using (Int.cast_inj.mpr (hpT i).symm)
 
+end Finite
+
 private noncomputable abbrev xp := fun (p : Primes) ↦ (h3.1 p).choose
 
-omit [Finite I] in
-private lemma xp_eq : ∀ p : Primes, ∀ (i : I), hilbertSym (xp h3 p) (a i) = ep i p := fun p ↦
-    Exists.choose_spec (h3.1 p)
+private lemma xp_eq (p : Primes) : ∀ (i : I), hilbertSym (xp h3 p) (a i) = ep i p :=
+  (h3.1 p).choose_spec
 
-omit [Finite I] in
 include hep in
-private lemma xp_ne_zero [Nonempty I] : ∀ p : Primes, xp h3 p ≠ 0 := by
-    intro p hp
-    have := xp_eq h3 p
-    simp only [hilbertSym, hp, Int.cast_eq_zero, true_or, ↓reduceIte] at this
-    let i : I := Classical.arbitrary I
-    have h := hep i p
-    simp only [← this] at h
-    grind
+private lemma xp_ne_zero [Nonempty I] (p : Primes) : xp h3 p ≠ 0 := by
+  intro hp
+  have := xp_eq h3 p
+  simp [hilbertSym, hp] at this
+  have := hep (Classical.arbitrary I) p
+  grind
 
 private noncomputable abbrev xr := h3.2.choose
 
-omit [Finite I] in
-private lemma xr_eq : ∀ (i : I), hilbertSym (xr h3) (a i) = ereal i := Exists.choose_spec h3.2
+private lemma xr_eq : ∀ (i : I), hilbertSym (xr h3) (a i) = ereal i := h3.2.choose_spec
 
-omit [Finite I] in
 include hereal in
 private lemma xr_ne_zero [Nonempty I] : xr h3 ≠ 0 := by
     intro hr
@@ -409,6 +407,8 @@ private lemma open_in_units {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) 
 private lemma mem_U {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ)))
     (x : ℝˣ × ((p : R) → ℚ_[p]ˣ)) : F.symm x ∈ Set.preimage (F (R := R)) U ↔ x ∈ U := by
   simp [Set.preimage]
+
+variable [Finite I]
 
 include hep hereal in
 /-- The following lemma uses the Approximation Theorem to show that there exists a rational number

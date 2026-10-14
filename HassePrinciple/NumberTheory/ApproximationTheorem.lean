@@ -45,16 +45,14 @@ theorem approximation (S : Finset Nat.Primes) :
 
 theorem approximation_units (S : Finset Nat.Primes) :
     Dense (Set.range (Units.map (finiteEmbedding S).toMonoidHom)) := by
-  have : IsOpenUnits (ℝ × ((p : ↥S) → ℚ_[p])) := inferInstance
-  rw [isOpenUnits_iff] at this
+  have h : IsOpenUnits (ℝ × ((p : ↥S) → ℚ_[p])) := inferInstance
+  rw [isOpenUnits_iff] at h
   have hd := approximation S
   simp only [Dense, RingHom.coe_mk, eq_ratCast, MonoidHom.coe_mk, OneHom.coe_mk,
     mem_closure_iff_nhds] at hd ⊢
-  refine fun x N hN ↦ ?_
-  obtain ⟨y, ⟨u, huN, hur⟩, ⟨r, rfl⟩⟩ :=
-    hd x (Units.val '' N) ((Topology.IsOpenEmbedding.image_mem_nhds (this)).mpr hN)
-  refine ⟨u, ⟨huN, ?_⟩⟩
-  use Units.mk0 r (fun h0 ↦ by simp only [h0, cast_zero] at hur; exact Units.ne_zero u hur)
-  simp [← Units.val_inj, hur]
-
+  intro x N hN
+  obtain ⟨y, ⟨u, huN, hur⟩, ⟨r, rfl⟩⟩ := hd x (Units.val '' N) (h.image_mem_nhds.mpr hN)
+  exact ⟨u, huN,
+    Units.mk0 r (fun h0 ↦ by simp only [h0, cast_zero] at hur; exact Units.ne_zero u hur),
+    by simp [← Units.val_inj, hur]⟩
 end Rat

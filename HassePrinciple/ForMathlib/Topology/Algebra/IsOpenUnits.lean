@@ -10,8 +10,8 @@ public import HassePrinciple.ForMathlib.Topology.Algebra.Group.Units
 /-!
 # Properties of units in products
 
-This file contains the instances that the units in a product of two or finitely many topological
-monoids are open.
+This file contains the instances that a product of two or finitely many topological monoids
+satisfying `IsOpenUnits` also have this property.
 -/
 
 @[expose] public section
