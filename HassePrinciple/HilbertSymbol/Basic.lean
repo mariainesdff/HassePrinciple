@@ -428,7 +428,7 @@ lemma eq_one_of_valuation_zero {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
 
 /-- The Hilbert symbol of (numerator of a)*(denominator of a) and b is that of a and b. -/
 theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
-    hilbertSym (((a.num * a.den : ℤ) : ℚ) : K) b = hilbertSym (a : K) b := by
+    hilbertSym ((a.num * a.den : ℤ) : K) b = hilbertSym (a : K) b := by
   set N := (a : ℚ).num with hN
   set D := (a : ℚ).den with hD
   calc
@@ -440,16 +440,8 @@ theorem num_mul_den_left {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
     _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
 
 theorem num_mul_den_right {K : Type*} [Field K] [CharZero K] (a : K) (b : ℚ) :
-     hilbertSym (a : K) ((b.num * b.den : ℤ) : ℚ) = hilbertSym (a : K) b := by
-  rw [comm, num_mul_den_left, comm]
-
-theorem num_mul_den_left' {K : Type*} [Field K] [CharZero K] (a : ℚ) (b : K) :
-    hilbertSym ((a.num * a.den : ℤ) : K) b = hilbertSym (a : K) b := by
-  simp [← num_mul_den_left]
-
-theorem num_mul_den_right' {K : Type*} [Field K] [CharZero K] (a : K) (b : ℚ) :
     hilbertSym (a : K) ((b.num * b.den : ℤ) : K) = hilbertSym (a : K) b := by
-  simp [← num_mul_den_right]
+  rw [comm, num_mul_den_left, comm]
 
 /-- Let a and b be rational units. Suppose given d either -1 or prime, the Hilbert symbol of a and d
 is 1 for all but finitely many primes. Then, for all but finitely many primes, the Hilbert symbol
@@ -552,7 +544,8 @@ theorem almost_all_one_left {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPri
   filter_upwards [sign_mul_num_den ha b, h_nat] with p hsignND hnatND
   have hsplitQ : ((N * D : ℤ) : ℚ) = ((sign (N * D) : ℤ) : ℚ) * ((N * D).natAbs : ℚ) := by
     rw [← cast_natCast (R := ℚ), ← Int.cast_mul, sign_mul_natAbs]
-  rw [← num_mul_den_right, hsplitQ, Rat.cast_mul, right_mul_eq_of_eq_one hsignND, hnatND]
+  rw [← num_mul_den_right, ← Rat.cast_intCast, hsplitQ, Rat.cast_mul,
+    right_mul_eq_of_eq_one hsignND, hnatND]
 
 end eventually_one
 
