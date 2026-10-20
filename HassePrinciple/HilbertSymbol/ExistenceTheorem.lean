@@ -395,9 +395,9 @@ lemma _root_.Units.isSquare_coe_iff {M : Type*} [Monoid M] {a : Mˣ} :
 open ContinuousMulEquiv Topology
 
 @[simps! apply symm_apply]
-private noncomputable def F {R : Finset Nat.Primes} :
-    (ℝ × ((p : R) → ℚ_[p]))ˣ ≃ₜ* ℝˣ × ((p : R) → ℚ_[p]ˣ) where
-  __ := (MulEquiv.prodUnits (M := ℝ) (N := (p : R) → ℚ_[p])).trans
+private noncomputable def F (S' : Finset Nat.Primes) :
+    (ℝ × ((p : S') → ℚ_[p]))ˣ ≃ₜ* ℝˣ × ((p : S') → ℚ_[p]ˣ) where
+  __ := (MulEquiv.prodUnits (M := ℝ) (N := (p : S') → ℚ_[p])).trans
     ((MulEquiv.refl ℝˣ).prodCongr MulEquiv.piUnits)
   continuous_toFun :=
     (continuous_prodMk.mpr ⟨continuous_fst, (map_continuous piUnits).comp continuous_snd⟩).comp
@@ -406,14 +406,8 @@ private noncomputable def F {R : Finset Nat.Primes} :
     simp only [MulEquiv.toEquiv_eq_coe, Equiv.invFun_as_coe,
       MulEquiv.coe_toEquiv_symm]
     exact (Equiv.continuous_symm_iff _).mpr
-      ((IsOpenMap.id.prodMap (piUnits (M := fun p : R ↦ ℚ_[p])).isOpenMap).comp
-        (ContinuousMulEquiv.prodUnits ℝ ((p : R) → ℚ_[p])).isOpenMap)
-
-private lemma open_in_units {R : Finset Nat.Primes} (U : Set (ℝˣ × ((p : R) → ℚ_[p]ˣ))) :
-    IsOpen U ↔ IsOpen (Set.preimage (F (R := R)) U) :=
-  IsOpenEmbedding.isOpen_iff_preimage_isOpen
-    (IsOpenEmbedding.of_continuous_injective_isOpenMap (map_continuous F) F.injective F.isOpenMap)
-    (Set.subset_range_of_surjective (ContinuousMulEquiv.surjective F) U)
+      ((IsOpenMap.id.prodMap (piUnits (M := fun p : S' ↦ ℚ_[p])).isOpenMap).comp
+        (ContinuousMulEquiv.prodUnits ℝ ((p : S') → ℚ_[p])).isOpenMap)
 
 variable [Finite I]
 
@@ -434,10 +428,10 @@ private lemma square_approx [Nonempty I] :
   have approx := dense_iff_inter_open.mp (Rat.approximation_units (S a))
   --Define the open nonempty set U of points (x, (y_p)_{p ∈ S}) such that x/xr is a square in ℝˣ
   --and y_p/xp is a square in ℚ_[p]ˣ for all p in S.
-  set U : Set ((ℝ × ((p : S a) → ℚ_[p]))ˣ) := (F (R := S a)) ⁻¹'
+  set U : Set ((ℝ × ((p : S a) → ℚ_[p]))ˣ) := (F (S a))⁻¹'
     ({x : ℝˣ | 0 < x.val / xr} ×ˢ Set.univ.pi fun (p : S a) ↦ {x : ℚ_[p]ˣ | IsSquare (x / xp p)})
   have hUopen : IsOpen U := by
-    refine IsOpen.preimage (map_continuous F) (isOpen_prod_iff.mpr
+    refine IsOpen.preimage (map_continuous (F (S a))) (isOpen_prod_iff.mpr
       fun sr sp hs ↦ ⟨{x | 0 < ↑x / xr}, Set.univ.pi fun p ↦ {x | IsSquare (↑x / xp ↑p)},
         isOpen_lt continuous_const (continuous_val.mul_const xr⁻¹),
         isOpen_set_pi Set.finite_univ fun p _ ↦ ?_, by simp_all⟩)
@@ -447,7 +441,8 @@ private lemma square_approx [Nonempty I] :
       val_mk0, ne_eq, hp, not_false_eq_true, mul_div_cancel_right₀, Units.isSquare_coe_iff]
     exact (Padic.unitSquares p).isOpen
   have hUnonempty : U.Nonempty :=
-    ⟨F.symm (Units.mk0 xr xr_ne_zero, fun p : S a ↦ Units.mk0 (xp p) (xp_ne_zero p)), by aesop⟩
+    ⟨(F (S a)).symm (Units.mk0 xr xr_ne_zero, fun p : S a ↦ Units.mk0 (xp p) (xp_ne_zero p)),
+      by aesop⟩
   --Any rational point in U satisfies the desired properties.
   obtain ⟨z, hz, x', rfl⟩ := approx U hUopen hUnonempty
   use x'
