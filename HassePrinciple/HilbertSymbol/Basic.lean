@@ -570,7 +570,7 @@ theorem almost_all_one (a b : ℚˣ) :
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
+    hilbertSym (a : ℝ) b * (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b) = 1 := by
   sorry
 
 end hilbertSym
