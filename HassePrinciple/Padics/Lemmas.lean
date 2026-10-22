@@ -61,6 +61,9 @@ lemma map_unitPart (a : ℤ_[p]ˣ) :
   simp [unitPart, valuation_units a]
   norm_cast
 
+lemma padic_eq_square_times_unit_or_val_one (a : ℚ_[p]) :
+    ∃ s u : ℚ_[p], (valuation u = 0 ∨ valuation u = 1) ∧ a = u * s ^ 2 := sorry
+
 /-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
 noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
   PadicInt.mkUnits (Padic.norm_natCast_eq_one_iff.mpr

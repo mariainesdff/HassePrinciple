@@ -22,6 +22,8 @@ namespace PadicInt
 noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
   if (u.val).appr 2 % 4 = 1 then 0 else 1
 
+private lemma epsilon_square (u : (PadicInt 2)ˣ) : epsilon (u ^ 2) = 0 := by sorry
+
 /-- omega(u) is the class modulo 2 of (u^2-1)/8. -/
 noncomputable abbrev omega (u : (PadicInt 2)ˣ) : ℤ :=
   if (u.val).appr 3 % 8 = 1 ∨ (u.val).appr 3 % 8 = 7 then 0 else 1
@@ -394,6 +396,11 @@ theorem two_adic_eq :
       epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
       omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
       omega (unitPart (Units.mk0 a ha))) := by
+  have ⟨sa, ua, hua, ha'⟩ := padic_eq_square_times_unit_or_val_one a
+  have ⟨sb, ub, hub, hb'⟩ := padic_eq_square_times_unit_or_val_one b
+  simp_rw [ha', hb']
+  rw [mul_left_square_eq (by aesop), mul_right_square_eq (by aesop)]
+
   sorry
 
 end two
