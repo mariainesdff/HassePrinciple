@@ -18,15 +18,35 @@ public import Mathlib.NumberTheory.LSeries.PrimesInAP
 -- Notation:
 namespace PadicInt
 
+--PR?
+theorem toZModPow_of_unit_ne_zero {p : ℕ} [Fact (Nat.Prime p)] (u : (PadicInt p)ˣ) (n : ℕ) :
+    (u.val).toZModPow n ≠ 0 := by
+  --have := ker_toZModPow (p := p) n
+  --simp [RingHom.ker] at this
+  sorry
+
+
 /-- epsilon(u) is the class modulo 2 of (u-1)/2. -/
 noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 2 % 4 = 1 then 0 else 1
+  if (u.val).toZModPow 2 = 1 then 0 else 1
 
-private lemma epsilon_square (u : (PadicInt 2)ˣ) : epsilon (u ^ 2) = 0 := by sorry
+private lemma epsilon_square (u : (PadicInt 2)ˣ) : epsilon (u ^ 2) = 0 := by
+  cases (u.val.toZModPow 2).1.even_or_odd
+  · sorry
+  · sorry
+
+
+
+
+
+private lemma epsilon_mul (u v : (PadicInt 2)ˣ) :
+    epsilon (u * v) = (epsilon u + epsilon v) % 2 := by sorry
+
+
 
 /-- omega(u) is the class modulo 2 of (u^2-1)/8. -/
 noncomputable abbrev omega (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 3 % 8 = 1 ∨ (u.val).appr 3 % 8 = 7 then 0 else 1
+  if (u.val).toZModPow 3 = 1 ∨ (u.val).toZModPow 3 = 7 then 0 else 1
 
 end PadicInt
 
