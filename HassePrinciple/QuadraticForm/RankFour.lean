@@ -84,17 +84,20 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
   -- Since `Q` is equivalent to `Q1.prod (-Q2)`, it suffices to prove that the latter is isotropic.
   apply (hw.trans (weightedSumSquares_equiv_prod w)).symm.isotropic
   -- Equivalently, there exists `x : ℚ` represented by both `Q1` and `Q2`.
-  rw [prod_isotropic_iff (nondegenerate_weightedSumSquares _) (nondegenerate_weightedSumSquares _)]
+  rw [prod_isotropic_iff finrank_pos finrank_pos (nondegenerate_weightedSumSquares _)
+    (nondegenerate_weightedSumSquares _)]
   -- For all `p`, there exists `xₚ : ℚ_[p]` represented by both `Q1` and `Q2`.
   have hp (p : ℕ) [Fact (Nat.Prime p)] : ∃ xₚ : ℚ_[p]ˣ, (Q1.baseChange ℚ_[p]).represents xₚ.1 ∧
       (Q2.baseChange ℚ_[p]).represents xₚ.1 := by
-    rw [← prod_isotropic_iff (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))
+    rw [← prod_isotropic_iff finrank_pos finrank_pos
+      (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))
       (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))]
     exact (baseChange_prod_neg _ _).isotropic ((heq.baseChange _).isotropic (hQ'.1 p))
   -- There exists `xr : ℝ` represented by both `Q1` and `Q2`.
   obtain ⟨xr, hxr⟩ :
       ∃ x : ℝˣ, (Q1.baseChange ℝ).represents x.1 ∧ (Q2.baseChange ℝ).represents x.1 := by
-    rw [← prod_isotropic_iff (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))
+    rw [← prod_isotropic_iff finrank_pos finrank_pos
+      (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))
       (nondegenerate_baseChange (nondegenerate_weightedSumSquares _))]
     exact (baseChange_prod_neg _ _).isotropic ((heq.baseChange ℝ).isotropic hQ'.2)
   -- For all prime `p`, we have `(xₚ, - ab)ₚ = (a, b)ₚ` and `(xₚ, - cd)ₚ = (-c, -d)ₚ`
