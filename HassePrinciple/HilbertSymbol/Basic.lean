@@ -22,21 +22,24 @@ namespace PadicInt
 noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
   if Units.map (toZModPow 2).toMonoidHom u = 1 then 0 else 1
 
+/-- epsilon only takes the values 0 and 1 -/
 lemma epsilon_eq_zero_or_one {u : (PadicInt 2)ˣ} : epsilon u = 0 ∨ epsilon u = 1 := by grind
 
+/-- epsilon is not 0 if and only if it is 1. -/
 lemma epsilon_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(epsilon u = 0) ↔ epsilon u = 1 := by grind
 
-lemma cases_toZModPow2 (u : (PadicInt 2)ˣ) : Units.map (toZModPow 2).toMonoidHom u = 1 ∨
-    Units.map (toZModPow 2).toMonoidHom u = -1 := by
---help!
-  sorry
+/-- The units mod 4 are only 1 and -1. -/
+lemma units_mod4 (u : (ZMod (2 ^ 2))ˣ) : u = 1 ∨ u = -1 := by
+  decide +revert
 
+/-- epsilon maps products to sums modulo 2. -/
 lemma epsilon_hom_mod2 {u v : (PadicInt 2)ˣ} :
     (epsilon (u * v) : ZMod 2) = (epsilon u + epsilon v : ZMod 2) := by
-  rcases cases_toZModPow2 u with h
-  rcases cases_toZModPow2 v with h'
+  rcases units_mod4 (Units.map (toZModPow 2).toMonoidHom u) with h
+  rcases units_mod4 (Units.map (toZModPow 2).toMonoidHom v) with h'
   aesop
 
+/-- epsilon is 0 on squares. -/
 lemma epsilon_of_square {u : (PadicInt 2)ˣ} : epsilon (u ^ 2) = 0 := by
   have : (epsilon (u ^ 2) : ZMod 2) = 0 := by
     rw [pow_two, epsilon_hom_mod2]
@@ -50,14 +53,25 @@ noncomputable abbrev omega (u : (PadicInt 2)ˣ) : ℤ :=
   if Units.map (toZModPow 3).toMonoidHom u = 1 ∨
     Units.map (toZModPow 3).toMonoidHom u = -1 then 0 else 1
 
+/-- omega only takes the values 0 and 1 -/
 lemma omega_eq_zero_or_one {u : (PadicInt 2)ˣ} : omega u = 0 ∨ omega u = 1 := by grind
 
+/-- omega is not 0 if and only if it is 1. -/
 lemma omega_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(omega u = 0) ↔ omega u = 1 := by grind
 
--- not sure what I was trying with epsilon is the best option here
-lemma omega_hom_mod2 {u v : (PadicInt 2)ˣ} :
-    (omega (u * v) : ZMod 2) = (omega u + omega v : ZMod 2) := sorry
+/-- The units mod 8 are only 1, -1, 3 and -3. -/
+lemma units_mod8 (u : (ZMod (2 ^ 3))ˣ) : u = 1 ∨ u = -1 ∨
+    u = ⟨3, 3, by aesop, by aesop⟩ ∨ u = -⟨3, 3, by aesop, by aesop⟩ := by
+  decide +revert
 
+/-- omega maps products to sums modulo 2. -/
+lemma omega_hom_mod2 {u v : (PadicInt 2)ˣ} :
+    (omega (u * v) : ZMod 2) = (omega u + omega v : ZMod 2) := by
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom u) with h
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom v) with h'
+  aesop
+
+/-- omega is 0 on squares. -/
 lemma omega_of_square {u : (PadicInt 2)ˣ} : omega (u ^ 2) = 0 := by
   have : (omega (u ^ 2) : ZMod 2) = 0 := by
     rw [pow_two, omega_hom_mod2]
@@ -65,6 +79,7 @@ lemma omega_of_square {u : (PadicInt 2)ˣ} : omega (u ^ 2) = 0 := by
   by_contra
   simp only [omega_ne_zero_iff_eq_one] at this
   aesop
+
 
 end PadicInt
 
