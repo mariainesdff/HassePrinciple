@@ -18,35 +18,53 @@ public import Mathlib.NumberTheory.LSeries.PrimesInAP
 -- Notation:
 namespace PadicInt
 
---PR?
-theorem toZModPow_of_unit_ne_zero {p : ℕ} [Fact (Nat.Prime p)] (u : (PadicInt p)ˣ) (n : ℕ) :
-    (u.val).toZModPow n ≠ 0 := by
-  --have := ker_toZModPow (p := p) n
-  --simp [RingHom.ker] at this
+/-- epsilon(u) is the class modulo 2 of (u - 1) / 2. -/
+noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
+  if Units.map (toZModPow 2).toMonoidHom u = 1 then 0 else 1
+
+lemma epsilon_eq_zero_or_one {u : (PadicInt 2)ˣ} : epsilon u = 0 ∨ epsilon u = 1 := by grind
+
+lemma epsilon_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(epsilon u = 0) ↔ epsilon u = 1 := by grind
+
+lemma cases_toZModPow2 (u : (PadicInt 2)ˣ) : Units.map (toZModPow 2).toMonoidHom u = 1 ∨
+    Units.map (toZModPow 2).toMonoidHom u = -1 := by
+--help!
   sorry
 
+lemma epsilon_hom_mod2 {u v : (PadicInt 2)ˣ} :
+    (epsilon (u * v) : ZMod 2) = (epsilon u + epsilon v : ZMod 2) := by
+  rcases cases_toZModPow2 u with h
+  rcases cases_toZModPow2 v with h'
+  aesop
 
-/-- epsilon(u) is the class modulo 2 of (u-1)/2. -/
-noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).toZModPow 2 = 1 then 0 else 1
+lemma epsilon_of_square {u : (PadicInt 2)ˣ} : epsilon (u ^ 2) = 0 := by
+  have : (epsilon (u ^ 2) : ZMod 2) = 0 := by
+    rw [pow_two, epsilon_hom_mod2]
+    aesop
+  by_contra
+  simp only [epsilon_ne_zero_iff_eq_one] at this
+  aesop
 
-private lemma epsilon_square (u : (PadicInt 2)ˣ) : epsilon (u ^ 2) = 0 := by
-  cases (u.val.toZModPow 2).1.even_or_odd
-  · sorry
-  · sorry
-
-
-
-
-
-private lemma epsilon_mul (u v : (PadicInt 2)ˣ) :
-    epsilon (u * v) = (epsilon u + epsilon v) % 2 := by sorry
-
-
-
-/-- omega(u) is the class modulo 2 of (u^2-1)/8. -/
+/-- omega(u) is the class modulo 2 of (u ^ 2 - 1) / 8. -/
 noncomputable abbrev omega (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).toZModPow 3 = 1 ∨ (u.val).toZModPow 3 = 7 then 0 else 1
+  if Units.map (toZModPow 3).toMonoidHom u = 1 ∨
+    Units.map (toZModPow 3).toMonoidHom u = -1 then 0 else 1
+
+lemma omega_eq_zero_or_one {u : (PadicInt 2)ˣ} : omega u = 0 ∨ omega u = 1 := by grind
+
+lemma omega_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(omega u = 0) ↔ omega u = 1 := by grind
+
+-- not sure what I was trying with epsilon is the best option here
+lemma omega_hom_mod2 {u v : (PadicInt 2)ˣ} :
+    (omega (u * v) : ZMod 2) = (omega u + omega v : ZMod 2) := sorry
+
+lemma omega_of_square {u : (PadicInt 2)ˣ} : omega (u ^ 2) = 0 := by
+  have : (omega (u ^ 2) : ZMod 2) = 0 := by
+    rw [pow_two, omega_hom_mod2]
+    aesop
+  by_contra
+  simp only [omega_ne_zero_iff_eq_one] at this
+  aesop
 
 end PadicInt
 
@@ -241,6 +259,7 @@ theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
         rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, ite_eq_right (by aesop)] at this
         simp only [ite_eq_left_iff] at this
         grind
+
 @[simp]
 theorem left_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
     hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b := by
@@ -408,6 +427,13 @@ lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : 
       omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
+--I didn't find this in Mathlib
+lemma _root_.Int.even_diff_iff_eq_mod_two {x y : ℤ} : Even (y - x) ↔ (x : ZMod 2) = y := by
+  refine ⟨fun h ↦ (ZMod.intCast_eq_intCast_iff_dvd_sub x y 2).mpr (Even.two_dvd h), fun h ↦ ?_⟩
+  refine ZMod.intCast_eq_zero_iff_even.mp ?_
+  simp only [Int.cast_sub]
+  exact sub_eq_zero.mpr (id (Eq.symm h))
+
 /-- If a, b are nonzero in ℚ_[2], then the Hilbert symbol (a, b)₂ equals
 `(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where u_a, u_b are the unit parts of a, b
 respectively. -/
@@ -419,7 +445,22 @@ theorem two_adic_eq :
   have ⟨sa, ua, hua, ha'⟩ := padic_eq_square_times_unit_or_val_one a
   have ⟨sb, ub, hub, hb'⟩ := padic_eq_square_times_unit_or_val_one b
   simp_rw [ha', hb']
-  rw [mul_left_square_eq (by aesop), mul_right_square_eq (by aesop)]
+  have : Int.negOnePow (PadicInt.epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
+      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
+      omega (unitPart (Units.mk0 a ha))) =
+        Int.negOnePow (PadicInt.epsilon (unitPart (Units.mk0 ua (by aesop))) *
+        epsilon (unitPart (Units.mk0 ub (by aesop))) + valuation (ua : ℚ_[2]) *
+        omega (unitPart (Units.mk0 ub (by aesop))) + valuation (ub : ℚ_[2]) *
+        omega (unitPart (Units.mk0 ua (by aesop)))) := by
+    rw [Int.negOnePow_eq_iff, Int.even_diff_iff_eq_mod_two]
+    simp
+
+
+    sorry
+  --rw [mul_left_square_eq (by aesop), mul_right_square_eq (by aesop)]
+
+
 
   sorry
 
