@@ -80,7 +80,6 @@ lemma omega_of_square {u : (PadicInt 2)ˣ} : omega (u ^ 2) = 0 := by
   simp only [omega_ne_zero_iff_eq_one] at this
   aesop
 
-
 end PadicInt
 
 -- `k` is a field and typically will be either `ℝ` or `ℚ_[p]`, but we need less for the definition.
