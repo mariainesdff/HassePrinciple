@@ -45,10 +45,12 @@ lemma valuation_units (a : ℤ_[p]ˣ) : (a : ℤ_[p]).valuation = 0 := by
     (Nat.cast_nonneg' p) (by exact_mod_cast (Nat.Prime.ne_one Fact.out))] at h₁
   simpa only [neg_eq_zero, Int.natCast_eq_zero] using h₁
 
+lemma valuation_units' (a : ℤ_[p]ˣ) : (a : ℚ_[p]).valuation = 0 := by
+  simp [valuation_units]
+
 /-- valuation is `0' at `p' when `x' is `-1' or a prime `≠ p' -/
-lemma valuation_eq_zero_of_neg_one_or_prime {p : ℕ} [Fact (Nat.Prime p)]
-    {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) :
-    (x : ℚ_[p]).valuation = 0 := by
+lemma valuation_eq_zero_of_neg_one_or_prime
+    {x : ℚ} (hx : x = -1 ∨ ∃ r : ℕ, Nat.Prime r ∧ x = r ∧ p ≠ r) : (x : ℚ_[p]).valuation = 0 := by
   rw [valuation_ratCast]
   rcases hx with rfl | ⟨r, hr, rfl, hpr⟩
   · simp
@@ -62,8 +64,16 @@ lemma map_unitPart (a : ℤ_[p]ˣ) :
   simp [unitPart, valuation_units a]
   norm_cast
 
-lemma padic_eq_square_times_unit_or_val_one (a : ℚ_[p]) :
-    ∃ s u : ℚ_[p], (valuation u = 0 ∨ valuation u = 1) ∧ a = u * s ^ 2 := sorry
+lemma unitPart_of_unitPart {a : ℚ_[p]} (ha : a ≠ 0) :
+    unitPart (Units.mk0 (unitPart (Units.mk0 a ha)) (by aesop)) = unitPart (Units.mk0 a ha) := by
+  ext
+  simp only [unitPart, Units.val_mk0, PadicInt.val_mkUnits, Units.mk0_mul, Units.val_mul]
+  field_simp
+  have h : (-(a * ↑p ^ (-a.valuation)).valuation) = 0 := by
+    rw [Padic.valuation_mul ha (zpow_ne_zero _ NeZero.out)]
+    simp
+  simp_rw [h, zpow_zero, mul_one]
+  rfl
 
 /-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
 noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
