@@ -415,7 +415,7 @@ theorem padic_odd_eq :
 end odd
 
 section two
-
+--maybe these three lemmas can go to the p-adic section (for general p)? But they are not very deep.
 private lemma eq_unit_mul_pow_two {x : ℚ_[2]} (hx : x ≠ 0) :
     x = (unitPart (Units.mk0 x hx)) * 2 ^ (valuation x) := by
   simp [unitPart]
@@ -463,14 +463,63 @@ lemma two_adic_case00 (ha0 : valuation (a : ℚ_[2]) = 0) (hb0 : valuation (b : 
                 congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
               rw [hu]
               exact ⟨1, by simp⟩
-          rw [comm, pow_two.mpr hr, right_square_eq_one]
-          sorry
-        · --contradiction
-          sorry
-        · --contradiction
-          sorry
-        · --solve
-          sorry
+          rw [comm, hr, ← pow_two, coe_pow, right_square_eq_one (by simp) (by aesop)]
+        · --contradiction (can this be golfed?)
+          have hu : (u : ℤ_[2]).toZModPow 2 = 1 :=
+            congrArg (fun x : (ZMod (2 ^ 2))ˣ => (x : ZMod (2 ^ 2))) h
+          have hu1 : (u : ℤ_[2]).toZModPow 3 = -1 :=
+            congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
+          have hu' : (u : ℤ_[2]).toZModPow 2 = -1 := by
+            have hcast := congrArg
+              (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2))) hu1
+            simpa [← PadicInt.zmod_cast_comp_toZModPow 2 3 (by norm_num)] using hcast
+          rw [hu] at hu'
+          contradiction
+        · --contradiction (same idea as above)
+          have hu : (u : ℤ_[2]).toZModPow 2 = 1 :=
+            congrArg (fun x : (ZMod (2 ^ 2))ˣ => (x : ZMod (2 ^ 2))) h
+          have hu1 : (u : ℤ_[2]).toZModPow 3 = 3 :=
+            congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
+          have hu' : (u : ℤ_[2]).toZModPow 2 = 3 := by
+            have hcast :=
+              congrArg (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2))) hu1
+            have hthree : (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2)))
+                (3 : ZMod (2 ^ 3)) = 3 := map_natCast _ 3
+            simpa only [← PadicInt.zmod_cast_comp_toZModPow 2 3 (by norm_num),
+              RingHom.comp_apply, hthree] using hcast
+          rw [hu] at hu'
+          contradiction
+        · have ⟨r, hr⟩ : IsSquare (u + 4 * v : ℤ_[2]) := by
+            apply isSquare_of_zmodPow
+            · intro hdvd
+              have two_dvd_u : 2 ∣ (u : ℤ_[2]) := by
+                rwa [dvd_add_left] at hdvd
+                exact ⟨2 * v, by grind⟩
+              have := PadicInt.zmodRepr_units_ne_zero u
+              have := PadicInt.zmodRepr_eq_zero_of_dvd two_dvd_u
+              contradiction
+            · have u_eq : (toZModPow 3) u.val = -3 := by
+                simpa using congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
+              have v_eq : (toZModPow 3) 4 * (toZModPow 3) v.val = 4 := by
+                have : (toZModPow 3) (4 : ℤ_[2]) = (4 : ZMod (2 ^ 3)) := map_natCast _ 4
+                rw [this]
+                rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom v) with hv | hv | hv | hv
+                all_goals
+                  have := congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) hv
+                  simp only [Nat.reducePow, RingHom.toMonoidHom_eq_coe, Units.coe_map,
+                    MonoidHom.coe_coe, Units.val_one] at this
+                  rw [this]
+                  norm_num; try decide
+              exact ⟨1, by simp [u_eq, v_eq]; ring⟩
+          simp only [hilbertSym, coe_eq_zero, Units.ne_zero, or_self, ↓reduceIte, ne_eq,
+            Prod.mk.injEq, not_and, Int.reduceNeg, ite_eq_left_iff, not_exists, reduceCtorEq,
+            imp_false, not_forall, not_not]
+          refine ⟨r, 1, 2, by simp, ?_⟩
+          rw_mod_cast [pow_two, ← hr]
+          ring_nf
+          simp only [add_sub_cancel_left, PadicInt.coe_mul, u, v, ← mul_sub, mul_eq_zero]
+          right
+          apply sub_self
 
   · sorry
 
@@ -489,7 +538,7 @@ lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : 
       omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
       omega (unitPart (Units.mk0 a ha))) := by
   sorry
-#exit
+
 /-- If `a`, `b` are nonzero in `ℚ_[2]`, then the Hilbert symbol `(a, b)₂` equals
 `(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where `u_a`, `u_b` are the unit parts of `a`, `b`
 respectively. -/
@@ -503,10 +552,11 @@ theorem two_adic_eq :
     · calc _
         _ = hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb)) := by
           nth_rw 1 [eq_unit_mul_pow_two ha, eq_unit_mul_pow_two hb, even_pow ha', even_pow hb',
-            mul_left_square_eq (by grind [even_pow]), mul_right_square_eq (by grind [even_pow])]
+            mul_left_square_eq (by simp [zpow_ne_zero]),
+              mul_right_square_eq (by simp [zpow_ne_zero])]
         _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
             epsilon (unitPart (Units.mk0 b hb))) := by
-          rw [two_adic_case00 (by grind) (by grind) (by simp only [valuation_units'])
+          rw [two_adic_case00 (by simp) (by simp) (by simp only [valuation_units'])
             (by simp only [valuation_units'])]
           simp [unitPart_of_unitPart, valuation_units]
         _ = _ := by
@@ -520,25 +570,25 @@ theorem two_adic_eq :
     · calc _
         _ = hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb) * 2) := by
           nth_rw 1 [eq_unit_mul_pow_two ha, eq_unit_mul_pow_two hb, even_pow ha', odd_pow hb',
-            mul_left_square_eq (by grind [even_pow]), ← mul_assoc,
-            mul_right_square_eq (by grind [odd_pow])]
+            mul_left_square_eq (by simp [zpow_ne_zero]), ← mul_assoc,
+            mul_right_square_eq (by simp [zpow_ne_zero])]
         _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
               epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha))) := by
-          rw [comm, two_adic_case10 (by grind) (by grind) _ (by simp only [valuation_units'])]
+          rw [comm, two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
           · rw [valuation_units' (unitPart (Units.mk0 a ha)),
-              Padic.valuation_mul (by grind) (by grind),
+              Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
             ring_nf
-            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 a ha)) (by grind)) =
+            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 a ha)) (by simp)) =
                 unitPart (Units.mk0 a ha) := by simp [unitPart_of_unitPart]
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by grind)) =
+            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by simp)) =
                 unitPart (Units.mk0 b hb) := by
               set u : ℤ_[2]ˣ := unitPart (Units.mk0 b hb)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by grind))
-                _ = unitPart (Units.mk0 (↑↑u) (by grind)) := by simp [unitPart, valuation_units' u]
+              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
+                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
                 _ = unitPart (Units.mk0 b hb) := by simpa using (unitPart_of_unitPart hb)
             rw [mul_comm, h1, h2]
-          · rw [Padic.valuation_mul (by grind) (by grind),
+          · rw [Padic.valuation_mul (by simp) (by grind),
               valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
             norm_num
         _ = _ := by
@@ -553,25 +603,26 @@ theorem two_adic_eq :
   · by_cases hb' : Even b.valuation
     · calc _
         _ = hilbertSym (unitPart (Units.mk0 a ha) * 2 : ℚ_[2]) (unitPart (Units.mk0 b hb)) := by
-          nth_rw 1 [h ha, h hb, odd_pow ha', even_pow hb', ← mul_assoc,
-            mul_left_square_eq (by grind [odd_pow]), mul_right_square_eq (by grind [even_pow])]
+          nth_rw 1 [eq_unit_mul_pow_two ha, eq_unit_mul_pow_two hb, odd_pow ha', even_pow hb',
+            ← mul_assoc, mul_left_square_eq (by simp [zpow_ne_zero]),
+            mul_right_square_eq (by simp [zpow_ne_zero])]
         _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
               epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 b hb))) := by
-          rw [two_adic_case10 (by grind) (by grind) _ (by simp only [valuation_units'])]
+          rw [two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
           · rw [valuation_units' (unitPart (Units.mk0 b hb)),
-              Padic.valuation_mul (by grind) (by grind),
+              Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
             ring_nf
-            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 b hb)) (by grind)) =
+            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 b hb)) (by simp)) =
                 unitPart (Units.mk0 b hb) := by simp [unitPart_of_unitPart]
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by grind)) =
+            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by simp)) =
                 unitPart (Units.mk0 a ha) := by
               set u : ℤ_[2]ˣ := unitPart (Units.mk0 a ha)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by grind))
-                _ = unitPart (Units.mk0 (↑↑u) (by grind)) := by simp [unitPart, valuation_units' u]
+              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
+                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
                 _ = unitPart (Units.mk0 a ha) := by simpa using (unitPart_of_unitPart ha)
             rw [h1, h2]
-          · rw [Padic.valuation_mul (by grind) (by grind),
+          · rw [Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
             norm_num
         _ = _ := by
@@ -585,36 +636,36 @@ theorem two_adic_eq :
           tauto
     · calc _
         _ = hilbertSym (unitPart (Units.mk0 a ha) * 2 : ℚ_[2]) (unitPart (Units.mk0 b hb) * 2) := by
-          nth_rw 1 [h ha, h hb, odd_pow ha', odd_pow hb', ← mul_assoc,
-            mul_left_square_eq (by grind [odd_pow]), ← mul_assoc,
-            mul_right_square_eq (by grind [odd_pow])]
+          nth_rw 1 [eq_unit_mul_pow_two ha, eq_unit_mul_pow_two hb, odd_pow ha', odd_pow hb',
+            ← mul_assoc, mul_left_square_eq (by simp [zpow_ne_zero]), ← mul_assoc,
+            mul_right_square_eq (by simp [zpow_ne_zero])]
         _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
               epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha)) +
               omega (unitPart (Units.mk0 b hb))) := by
-          rw [two_adic_case11 (by grind) (by grind) _ _]
-          · rw [Padic.valuation_mul (by grind) (by grind),
+          rw [two_adic_case11 (by simp) (by simp) _ _]
+          · rw [Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 a ha)),
-              Padic.valuation_mul (by grind) (by grind),
+              Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
             ring_nf
-            have h1 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by grind)) =
+            have h1 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by simp)) =
                 unitPart (Units.mk0 a ha) := by
               set u : ℤ_[2]ˣ := unitPart (Units.mk0 a ha)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by grind))
-                _ = unitPart (Units.mk0 (↑↑u) (by grind)) := by simp [unitPart, valuation_units' u]
+              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
+                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
                 _ = unitPart (Units.mk0 a ha) := by simpa using (unitPart_of_unitPart ha)
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by grind)) =
+            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by simp)) =
                 unitPart (Units.mk0 b hb) := by
               set u : ℤ_[2]ˣ := unitPart (Units.mk0 b hb)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by grind))
-                _ = unitPart (Units.mk0 (↑↑u) (by grind)) := by simp [unitPart, valuation_units' u]
+              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
+                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
                 _ = unitPart (Units.mk0 b hb) := by simpa using (unitPart_of_unitPart hb)
             rw [h1, h2]
             ring_nf
-          · rw [Padic.valuation_mul (by grind) (by grind),
+          · rw [Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
             norm_num
-          · rw [Padic.valuation_mul (by grind) (by grind),
+          · rw [Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
             norm_num
         _ = _ := by
