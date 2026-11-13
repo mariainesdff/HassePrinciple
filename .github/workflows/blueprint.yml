@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   build_project:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     name: Build project
     steps:
       - name: Cleanup to free disk space
