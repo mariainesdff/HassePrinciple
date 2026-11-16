@@ -57,13 +57,14 @@ lemma valuation_eq_zero_of_neg_one_or_prime
   · have : Fact (Nat.Prime r) := ⟨hr⟩
     simp [padicValNat_primes hpr]
 
-/-- The map that sends a padic integer to its unit part in ℤ_[p]ˣ is the natural inclusion. -/
+/-- The map that sends a p-adic integer to its unit part in ℤ_[p]ˣ is the natural inclusion. -/
 lemma map_unitPart (a : ℤ_[p]ˣ) :
     unitPart (Units.map (algebraMap ℤ_[p] ℚ_[p]) a) = a := by
   ext
   simp [unitPart, valuation_units a]
   norm_cast
 
+/-- Given a nonzero p-adic number, the unit part of its unit part is still its unit part. -/
 lemma unitPart_of_unitPart {a : ℚ_[p]} (ha : a ≠ 0) :
     unitPart (Units.mk0 (unitPart (Units.mk0 a ha)) (by aesop)) = unitPart (Units.mk0 a ha) := by
   ext
@@ -90,12 +91,12 @@ lemma norm_mul_zpow_valuation_le_one_of_norm_le {x y : ℚ_[p]} (hxy : ‖y‖ �
   simp [hxy]
 
 open PadicInt in
-/-- If `p` is a prime, `x, y, z ∈ ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v in`
-`ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same
-equation with `z', y', x' ∈ ℤ_[p]`, and at least one is a unit -/
-lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
-    (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
-    ∃ z' y' x' : ℤ_[p], z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0 ∧
+/-- If `p` is a prime, `x, y, z ∈ ℚ_[p]` satisfy `z ^ 2 - u * x ^ 2 - v * y ^ 2`, with `u in`
+`ℤ_[p]`, `v in ℤ_[p]ˣ`, and not all of `x, y, z` are zero, then there exists a nontrivial solution
+to the same equation with `z', y', x' ∈ ℤ_[p]`, and at least one is a unit -/
+lemma exists_padicInt_sol {u : ℤ_[p]} {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
+    (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - u * x ^ 2 - v * y ^ 2 = 0) :
+    ∃ z' y' x' : ℤ_[p], z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0 ∧
     (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := by
   by_cases h : ‖y‖ ≤ ‖x‖ ∧ ‖z‖ ≤ ‖x‖
   · let x' := x * p ^ (-x.valuation)
@@ -105,7 +106,7 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
     have y'_int : ‖y'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le h.1
     have z'_int : ‖z'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le h.2
     exact ⟨⟨z', z'_int⟩, ⟨y', y'_int⟩, ⟨x', x'_unit.le⟩,
-      ⟨coe_eq_zero.mp (by grind : z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0),
+      ⟨coe_eq_zero.mp (by grind : z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0),
       Or.inr (Or.inr (isUnit_iff.mpr x'_unit))⟩⟩
   · by_cases h_1 : ‖z‖ ≤ ‖y‖
     · rw [or_left_comm] at hnontriv
@@ -117,7 +118,7 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
       have x'_int : ‖x'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le (by grind)
       have z'_int : ‖z'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le h_1
       exact ⟨⟨z', z'_int⟩, ⟨y', le_of_eq y'_unit⟩, ⟨x', x'_int⟩,
-        ⟨coe_eq_zero.mp (by grind : z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0),
+        ⟨coe_eq_zero.mp (by grind : z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0),
         Or.inr (Or.inl (isUnit_iff.mpr y'_unit))⟩⟩
     · let x' := x * p ^ (-z.valuation)
       let y' := y * p ^ (-z.valuation)
@@ -127,7 +128,7 @@ lemma exists_padicInt_sol {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
       have x'_int : ‖x'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le (by grind)
       have y'_int : ‖y'‖ ≤ 1 := norm_mul_zpow_valuation_le_one_of_norm_le (not_le.mp h_1).le
       exact ⟨⟨z', le_of_eq z'_unit⟩, ⟨y', y'_int⟩, ⟨x', x'_int⟩,
-        ⟨coe_eq_zero.mp (by grind : z' ^ 2 - p * x' ^ 2 - v * y' ^ 2 = 0),
+        ⟨coe_eq_zero.mp (by grind : z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0),
         Or.inl (isUnit_iff.mpr z'_unit)⟩⟩
 
 open PadicInt in
@@ -138,7 +139,7 @@ lemma exists_nontrivial_units_zero {v : ℤ_[p]ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
     (z' : ℤ_[p]) ^ 2 - p * (x') ^ 2 - v * (y' : ℤ_[p]) ^ 2 = 0 := by
-  obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_sol hnontriv hsol
+  obtain ⟨z', y', x', hnewsol, hunits⟩ := exists_padicInt_sol (u := p) hnontriv hsol
   have not_unit_x_of_not_unit_y_z (hy : ¬ IsUnit y') (hz : ¬ IsUnit z') : ¬ IsUnit x' := by
     rw [not_isUnit_iff, norm_lt_one_iff_dvd, ← Prime.dvd_pow_iff_dvd prime_p two_ne_zero]
     have hp2 : (p : ℤ_[p]) ^ 2 ∣ p * x' ^ 2 := by
