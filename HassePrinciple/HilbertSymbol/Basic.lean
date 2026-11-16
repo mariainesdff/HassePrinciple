@@ -18,13 +18,67 @@ public import Mathlib.NumberTheory.LSeries.PrimesInAP
 -- Notation:
 namespace PadicInt
 
-/-- epsilon(u) is the class modulo 2 of (u-1)/2. -/
+/-- epsilon(u) is the class modulo 2 of (u - 1) / 2. -/
 noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 2 % 4 = 1 then 0 else 1
+  if Units.map (toZModPow 2).toMonoidHom u = 1 then 0 else 1
 
-/-- omega(u) is the class modulo 2 of (u^2-1)/8. -/
+/-- epsilon only takes the values 0 and 1 -/
+lemma epsilon_eq_zero_or_one {u : (PadicInt 2)ˣ} : epsilon u = 0 ∨ epsilon u = 1 := by grind
+
+/-- epsilon is not 0 if and only if it is 1. -/
+lemma epsilon_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(epsilon u = 0) ↔ epsilon u = 1 := by grind
+
+/-- The units mod 4 are only 1 and -1. -/
+lemma units_mod4 (u : (ZMod (2 ^ 2))ˣ) : u = 1 ∨ u = -1 := by
+  decide +revert
+
+/-- epsilon maps products to sums modulo 2. -/
+lemma epsilon_hom_mod2 {u v : (PadicInt 2)ˣ} :
+    (epsilon (u * v) : ZMod 2) = (epsilon u + epsilon v : ZMod 2) := by
+  rcases units_mod4 (Units.map (toZModPow 2).toMonoidHom u) with h
+  rcases units_mod4 (Units.map (toZModPow 2).toMonoidHom v) with h'
+  aesop
+
+/-- epsilon is 0 on squares. -/
+lemma epsilon_of_square {u : (PadicInt 2)ˣ} : epsilon (u ^ 2) = 0 := by
+  have : (epsilon (u ^ 2) : ZMod 2) = 0 := by
+    rw [pow_two, epsilon_hom_mod2]
+    aesop
+  by_contra
+  simp only [epsilon_ne_zero_iff_eq_one] at this
+  aesop
+
+/-- omega(u) is the class modulo 2 of (u ^ 2 - 1) / 8. -/
 noncomputable abbrev omega (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 3 % 8 = 1 ∨ (u.val).appr 3 % 8 = 7 then 0 else 1
+  if Units.map (toZModPow 3).toMonoidHom u = 1 ∨
+    Units.map (toZModPow 3).toMonoidHom u = -1 then 0 else 1
+
+/-- omega only takes the values 0 and 1 -/
+lemma omega_eq_zero_or_one {u : (PadicInt 2)ˣ} : omega u = 0 ∨ omega u = 1 := by grind
+
+/-- omega is not 0 if and only if it is 1. -/
+lemma omega_ne_zero_iff_eq_one {u : (PadicInt 2)ˣ} : ¬(omega u = 0) ↔ omega u = 1 := by grind
+
+/-- The units mod 8 are only 1, -1, 3 and -3. -/
+lemma units_mod8 (u : (ZMod (2 ^ 3))ˣ) : u = 1 ∨ u = -1 ∨
+    u = ⟨3, 3, by aesop, by aesop⟩ ∨ u = -⟨3, 3, by aesop, by aesop⟩ := by
+  decide +revert
+
+/-- omega maps products to sums modulo 2. -/
+lemma omega_hom_mod2 {u v : (PadicInt 2)ˣ} :
+    (omega (u * v) : ZMod 2) = (omega u + omega v : ZMod 2) := by
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom u) with h
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom v) with h'
+  aesop
+
+/-- omega is 0 on squares. -/
+lemma omega_of_square {u : (PadicInt 2)ˣ} : omega (u ^ 2) = 0 := by
+  have : (omega (u ^ 2) : ZMod 2) = 0 := by
+    rw [pow_two, omega_hom_mod2]
+    aesop
+  by_contra
+  simp only [omega_ne_zero_iff_eq_one] at this
+  aesop
 
 end PadicInt
 
@@ -108,7 +162,7 @@ lemma comm : hilbertSym a b = hilbertSym b a := by
 -/
 
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if and only if a is a norm from the
-  quadratic algebra `QuadraticAlgebra k b 0`. -/
+quadratic algebra `QuadraticAlgebra k b 0`. -/
 theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
     hilbertSym a b = 1 ↔ ∃ t : QuadraticAlgebra k b 0, a = QuadraticAlgebra.norm t := by
   rw [hilbertSym, ite_eq_right (by simp [ha, hb])]
@@ -219,7 +273,10 @@ theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
         rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, ite_eq_right (by aesop)] at this
         simp only [ite_eq_left_iff] at this
         grind
-
+@[simp]
+theorem left_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
+    hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b := by
+  simp [comm, right_mul_eq_of_eq_one (by rwa [comm] at hab : hilbertSym b a = 1), hab]
 /-- The Hilbert symbol of a and -a*b, equals the Hilbert symbol of a and b. -/
 @[simp]
 theorem right_neg_mul : hilbertSym a (- (a * b)) = hilbertSym a b := by
@@ -239,13 +296,17 @@ theorem right_minus_self_mul (ha : a ≠ 1) :
     hilbertSym a ((1 - a) * b) = hilbertSym a b := by
   by_cases hzero : a = 0 <;> aesop
 
+/-- Hilbert symbol with 1 is 1. Needed for the n = 1 base case in Hilbert reciprocity -/
+lemma one_right (ha : a ≠ 0) : hilbertSym a 1 = 1 := by
+  rw [← one_pow 2, right_square_eq_one ha one_ne_zero]
+
 section Bilin
 
 variable (k) in
 /-- We say that `HasBilinHilbertSym k` if the Hilbert symbol on `k` is bilinear, i.e., if
-  `hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
-  Note that, by the commutativity property of the Hilbert symbol, this also implies
-  `hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b'` for all `a, b, b'` in k. -/
+`hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
+Note that, by the commutativity property of the Hilbert symbol, this also implies
+`hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b'` for all `a, b, b'` in k. -/
 class HasBilinHilbertSym : Prop where
   mul_left_eq {a a' b : k} : hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b
 
@@ -400,19 +461,166 @@ end Padic
 /-
 # Global properties of the Hilbert symbol
 -/
-open Nat
+open Filter Int Nat
 
-/-- The instance that provides the fact that the nth prime is prime. -/
+/-- The instance that provides the fact that an element of type Nat.Primes is prime. -/
 scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
+/-- A property that a rational number is either equal to -1 or a natural prime. -/
+abbrev IsNegOneOrPrime (a : ℚ) : Prop := a = -1 ∨ ∃ r : ℕ, r.Prime ∧ (a : ℚ) = r
+
+/-- `x ≠ 0' in `ℚ_[p]' when `x' is `-1' or a prime -/
+lemma IsNegOneOrPrime.valuation_ne_zero {p : ℕ} [Fact (Nat.Prime p)] {x : ℚ}
+    (hx : IsNegOneOrPrime x) : (x : ℚ_[p]) ≠ 0 := by rcases hx <;> aesop
+
+/-- the actual Hilbert symbol computation, once both valuations vanish. -/
+lemma eq_one_of_valuation_zero {p : ℕ} [Fact (Nat.Prime p)] (hp2 : p ≠ 2)
+    {a b : ℚ} (ha : (a : ℚ_[p]) ≠ 0) (hb : (b : ℚ_[p]) ≠ 0)
+    (hva : (a : ℚ_[p]).valuation = 0) (hvb : (b : ℚ_[p]).valuation = 0) :
+    hilbertSym (a : ℚ_[p]) b = 1 := by
+  simp [← Rat.intCast_eq_one_iff, padic_odd_eq hp2 ha hb, hva, hvb]
+
+/-- The Hilbert symbol of (numerator of a)*(denominator of a) and b is that of a and b. -/
+theorem num_mul_den (K : Type*) [Field K] [CharZero K] (a b : ℚˣ) :
+    hilbertSym (((a.1.num * a.1.den : ℤ) : ℚ) : K) b = hilbertSym (a : K) b := by
+  set N := (a : ℚ).num with hN
+  set D := (a : ℚ).den with hD
+  calc
+    _ = hilbertSym ((((N / D) * D ^ 2) : ℚ) : K) b := by
+      congr 1; push_cast; field_simp
+    _ = hilbertSym (((N / D) : ℚ) : K) b := by
+      simpa using mul_square_eq (b := (b : K)) (a' := D)
+        (cast_ne_zero.mpr (a : ℚ).den_ne_zero) one_ne_zero
+    _ = hilbertSym (a : K) b := by rw [← Rat.num_div_den a]
+
+
+/-- Let a and b be rational units. Suppose given d either -1 or prime, the Hilbert symbol of a and d
+is 1 for all but finitely many primes. Then, for all but finitely many primes, the Hilbert symbol
+of a and (numerator of b)*(denominator of b) is 1. -/
+theorem sign_mul_num_den {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPrime d),
+      ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
+    ∀ᶠ (q : Primes) in cofinite, hilbertSym (a : ℚ_[q]) (sign (b.1.num * b.1.den) : ℚ) = 1 := by
+  rcases sign_trichotomy (b.1.num * b.1.den) with h1 | h0 | hneg1
+  · simp only [h1, Int.cast_one, Rat.cast_one]
+    exact Eventually.of_forall (fun q ↦ one_right (by simp))
+  · exact absurd (sign_eq_zero_iff_zero.mp h0) (by simp [(b : ℚ).den_ne_zero])
+  · simpa [hneg1] using ha (-1) (Or.inl rfl)
+
+/-- Let a be a rational unit and b ∈ ℕ be nonzero. Suppose given d either -1 or prime,
+the Hilbert symbol of a and d is 1 for all but finitely many primes. Then, for all but finitely
+many primes, the Hilbert symbol of a and b is 1. -/
+theorem natCast {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPrime d),
+      ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) d = 1) {b : ℕ} (hb : b ≠ 0) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
+  induction b using UniqueFactorizationMonoid.induction_on_prime with
+  | h₁ => tauto
+  | h₂ x hx =>
+    obtain rfl : x = 1 := Nat.isUnit_iff.mp hx
+    exact Eventually.of_forall (fun q ↦ one_right (by simp [a.ne_zero]))
+  | h₃ m p' hm1 hp' hm2 =>
+    have hBase : ∀ᶠ q : Primes in cofinite, hilbertSym (a : ℚ_[q]) p' = 1 :=
+      ha (Units.mk0 (p' : ℚ) (by exact_mod_cast hp'.ne_zero))
+        (Or.inr ⟨p', prime_iff.mpr hp', by simp⟩)
+    filter_upwards [eventually_and.mpr ⟨hm2 hm1, hBase⟩] with q ⟨hq1, hq2⟩
+    simp [right_mul_eq_of_eq_one hq2, hq1]
+
+namespace eventually_one
+
+/-- For all but finitely many primes, the Hilbert symbol of -1 and -1 is 1. -/
+theorem of_neg_one_of_neg_one :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) ((-1 : ℚ)) = 1 := by
+  apply (Set.finite_singleton ⟨2, prime_two⟩).subset
+  intro ⟨p, hp⟩ hne
+  by_contra hcon
+  have hp2 : p ≠ 2 := by contrapose! hcon; aesop
+  have hfact : Fact (Nat.Prime p) := ⟨hp⟩
+  exact hne (eq_one_of_valuation_zero hp2
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inl rfl))
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inl rfl))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl)))
+
+/-- Fix b a prime. For all but finitely many primes, the Hilbert symbol of -1 and b is 1. -/
+theorem of_neg_one_of_prime {b : ℕ} (hb : Nat.Prime b) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((-1 : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
+  refine (Set.toFinite ({⟨2, prime_two⟩, ⟨b, hb⟩} : Set Primes)).subset ?_
+  intro ⟨p, hp⟩ hne
+  by_contra hcon
+  have hpr : p ≠ b := fun h ↦ hcon (by subst h; tauto)
+  have hp2 : p ≠ 2 := by
+    intro h2
+    exact hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2)))
+  have hfact : Fact (Nat.Prime p) := ⟨hp⟩
+  exact hne (eq_one_of_valuation_zero hp2
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inl rfl))
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨b, hb, rfl⟩))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inl rfl))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨b, hb, rfl, hpr⟩)))
+
+/-- Given primes a and b, for all but finitely many primes, the Hilbert symbol of a and b is 1. -/
+theorem of_prime_of_prime {a b : ℕ} (ha : Nat.Prime a) (hb : Nat.Prime b) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym ((a : ℚ) : ℚ_[p]) (b : ℚ) = 1 := by
+  refine (Set.toFinite ({⟨2, prime_two⟩, ⟨a, ha⟩, ⟨b, hb⟩} : Set Primes)).subset ?_
+  intro ⟨p, hp⟩ hne
+  by_contra hcon
+  have : Fact (Nat.Prime p) := ⟨hp⟩
+  exact hne (eq_one_of_valuation_zero
+    (fun h2 ↦ hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2))))
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨a, ha, rfl⟩))
+    (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨b, hb, rfl⟩))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨a, ha, rfl, by grind⟩))
+    (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨b, hb, rfl, by grind⟩)))
+
+/-- Suppose a and b are each either -1 or prime. Then for all but finitely many primes,
+the Hilbert symbol of a and b is 1. -/
+theorem of_IsNegOneOrPrime {a b : ℚˣ} (ha : IsNegOneOrPrime a) (hb : IsNegOneOrPrime b) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
+  rcases ha with ha | ⟨r, hr, ha⟩ <;> rcases hb with hb | ⟨q, hq, hb⟩
+  · simpa [ha, hb] using of_neg_one_of_neg_one
+  · simpa [ha, hb] using of_neg_one_of_prime hq
+  · simpa [ha, hb, comm] using of_neg_one_of_prime hr
+  · simpa [ha, hb] using of_prime_of_prime hr hq
+
+/-- Let a and b be rational units. Suppose given d either -1 or prime,
+the Hilbert symbol of a and d is 1 for all but finitely many primes. Then, for all but finitely
+many primes, the Hilbert symbol of b and a is 1. -/
+theorem almost_all_one_left {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPrime d),
+      ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) d = 1) (b : ℚˣ) :
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) (b : ℚ_[p]) = 1 := by
+  set N := (b : ℚ).num
+  set D := (b : ℚ).den
+  have h_nat : ∀ᶠ p : Primes in cofinite, hilbertSym (a : ℚ_[p]) ((N * D).natAbs : ℚ) = 1 :=
+    natCast ha (natAbs_ne_zero.mpr (mul_ne_zero (Rat.num_ne_zero.mpr b.ne_zero)
+      (ofNat_ne_zero.mpr (b : ℚ).den_ne_zero)))
+  filter_upwards [sign_mul_num_den ha b, h_nat] with p hsignND hnatND
+  have hsplitQ : ((N * D : ℤ) : ℚ) = ((sign (N * D) : ℤ) : ℚ) * ((N * D).natAbs : ℚ) := by
+    rw [← cast_natCast (R := ℚ), ← Int.cast_mul, sign_mul_natAbs]
+  rw [comm, ← num_mul_den, hsplitQ, Rat.cast_mul, comm, right_mul_eq_of_eq_one hsignND, hnatND]
+
+end eventually_one
+
+open eventually_one in
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
-  sorry
+    ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
+  suffices hreduction : ∀ (c d : ℚˣ) (hc : IsNegOneOrPrime c) (hd : IsNegOneOrPrime d),
+      (∀ᶠ (p : Primes) in cofinite, hilbertSym (c : ℚ_[p]) d = 1) by
+    have one_reduced_general {c₀ : ℚˣ}
+        (hc : ∀ (d : ℚˣ) (_ : IsNegOneOrPrime d), ∀ᶠ p : Primes in cofinite,
+          hilbertSym (c₀ : ℚ_[p]) d = 1) (b' : ℚˣ) :
+        ∀ᶠ p : Primes in cofinite, hilbertSym (b' : ℚ_[p]) c₀ = 1 := by
+      filter_upwards [almost_all_one_left hc b'] with p hp
+      rw [comm, hp]
+    have hbase_b (d : ℚˣ) (hd : IsNegOneOrPrime d) :
+        ∀ᶠ p : Primes in cofinite, hilbertSym (b : ℚ_[p]) d = 1 := by
+      filter_upwards [almost_all_one_left (fun _ he ↦ hreduction _ _ hd he) b] with p hp
+      rw [comm, hp]
+    exact one_reduced_general hbase_b a
+  · apply of_IsNegOneOrPrime
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    (∏ᶠ (p : Nat.Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
+    (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b = 1 := by
   sorry
 
 end hilbertSym
