@@ -526,29 +526,27 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n n' : ℕ} {w : Fin n → k} {w' :
       hilbertSym.eq_one_or_neg_one_of_ne_zero h0.1 h0.2
   | (r + 3) =>
   by_cases hw : ∃ i, w i = 0
-  · sorry
--- lemma hasseMinkowskiInvAux.eq_of_equivalent_of_zero {n : ℕ} {w w' : Fin (n + 1) → k}
---     [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
---     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
---     (ih : ∀ {w0 w0' : Fin n → k},
---       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
---         hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
---     (hw : ∃ i, w i = 0) :
---     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
-  push Not at hw
-  have hNondeg : (weightedSumSquares (R := k) w).Nondegenerate := by
-    apply (QuadraticForm.nondegenerate_iff_map_basis_ne_zero (weightedSumSquares_isOrthoᵢ_basisFun w)).mpr
+  · obtain ⟨f⟩ := h
+    exact hasseMinkowskiInvAux.eq_of_equivalent_of_zero f hasseMinkowskiInvAux.eq_of_equivalent hw
+  have hw' : ¬∃ i, w' i = 0 := by
+    contrapose! hw
+    exact exists_eq_zero_of_equivalent_of_zero h.symm hw
+  push Not at hw'
+  have hNondeg : (weightedSumSquares (R := k) w').Nondegenerate := by
+    apply (QuadraticForm.nondegenerate_iff_map_basis_ne_zero
+      (weightedSumSquares_isOrthoᵢ_basisFun w')).mpr
     intro i
     simp only [Pi.basisFun_apply, QuadraticMap.weightedSumSquares_apply, smul_eq_mul, ne_eq]
     rw [Finset.sum_eq_single i (fun j _ hj ↦ by simp [hj]) (fun h0 ↦ by simp at h0)]
-    simp [hw]
+    simp [hw']
   obtain ⟨f⟩ := h
   let b' := (Pi.basisFun k (Fin (r + 3)))
   let b := b'.map f.toLinearEquiv
-  have c : Module.Basis.Chain (weightedSumSquares k w') b b' := by
-    refine Module.Basis.chain_of_nondegenerate (ι := Fin (r + 3)) ?_
-      (QuadraticMap.nondegenerate_associated_iff.mpr hNondeg).1 ?_ ?_
-
+  have hdim : 3 ≤ Fintype.card (Fin (r + 3)) := by simp
+  have hSepLeft := (QuadraticMap.nondegenerate_associated_iff.mpr hNondeg).1
+  have hb' := weightedSumSquares_isOrthoᵢ_basisFun w'
+  have hb := f.isOrthoᵢ_map (weightedSumSquares_isOrthoᵢ_basisFun w)
+  obtain ⟨c⟩ := Module.Basis.chain_of_nondegenerate hdim hSepLeft hb hb'
   exact hasseMinkowskiInvAux.eq_of_equivalent_of_chain f hasseMinkowskiInvAux.eq_of_equivalent c
 
 variable [FiniteDimensional k V] [FiniteDimensional k W]
