@@ -18,6 +18,12 @@ def IsContiguous {ι R M : Type*} [Semiring R] [AddCommMonoid M] [Module R M]
     (b b' : Basis ι R M) : Prop :=
   ∃ (i j : ι), b i = b' j
 
+theorem IsContiguous.map {ι R M N : Type*} [CommRing R] [AddCommGroup M] [AddCommGroup N]
+    [Module R M] [Module R N] {b b' : Basis ι R M} (hc : b.IsContiguous b') (f : M ≃ₗ[R] N) :
+    (b.map f).IsContiguous (b'.map f) := by
+  obtain ⟨i, j, hij⟩ := hc
+  exact ⟨i, j, by rw [Basis.map_apply, Basis.map_apply, hij]⟩
+
 variable {k : Type*} [Field k] [Invertible (2 : k)]
   {V : Type*} [AddCommGroup V] [Module k V] [FiniteDimensional k V]
   {Q : QuadraticForm k V}

@@ -314,6 +314,19 @@ lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
     hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
   rw [comm, mul_left_eq, comm, comm (b := b')]
 
+lemma HasBilinHilbertSym.prod_right_eq [HasBilinHilbertSym k]
+    {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (f : ι → k) :
+    hilbertSym a (∏ i ∈ s, f i) = ∏ i ∈ s, hilbertSym a (f i) := by
+  by_cases ha : a = 0
+  · simp [hilbertSym, ha, zero_pow hs.card_ne_zero]
+  let h : k →* ℤ :=
+    { toFun := fun b ↦ hilbertSym (a : k) b
+      map_one' := by
+        rw [← one_pow 2]
+        exact hilbertSym.right_square_eq_one ha (by simp)
+      map_mul' := fun _ _ ↦ hilbertSym.HasBilinHilbertSym.mul_right_eq }
+  simpa only [h, MonoidHom.coe_mk, OneHom.coe_mk, Units.coe_prod] using map_prod h f s
+
 end Bilin
 
 end Field
