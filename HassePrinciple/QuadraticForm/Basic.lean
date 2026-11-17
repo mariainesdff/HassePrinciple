@@ -195,6 +195,16 @@ lemma Equivalent.baseChange (A : Type*) [CommRing A] [Algebra R A] [Invertible (
 
 open Module
 
+theorem IsometryEquiv.isOrthoᵢ_map {R M₁ M₂ N ι : Type*} [CommRing R] [Invertible (2 : R)]
+    [AddCommGroup M₁] [AddCommGroup M₂] [AddCommGroup N] [Module R M₁] [Module R M₂] [Module R N]
+    {Q₁ : QuadraticMap R M₁ N} {Q₂ : QuadraticMap R M₂ N} (e : Q₁.IsometryEquiv Q₂)
+    {v : Basis ι R M₁} (hv : Q₁.associated.IsOrthoᵢ v) :
+    Q₂.associated.IsOrthoᵢ (v.map e.toLinearEquiv) := by
+  have h : Q₂.comp e.toLinearEquiv.toLinearMap = Q₁ := ext e.map_app
+  rw [← h, associated_comp] at hv
+  intro i j hij
+  simpa [Function.onFun] using (hv hij)
+
 -- TODO: change in Mathlib
 theorem polarBilin_injective' :
     Function.Injective (polarBilin : QuadraticMap R M N → _) :=
