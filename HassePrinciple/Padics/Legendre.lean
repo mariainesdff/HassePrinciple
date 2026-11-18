@@ -1,27 +1,59 @@
 /-
-Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández, Catherine Hsu. All rights reserved.
+Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández, Catherine Hsu.
+All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Catherine Hsu
 -/
-
 module
 
+public import Mathlib.Algebra.CharP.CharAndCard
 public import Mathlib.NumberTheory.LegendreSymbol.Basic
 public import Mathlib.NumberTheory.Padics.RingHoms
+public import Mathlib.RingTheory.LocalRing.ResidueField.Ideal
 
-/-! # The Legendre Symbol for Padic Integers. -/
+/-!
+# The Legendre Symbol for `p`-adic Integers
+
+This file contains results about Legendre symbols for local rings with finite residue fields.
+
+## Main definitions
+
+We define `IsLocalRing.legendreSym p a`, where `p` is a prime and `a : ℤ_[p]ˣ`, as the composition
+of the reduction map modulo `p` and the usual Legendre symbol `legendreSym`, which is defined
+over `ℤ`.
+
+## Main results
+
+The main results are
+
+* `IsLocalRing.legendreSym.eq_one_or_neg_one` shows the Legendre symbol of a unit is 1 or -1.
+
+* `IsLocalRing.legendreSym.eq_zero_iff` shows the Legendre symbol is 0 if and only if `p` divides
+`a`.
+
+* `IsLocalRing.legendreSym.eq_one_iff` shows that if `a` is a unit, then the Legendre symbol is 1
+  if and only if `a` is a square mod `p`.
+
+## Tags
+
+quadratic residue, quadratic nonresidue, Legendre symbol
+-/
 
 @[expose] public section
 
+-- TODO: This is in another file on Mathlib but putting it here to make sure things compile in our
+-- project.
 namespace MulChar
 
-variable {M M' R F : Type*} [CommMonoid M] [CommMonoid M'] [CommMonoidWithZero R]
-  [FunLike F M' M] [MonoidHomClass F M' M]
+variable {R : Type*} [CommMonoid R]
 
-/-- We define the composition of monoid morphisms as the map composition. It is still a monoid
-morphism. -/
+-- The target
+variable {R' : Type*} [CommMonoidWithZero R']
+
+/-- Composing a `MulChar` with a local homomorphism gives another `MulChar`. -/
 @[simps]
-def compMonoidHom (χ : MulChar M R) (f : F) [IsLocalHom f] : MulChar M' R where
+def compLocalHom {S F : Type*} [CommMonoid S] [FunLike F S R] [MonoidHomClass F S R]
+    (χ : MulChar R R') (f : F) [IsLocalHom f] : MulChar S R' where
   toFun m' := χ (f m')
   map_one' := by simp
   map_mul' := by simp
@@ -29,87 +61,174 @@ def compMonoidHom (χ : MulChar M R) (f : F) [IsLocalHom f] : MulChar M' R where
 
 end MulChar
 
-namespace PadicInt
+-- TODO: This is in another file on Mathlib but putting it here to make sure things compile in our
+-- project.
+namespace MonoidWithZeroHom
 
-variable {p : ℕ} [Fact (Nat.Prime p)]
+variable {M : Type*} [MonoidWithZero M] (f : M →*₀ ℤ) {b : M}
 
-/-- The Legendre symbol of a p-adic integer is the quadratic character on ℤ_[p] precomposed with
-the reduction modulo p. -/
-noncomputable
-def legendreSym : MulChar ℤ_[p] ℤ := (quadraticChar (ZMod p)).compMonoidHom toZMod
+/-- The image of a unit under an arbitrary homomorphism to the integers is 1 or -1. -/
+lemma eq_one_or_neg_one (hb : IsUnit b) : f b = 1 ∨ f b = -1 := Int.isUnit_eq_one_or (hb.map f)
 
-variable {a b : ℤ_[p]}
+/-- The square of the image of 'b' under a homomorphism to the integers is 1 if 'b' is a unit. -/
+theorem sq_one (hb : IsUnit b) : f b ^ 2 = 1 := by
+  cases eq_one_or_neg_one f hb <;> aesop
+
+end MonoidWithZeroHom
+
+namespace IsLocalRing
+
+variable {R : Type*} [CommRing R] [IsLocalRing R] [Fintype (ResidueField R)]
+  [DecidableEq (ResidueField R)]
+
+-- TODO: Switch over to Finite and Nat.card once the rest of the finite field material has been
+-- switched over
+noncomputable def legendreSym : MulChar R ℤ :=
+  (quadraticChar (ResidueField R)).compLocalHom (residue R)
+
 namespace legendreSym
 
-/-- The Padic Legendre symbol agrees with the classical Legendre symbol on ℤ. -/
-lemma intCast (z : ℤ) : legendreSym (z : ℤ_[p]) = _root_.legendreSym p z := by
-  simp [legendreSym, _root_.legendreSym, quadraticCharFun]
+variable {a b : R}
 
-/-- We have the congruence `legendreSym a ≡ a ^ (p / 2) mod p`. -/
-theorem eq_pow : (legendreSym a : ZMod p) = (a.toZMod) ^ (p / 2) := by
-  calc (legendreSym a : ZMod p)
-    _ = (legendreSym (a.zmodRepr : ℤ_[p]) : ZMod p) := by
-      simp [legendreSym, (ZMod.intCast_eq_intCast_iff' (quadraticCharFun (ZMod p) (toZMod a))
-        (quadraticCharFun (ZMod p) a.zmodRepr) p).mpr rfl]
-    _ = _root_.legendreSym p (a.zmodRepr) := by simp [legendreSym, _root_.legendreSym]
-    _ = (a.zmodRepr) ^ (p / 2) := by simp [_root_.legendreSym.eq_pow]
-    _ = (a.toZMod) ^ (p / 2) := ZMod.valMinAbs_inj.mp rfl
-
-/-- If `a` is a p-adic unit, then `legendreSym a` is `1` or `-1`. -/
+/-- If `a` is a unit, then `legendreSym a` is `1` or `-1`. -/
 theorem eq_one_or_neg_one (ha : IsUnit a) : legendreSym a = 1 ∨ legendreSym a = -1 :=
-  Int.isUnit_eq_one_or (IsUnit.map ((quadraticChar (ZMod p)).compMonoidHom toZMod) ha)
+  Int.isUnit_eq_one_or (IsUnit.map ((quadraticChar (ResidueField R)).compLocalHom (residue R)) ha)
 
-/-- If a is a p-adic unit, then `legendreSym a = -1` iff `legendreSym a ≠ 1`. -/
+/-- If `a` is a unit, then `legendreSym a = -1` iff `legendreSym a ≠ 1`. -/
 theorem eq_neg_one_iff_not_one (ha : IsUnit a) :
     legendreSym a = -1 ↔ ¬legendreSym a = 1 := by
   have := eq_one_or_neg_one ha
   lia
 
-/-- The Legendre symbol of a p-adic integer `a` is zero iff `p ∣ a`. -/
+/-- The Legendre symbol of `a` is zero iff `p ∣ a`. -/
 theorem eq_zero_iff : legendreSym a = 0 ↔ ¬ IsUnit a :=
   ⟨fun _ h ↦ by have := eq_one_or_neg_one h; lia, fun h ↦ by rw [MulChar.map_nonunit
   legendreSym h]⟩
 
 /-- The Legendre symbol is a homomorphism of monoids with zero. -/
-@[simps]
-noncomputable def hom : ℤ_[p] →*₀ ℤ where
-  toFun        := legendreSym
-  map_zero'    := by simp [legendreSym]
-  map_one'     := by simp [legendreSym]
-  map_mul' _ _ := by simp [legendreSym, map_mul]
-
-/-- The image of a unit under an arbitrary homomorphism to the integers is 1 or -1. -/
-lemma hom_eq_one_or_neg_one {M : Type*} [MonoidWithZero M] (f : M →*₀ ℤ) (b : M) (hb : IsUnit b) :
-    f b = 1 ∨ f b =  -1 := Int.isUnit_eq_one_or (IsUnit.map f hb)
-
-/-- The square of the image of 'b' under a homomorphism to the integers is 1 if 'b' is a unit. -/
-theorem hom_sq_one {M : Type*} [MonoidWithZero M] (f : M →*₀ ℤ) (b : M) (hb : IsUnit b) :
-    f b ^ 2 = 1 := by
-  cases hom_eq_one_or_neg_one f b hb <;> aesop
-
-/-- The image of the square of 'b' under a homomorphism to the integers is 1 if 'b' is a unit. -/
-theorem hom_sq_one' {M : Type*} [MonoidWithZero M] (f : M →*₀ ℤ) (b : M) (hb : IsUnit b) :
-    f (b ^ 2) = 1 := by
-  rw [pow_two]
-  cases hom_eq_one_or_neg_one f b hb <;> aesop
+@[simp]
+noncomputable abbrev hom : R →*₀ ℤ := legendreSym.toMonoidWithZeroHom
 
 /-- The square of the symbol is 1 if `a` is a unit. -/
-theorem sq_one (ha : IsUnit a) : legendreSym a ^ 2 = 1 := hom_sq_one hom a ha
+theorem sq_one (ha : IsUnit a) : legendreSym a ^ 2 = 1 := MonoidWithZeroHom.sq_one hom ha
 
-/-- The Legendre symbol of `a^2` at `p` is 1 if `a` is a unit. -/
-theorem sq_one' (ha : IsUnit a) : legendreSym (a ^ 2) = 1 := hom_sq_one' hom a ha
+-- TODO: move (wrong file)
+omit [DecidableEq (ResidueField R)] in
+lemma residue_eq_zero_iff_of_prime {p : ℕ} [Fact (Nat.Prime p)]
+    (hp : Fintype.card (ResidueField R) = p) {z : ℤ} :
+    residue R z = 0 ↔ (z : ZMod p) = 0 := by
+  subst hp
+  have : CharP (ResidueField R) (Fintype.card (ResidueField R)) := charP_of_card_eq_prime rfl
+  rw [show residue R z = ZMod.ringEquiv _ rfl (z : ZMod (Fintype.card (ResidueField R))) by simp,
+    RingEquiv.map_eq_zero_iff _]
+
+-- TODO: move (wrong file)
+omit [DecidableEq (ResidueField R)] in
+lemma isSquare_residue_iff {p : ℕ} [Fact (Nat.Prime p)]
+    (hp : Fintype.card (ResidueField R) = p) {z : ℤ} :
+    IsSquare (residue R z) ↔ IsSquare (z : ZMod p) := by
+  subst hp
+  have : CharP (ResidueField R) (Fintype.card (ResidueField R)) := charP_of_card_eq_prime rfl
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · rw [show (z : ZMod (Fintype.card (ResidueField R))) = (ZMod.ringEquiv _ rfl).symm (residue R z)
+      by simp]
+    exact IsSquare.map _ h
+  · rw [show residue R z = ZMod.ringEquiv _ rfl (z : ZMod (Fintype.card (ResidueField R))) by simp]
+    exact IsSquare.map _ h
+
+/-- The `p`-adic Legendre symbol agrees with the classical Legendre symbol on ℤ. -/
+lemma intCast {p : ℕ} [Fact (Nat.Prime p)]
+    (hp : Fintype.card (ResidueField R) = p) (z : ℤ) :
+    legendreSym (z : R) = _root_.legendreSym p z := by
+  simp only [legendreSym, _root_.legendreSym, quadraticChar_apply, quadraticCharFun]
+  split_ifs with h0 hsq
+  · simp [MulChar.compLocalHom_apply, (residue_eq_zero_iff_of_prime hp).mpr h0]
+  all_goals
+    simp only [MulChar.compLocalHom_apply, quadraticChar_apply, quadraticCharFun,
+      isSquare_residue_iff hp]
+  · rw [ite_eq_right (by rwa [residue_eq_zero_iff_of_prime hp]), ite_eq_left hsq]
+  · rw [ite_eq_right (by rwa [residue_eq_zero_iff_of_prime hp]), ite_eq_right hsq]
 
 /-- If `a` is a unit, then `legendreSym a = 1` iff `a` is a square mod `p`. -/
-theorem eq_one_iff (ha : IsUnit a) : legendreSym a = 1 ↔ IsSquare (a.toZMod) := by
-  rw [legendreSym, MulChar.compMonoidHom_apply, quadraticChar_one_iff_isSquare]
-  rw [← ZMod.val_ne_zero (toZMod a), val_toZMod_eq_zmodRepr, ← norm_natCast_zmodRepr_eq_one_iff_ne,
-    norm_natCast_zmodRepr_eq_one_iff.mpr (isUnit_iff.mp ha)]
+theorem eq_one_iff (ha : IsUnit a) : legendreSym a = 1 ↔ IsSquare (residue R a) := by
+  rw [legendreSym, MulChar.compLocalHom_apply, quadraticChar_one_iff_isSquare]
+  simpa using ha
 
 /-- `legendreSym p a = -1` iff `a` is a nonsquare mod `p`. -/
 theorem eq_neg_one_iff (ha : IsUnit a) :
-    legendreSym a = -1 ↔ ¬ IsSquare (a.toZMod) := by
-  rw [eq_neg_one_iff_not_one ha, eq_one_iff ha]
+    legendreSym a = -1 ↔ ¬ IsSquare (residue R a) := by
+  rw [IsLocalRing.legendreSym.eq_neg_one_iff_not_one ha, eq_one_iff ha]
+
+/-- We have the congruence `legendreSym a ≡ a ^ (p / 2) mod p`. -/
+theorem eq_pow {p : ℕ} [Fact (Nat.Prime p)] (hp : Fintype.card (ResidueField R) = p) :
+    residue R (legendreSym a) = (residue R a) ^ (p / 2) := by
+    simp only [map_intCast]
+    simp only [legendreSym]
+    simp only [MulChar.compLocalHom_apply, quadraticChar_apply]
+    simp only [quadraticCharFun]
+    split_ifs with h1 h2
+    · rw [h1]
+      rw [zero_pow]
+      · lia
+      · simp only [ne_eq, Nat.div_eq_zero_iff, OfNat.ofNat_ne_zero, Order.lt_two_iff, false_or,
+        not_le]
+        rw [← hp]
+        exact Fintype.one_lt_card
+    · obtain ⟨w, h⟩ := h2
+      rw [h]
+      simp only [Int.cast_one]
+      rw [← pow_two]
+      rw [← pow_mul']
+      rw [← hp]
+      rw [pow_mul]
+      have : w ^ (Fintype.card (ResidueField R) / 2) = 1 ∨ w ^ (Fintype.card (ResidueField R) / 2)
+      = -1 := by
+        by_cases hp2 : ringChar (ResidueField R) = 2
+        · have h6 : IsSquare w := by apply (FiniteField.isSquare_of_char_two hp2 w)
+          obtain ⟨b, h6⟩ := h6
+          rw [FiniteField.even_card_iff_char_two] at hp2
+          refine sq_eq_one_iff.mp ?_
+          rw [hp]
+          rw [← pow_mul]
+          push Not at h1
+          rw [h] at h1
+          rw [mul_self_ne_zero] at h1
+          rw [hp] at hp2
+          rw [← Nat.even_iff] at hp2
+          rw [Nat.div_two_mul_two_of_even hp2]
+          have that : w = 0 ∨ w = 1 := by sorry
+          rcases that with h5 | h5
+          · have : w ^ p = 1 := absurd h5 h1
+            exact this
+          · rw [h5]
+            simp [one_pow]
+        · refine FiniteField.pow_dichotomy ?_ ?_
+          · push Not at hp2
+            exact hp2
+          · push Not at h1
+            rw [h] at h1
+            exact zero_ne_mul_self.mp (id (Ne.symm h1))
+      rcases this with h3 | h3 <;>
+      simp [h3]
+    · push Not at h1
+      have h8: (residue R) a ≠ 0 := by apply h1
+      rw [IsLocalRing.residue_ne_zero_iff_isUnit] at h1
+      rw [← eq_neg_one_iff h1] at h2
+      simp only [Int.reduceNeg, Int.cast_neg, Int.cast_one]
+      rw [eq_neg_one_iff h1] at h2
+      by_cases hp2 : ringChar (ResidueField R) = 2
+      · have h6 : IsSquare ((residue R) a) := by apply (FiniteField.isSquare_of_char_two hp2
+        ((residue R) a))
+        have : -1 = (residue R) a ^ (p / 2) := absurd h6 h2
+        exact this
+      · rw [FiniteField.isSquare_iff hp2 h8] at h2
+        have h9 : (residue R) a ^ (Fintype.card (ResidueField R) / 2) = 1 ∨
+        (residue R) a ^ (Fintype.card (ResidueField R) / 2) = -1 := by apply
+        (FiniteField.pow_dichotomy hp2 h8)
+        rw [hp] at h9
+        rw [hp] at h2
+        tauto
 
 end legendreSym
 
-end PadicInt
+end IsLocalRing
