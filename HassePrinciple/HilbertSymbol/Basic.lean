@@ -637,7 +637,7 @@ theorem almost_all_one (a b : ℚˣ) :
 
 /-- The product of the Hilbert symbols of `a` and `b` at all places. -/
 noncomputable abbrev hilbertProduct (a b : ℚˣ) :=
-  (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b) * hilbertSym (a : ℝ) b
+  hilbertSym (a : ℝ) b * (∏ᶠ (p : Primes), hilbertSym (a : ℚ_[p]) b)
 
 /-- The function that takes a prime `p` and gives the local symbol of `a` and `b` at `p`
 has finite multiplicative support. -/
@@ -660,8 +660,8 @@ lemma hilbertProduct_one_right (a : ℚˣ) : hilbertProduct a 1 = 1 := by
 /-- The function hilbertProduct is commutative. -/
 lemma hilbertProduct_comm (a b : ℚˣ) : hilbertProduct a b = hilbertProduct b a := by
   unfold hilbertProduct; congr 1
-  · apply finprod_congr fun p => comm
   · exact comm
+  · apply finprod_congr fun p => comm
 
 /-- If `hilbertProduct a d = 1` for every `d` that is -1 or prime, then it holds for every `b`. -/
 lemma hilbertProduct_left {a : ℚˣ}
@@ -684,6 +684,32 @@ lemma hilbertProduct_left {a : ℚˣ}
       rw [hilbertProduct_comm]
       exact ha _ hd
 
+lemma mod4aux (a b : ℚ_[2]) (ha : ‖a‖ ≤ 1) (hb : ‖b‖ ≤ 1) :
+    1 + a ^ 2 + b ^ 2 ≠ 0 := by
+  intro h
+  obtain ⟨a', rfl⟩ : ∃ a' : ℤ_[2], (a' : ℚ_[2]) = a := ⟨⟨a, ha⟩, rfl⟩
+  obtain ⟨b', rfl⟩ : ∃ b' : ℤ_[2], (b' : ℚ_[2]) = b := ⟨⟨b, hb⟩, rfl⟩
+  have hz : (1 + a' ^ 2 + b' ^ 2 : ℤ_[2]) = 0 := by
+    apply PadicInt.ext
+    push_cast
+    simpa using h
+  have h4 := congrArg (PadicInt.toZModPow (p := 2) 2) hz
+  simp only [map_add, map_one, map_pow, map_zero] at h4
+  have H : ∀ u v : ZMod (2 ^ 2), 1 + u ^ 2 + v ^ 2 ≠ 0 := by decide
+  exact H _ _ h4
+
+lemma normalization (z x y : ℚ_[2]) (hnt : ¬(z = 0 ∧ x = 0 ∧ y = 0))
+    (hx : ‖x‖ ≤ ‖z‖) (hy : ‖y‖ ≤ ‖z‖) (hsum : z ^ 2 + x ^ 2 + y ^ 2 = 0) : False := by
+  have hz : z ≠ 0 := by
+    rintro rfl
+    exact hnt ⟨rfl, by simpa using hx, by simpa using hy⟩
+  have hzpos : 0 < ‖z‖ := norm_pos_iff.2 hz
+  refine mod4aux (x / z) (y / z) ?_ ?_ ?_
+  · rw [norm_div]; exact (div_le_one hzpos).2 hx
+  · rw [norm_div]; exact (div_le_one hzpos).2 hy
+  · have heq: 1 + (x / z) ^ 2 + (y / z) ^ 2 = (z ^ 2 + x ^ 2 + y ^ 2) / z ^ 2 := by field
+    rw [heq, hsum, zero_div]
+
 /-- The function hilbertProduct of -1 and -1 is 1. -/
 lemma hilbertProduct_neg_one_neg_one {c d : ℚˣ} (hc : (c : ℚ) = -1) (hd : (d : ℚ) = -1) :
     hilbertProduct c d = 1 := by
@@ -693,57 +719,69 @@ lemma hilbertProduct_neg_one_neg_one {c d : ℚˣ} (hc : (c : ℚ) = -1) (hd : (
       (fun p hp ↦ eventually_one.neg_one_neg_one_eq_one hp)]
     simp only [Rat.cast_neg, Rat.cast_one]
     unfold hilbertSym
-    split_ifs <;> simp_all
-    · sorry
-    · sorry
-
--- part 3a: If a=b=-1, then the only times the symbol is -1 is at infinity and 2.
--- Since this is even, the product is 1.
+    split_ifs with h1 h2 h3 h4 h5 h6 h7 h8 <;> simp_all only [Units.val_eq_neg_one, neg_eq_zero,
+      one_ne_zero, or_self, not_false_eq_true, ne_eq, Prod.mk.injEq, not_and, neg_mul, one_mul,
+      sub_neg_eq_add, mul_one, not_exists, reduceNeg, mul_neg, mul_one, neg_neg]
+    · obtain ⟨z, x, y, hnzero, heq⟩ := h4
+      have hz2 : z ^ 2 = 0 := by linarith [sq_nonneg z, sq_nonneg x, sq_nonneg y]
+      have hy2 : y ^ 2 = 0 := by linarith [sq_nonneg z, sq_nonneg x, sq_nonneg y]
+      have hx2 : x ^ 2 = 0 := by linarith [sq_nonneg z, sq_nonneg x, sq_nonneg y]
+      aesop
+    · obtain ⟨z, x, y, hnt, hsum⟩ := h8
+      have hnt' : ¬(z = 0 ∧ x = 0 ∧ y = 0) := fun ⟨a, b, c⟩ => hnt a b c
+      rcases le_total ‖z‖ ‖x‖ with hzx | hxz
+      · rcases le_total ‖x‖ ‖y‖ with hxy | hyx
+        ·exfalso
+         exact normalization y z x (by rintro ⟨h1, h2, h3⟩; exact hnt' ⟨h2, h3, h1⟩) (hzx.trans hxy)
+          hxy (by linear_combination hsum)
+        · exfalso
+          exact normalization x z y (by rintro ⟨h1, h2, h3⟩; exact hnt' ⟨h2, h1, h3⟩)
+            hzx hyx (by linear_combination hsum)
+      · rcases le_total ‖z‖ ‖y‖ with hzy | hyz
+        · exfalso
+          exact normalization y z x (by rintro ⟨h1, h2, h3⟩; exact hnt' ⟨h2, h3, h1⟩)
+            hzy (hxz.trans hzy) (by linear_combination hsum)
+        · exfalso; exact normalization z x y hnt' hxz hyz hsum
 
 /-- The function hilbertProduct of -1 and a prime number is 1. -/
 lemma hilbertProduct_neg_one_prime {c d : ℚˣ} {q : ℕ} (hc : (c : ℚ) = -1) (hq : Nat.Prime q)
     (hd : (d : ℚ) = q) : hilbertProduct c d = 1 := by
-    sorry
-  -- part 3b: If a=-1, b=l odd prime, then symbol at 2 and l are both (-1)^e(l) and all others are 1
-  -- here e(l) is the class modulo 2 of (u-1)/2 where u is viewed as a 2-adic unit
-  -- case 3b': If a=-1, b=2 then the symbol is always 1 by two_adic_eq.
--- https://leanprover-community.github.io/mathlib4_docs/Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.html
--- for 3b and 3c: theorem legendreSym.at_neg_one{p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) :
--- legendreSym p (-1) = ZMod.χ₄ ↑p
-
+    unfold hilbertProduct
+    by_cases h2 : q = 2
+    · rw [h2] at hd; rw [hc, hd]
+      have h : ∀ p : Primes, hilbertSym ((-1 : ℚ) : ℚ_[p]) (2:ℚ) = 1 := by
+        intro p
+        unfold hilbertSym
+        rw [ite_eq_right, ite_eq_left]
+        · use 1, 1, 1
+          norm_num
+        · aesop
+      norm_num at h; norm_num;
+      rw [finprod_eq_one_of_forall_eq_one h, mul_one]
+      unfold hilbertSym
+      simp only [neg_eq_zero, one_ne_zero, OfNat.ofNat_ne_zero, or_self, ↓reduceIte, ne_eq,
+        Prod.mk.injEq, not_and, neg_mul, one_mul, sub_neg_eq_add, reduceNeg, ite_eq_left_iff,
+        not_exists, reduceCtorEq, imp_false, not_forall, Decidable.not_not]
+      use 1, 1, 1
+      simp only [one_pow, mul_one, one_ne_zero, not_false_eq_true, implies_true, exists_const]
+      ring_nf
+    · rw [hc, hd]
+      push_cast
+      have hsupp : Function.mulSupport (fun p : Nat.Primes => hilbertSym (-1 : ℚ_[p]) (q : ℚ_[p]))
+      ⊆ (({⟨2, Nat.prime_two⟩, ⟨q, hq⟩} : Finset Nat.Primes) : Set Nat.Primes) := by
+        intro p hp
+        by_contra hnot
+        sorry
+      norm_num at hsupp
+      sorry
 
 /-- The function hilbertProduct of two prime numbers is 1. -/
 lemma hilbertProduct_prime_prime {c d : ℚˣ} {q r : ℕ} (hq : Nat.Prime q) (hr : Nat.Prime r)
     (hc : (c : ℚ) = q) (hd : (d : ℚ) = r) : hilbertProduct c d = 1 := by
     sorry
- -- part 3d: need more cases! If one of them is 2, we have a different argument
-  -- at 2: use two_adic_eq and at k: use padic_odd_eq
-  -- part 3d': If a and b are different primes j and k both not 2, use QR argument.
-  -- part 3d'': If a and b are the same prime, (j,j)=(-1,j) always (use right_neg_self_eq_one).
- -- for 3d: legendreSym.at_two{p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) :
--- legendreSym p 2 = ZMod.χ₈ ↑p
--- for 3d' legendreSym.quadratic_reciprocity{p q : ℕ} [Fact (Nat.Prime p)] [Fact (Nat.Prime q)]
--- (hp : p ≠ 2) (hq : q ≠ 2) (hpq : p ≠ q) :
--- legendreSym q ↑p * legendreSym p ↑q = (-1) ^ (p / 2 * (q / 2))
 
 /-- The product of the Hilbert symbols of `a` and `b  ` at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) : hilbertProduct a b = 1 := by
-  suffices hreduction : ∀ (c d : ℚˣ) (hc : IsNegOneOrPrime c) (hd : IsNegOneOrPrime d),
-    hilbertProduct c d = 1 by
-    have hreduction_right (d : ℚˣ) (hd : IsNegOneOrPrime d) :
-      hilbertProduct b d = 1 := by
-      rw [hilbertProduct_comm]
-      --exact hilbertProduct_left (fun _ he ↦ hreduction _ _ hd he) b
-      sorry
-    rw [hilbertProduct_comm]
-    --exact hilbertProduct_left hreduction_right a
-    sorry
-  intro c d hc hd
-  rcases hc with hc | ⟨r, hr, hc⟩ <;> rcases hd with hd | ⟨q, hq, hd⟩
-  · exact hilbertProduct_neg_one_neg_one hc hd
-  · exact hilbertProduct_neg_one_prime hc hq hd
-  · rw [hilbertProduct_comm]
-    exact hilbertProduct_neg_one_prime hd hr hc
-  · exact hilbertProduct_prime_prime hr hq hc hd
+  sorry
 
 end hilbertSym
