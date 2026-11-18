@@ -573,87 +573,66 @@ private lemma sum_squares (z x y : ℤ_[2]) (hz : IsUnit z)
       decide
 
 /-- Main theorem for `p = 2`, case of even valuations `v (a)`, `v (b)`. -/
-lemma two_adic_case00 (ha0 : Even (valuation (a : ℚ_[2]))) (hb0 : Even (valuation (b : ℚ_[2]))) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
+lemma two_adic_case00 : hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb)) =
+    Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb))) := by
   set u := unitPart (Units.mk0 a ha)
   set v := unitPart (Units.mk0 b hb)
-  calc _
-  _ = hilbertSym (u : ℚ_[2]) v := by
-    nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb, even_pow ha0, even_pow hb0,
-      mul_left_square_eq (by simp [zpow_ne_zero]),
-        mul_right_square_eq (by simp [zpow_ne_zero])]
-  _ = Int.negOnePow (epsilon u * epsilon v) := by
-    simp only [epsilon, Nat.reducePow, RingHom.toMonoidHom_eq_coe]
-    split_ifs with h
-    · simp only [h, ↓reduceIte, zero_mul, Int.negOnePow_zero, Units.val_one]
-      exact one_mod4 ha hb h
-    · simp only [h, ↓reduceIte, one_mul]
-      split_ifs with h'
-      · rw [comm]
-        simp only [h', ↓reduceIte, Int.negOnePow_zero, Units.val_one]
-        exact one_mod4 hb ha h'
-      · simp only [hilbertSym, coe_eq_zero, Units.ne_zero, or_self, ↓reduceIte, ne_eq,
-        Prod.mk.injEq, not_and, Int.reduceNeg, h', Int.negOnePow_one, Units.val_neg,
-        Units.val_one, ite_eq_right_iff, reduceCtorEq, imp_false, not_exists]
-        refine fun z x y hnetriv hsol ↦ ?_
-        have ⟨z, y, x, hsol, hprim⟩ : ∃ z' y' x' : ℤ_[2], z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0 ∧
-            (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := exists_padicInt_sol (by tauto) hsol
-        have hu : (u : ℤ_[2]).toZModPow 2 = -1 := by
-          rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) u) with h' | h'
-          · tauto
-          · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
-        have hv : (v : ℤ_[2]).toZModPow 2 = -1 := by
-          rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) v) with h' | h'
-          · tauto
-          · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
-        have eq_mod4 :
-            (z.toZModPow 2) ^ 2 - (u : ℤ_[2]).toZModPow 2 * (x : ℤ_[2]).toZModPow 2 ^ 2 -
-            (v : ℤ_[2]).toZModPow 2 * (y : ℤ_[2]).toZModPow 2 ^ 2 = 0 := by
-          calc _
-            _ = ((z ^ 2 - (u : ℤ_[2]) * x ^ 2 - (v : ℤ_[2]) * y ^ 2).toZModPow 2) := by simp
-            _ = _ := by rw [hsol]; simp
-        rw [hu, hv] at eq_mod4
-        ring_nf at eq_mod4
-        rcases hprim with hz | hy | hx
-        · exact sum_squares z x y hz eq_mod4
-        · apply sum_squares y x z hy
-          rw [← eq_mod4]
-          ring
-        · apply sum_squares x y z hx
-          rw [← eq_mod4]
-          ring
-  _ = _ := by
-    rw_mod_cast [Int.negOnePow_eq_iff]
-    rw [Int.even_sub, add_assoc, Int.even_add]
-    have : Even (a.valuation * omega (unitPart (Units.mk0 b hb)) +
-        b.valuation * omega (unitPart (Units.mk0 a ha))) := by
-      rw [Int.even_add, Int.even_mul, Int.even_mul]
-      tauto
-    tauto
+  simp only [epsilon, Nat.reducePow, RingHom.toMonoidHom_eq_coe]
+  split_ifs with h
+  · simp only [h, ↓reduceIte, zero_mul, Int.negOnePow_zero, Units.val_one]
+    exact one_mod4 ha hb h
+  · simp only [h, ↓reduceIte, one_mul]
+    split_ifs with h'
+    · rw [comm]
+      simp only [h', ↓reduceIte, Int.negOnePow_zero, Units.val_one]
+      exact one_mod4 hb ha h'
+    · simp only [hilbertSym, coe_eq_zero, Units.ne_zero, or_self, ↓reduceIte, ne_eq,
+      Prod.mk.injEq, not_and, Int.reduceNeg, h', Int.negOnePow_one, Units.val_neg,
+      Units.val_one, ite_eq_right_iff, reduceCtorEq, imp_false, not_exists]
+      refine fun z x y hnetriv hsol ↦ ?_
+      have ⟨z, y, x, hsol, hprim⟩ : ∃ z' y' x' : ℤ_[2], z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0 ∧
+          (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := exists_padicInt_sol (by tauto) hsol
+      have hu : (u : ℤ_[2]).toZModPow 2 = -1 := by
+        rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) u) with h' | h'
+        · tauto
+        · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
+      have hv : (v : ℤ_[2]).toZModPow 2 = -1 := by
+        rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) v) with h' | h'
+        · tauto
+        · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
+      have eq_mod4 :
+          (z.toZModPow 2) ^ 2 - (u : ℤ_[2]).toZModPow 2 * (x : ℤ_[2]).toZModPow 2 ^ 2 -
+          (v : ℤ_[2]).toZModPow 2 * (y : ℤ_[2]).toZModPow 2 ^ 2 = 0 := by
+        calc _
+          _ = ((z ^ 2 - (u : ℤ_[2]) * x ^ 2 - (v : ℤ_[2]) * y ^ 2).toZModPow 2) := by simp
+          _ = _ := by rw [hsol]; simp
+      rw [hu, hv] at eq_mod4
+      ring_nf at eq_mod4
+      rcases hprim with hz | hy | hx
+      · exact sum_squares z x y hz eq_mod4
+      · apply sum_squares y x z hy
+        rw [← eq_mod4]
+        ring
+      · apply sum_squares x y z hx
+        rw [← eq_mod4]
+        ring
 
 /-- Main theorem for `p = 2`, case `v (a) = 1`, `v (b) = 0`. -/
-lemma two_adic_case10 (ha1 : valuation (a : ℚ_[2]) = 1) (hb0 : valuation (b : ℚ_[2]) = 0) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
+lemma two_adic_case10 :
+    hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * 2) ((unitPart (Units.mk0 b hb))) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb)) +
+      omega (unitPart (Units.mk0 b hb))) := by
   sorry
 
 /-- Main theorem for `p = 2`, case `v (a) = 1`, `v (b) = 1`. -/
-lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : ℚ_[2]) = 1) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
+lemma two_adic_case11 :
+    hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * 2) ((unitPart (Units.mk0 b hb)) * 2) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb)) +
+      omega (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
-
-
 --reduce to (a, b) = (u_a * 2 ^ (v_2(a) mod 2), u_b * 2 ^ (v_2(b) mod 2))
-theorem two_adic_eq_mod :
+lemma two_adic_eq_mod :
     hilbertSym a b =
       hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * (2 : ℚ_[2]) ^ (a.valuation % 2))
         ((unitPart (Units.mk0 b hb) : ℚ_[2]) * (2 : ℚ_[2]) ^ (b.valuation % 2)) := by
@@ -666,7 +645,7 @@ theorem two_adic_eq_mod :
   nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb]
   rw_mod_cast [h1, h2, ← mul_assoc, mul_left_square_eq h1₀, ← mul_assoc, mul_right_square_eq h2₀]
 
-theorem two_adic_eq_pow : Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+lemma two_adic_eq_pow : Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
     epsilon (unitPart (Units.mk0 b hb)) + a.valuation * omega (unitPart (Units.mk0 b hb)) +
     b.valuation * omega (unitPart (Units.mk0 a ha))) =
       Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
@@ -686,136 +665,16 @@ theorem two_adic_eq :
   rw [two_adic_eq_mod ha hb, two_adic_eq_pow ha hb]
   by_cases ha' : a.valuation % 2 = 0
   · by_cases hb' : b.valuation % 2 = 0
-    · simp only [ha', zpow_ofNat, pow_zero, mul_one, hb', Nat.reducePow,
-      RingHom.toMonoidHom_eq_coe, epsilon, omega]
-      by_cases hu : (Units.map (toZModPow 2).toMonoidHom) (unitPart (Units.mk0 a ha)) = 1
-      · rw [one_mod4 ha hb hu]
-        sorry
-      · sorry
+    · simp [ha', hb', two_adic_case00 ha hb]
     · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
-      sorry
+      rw [comm]
+      simp [ha', hb', omega, epsilon, two_adic_case10 hb ha]
+      grind
   · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at ha'
     by_cases hb' : b.valuation % 2 = 0
-    · sorry
+    · simp [ha', hb', omega, two_adic_case10 ha hb]
     · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
-      sorry
-
-
-
-#exit
-    · calc _
-        _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-              epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha))) := by
-          rw [two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
-          · rw [valuation_units' (unitPart (Units.mk0 a ha)),
-              Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
-            ring_nf
-            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 a ha)) (by simp)) =
-                unitPart (Units.mk0 a ha) := by simp [unitPart_of_unitPart]
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by simp)) =
-                unitPart (Units.mk0 b hb) := by
-              set u : ℤ_[2]ˣ := unitPart (Units.mk0 b hb)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
-                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
-                _ = unitPart (Units.mk0 b hb) := by simpa using (unitPart_of_unitPart hb)
-            rw [mul_comm, h1, h2]
-          · rw [Padic.valuation_mul (by simp) (by grind),
-              valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
-            norm_num
-        _ = _ := by
-          rw_mod_cast [Int.negOnePow_eq_iff]
-          ring_nf
-          nth_rw 1 [← mul_one (omega (unitPart (Units.mk0 a ha))), ← mul_sub, Int.even_sub]
-          rw [Int.even_mul, Int.even_mul]
-          have : Even (1 - b.valuation) := by
-            rw [← Int.even_sub_one] at hb'
-            grind
-          tauto
-  · by_cases hb' : Even b.valuation
-    · calc _
-        _ = hilbertSym (unitPart (Units.mk0 a ha) * 2 : ℚ_[2]) (unitPart (Units.mk0 b hb)) := by
-          nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb, odd_pow ha', even_pow hb',
-            ← mul_assoc, mul_left_square_eq (by simp [zpow_ne_zero]),
-            mul_right_square_eq (by simp [zpow_ne_zero])]
-          exact_mod_cast rfl
-        _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-              epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 b hb))) := by
-          rw [two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
-          · rw [valuation_units' (unitPart (Units.mk0 b hb)),
-              Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
-            ring_nf
-            have h1 : unitPart (Units.mk0 ↑↑(unitPart (Units.mk0 b hb)) (by simp)) =
-                unitPart (Units.mk0 b hb) := by simp [unitPart_of_unitPart]
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by simp)) =
-                unitPart (Units.mk0 a ha) := by
-              set u : ℤ_[2]ˣ := unitPart (Units.mk0 a ha)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
-                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
-                _ = unitPart (Units.mk0 a ha) := by simpa using (unitPart_of_unitPart ha)
-            rw [h1, h2]
-          · rw [Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
-            norm_num
-        _ = _ := by
-          rw_mod_cast [Int.negOnePow_eq_iff]
-          ring_nf
-          nth_rw 1 [← mul_one (omega (unitPart (Units.mk0 b hb))), ← mul_sub, Int.even_sub]
-          rw [Int.even_mul, Int.even_mul]
-          have : Even (1 - a.valuation) := by
-            rw [← Int.even_sub_one] at ha'
-            grind
-          tauto
-    · calc _
-        _ = hilbertSym (unitPart (Units.mk0 a ha) * 2 : ℚ_[2]) (unitPart (Units.mk0 b hb) * 2) := by
-          nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb, odd_pow ha', odd_pow hb',
-            ← mul_assoc, mul_left_square_eq (by simp [zpow_ne_zero]), ← mul_assoc,
-            mul_right_square_eq (by simp [zpow_ne_zero])]
-          exact_mod_cast rfl
-        _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-              epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha)) +
-              omega (unitPart (Units.mk0 b hb))) := by
-          rw [two_adic_case11 (by simp) (by simp) _ _]
-          · rw [Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 a ha)),
-              Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
-            ring_nf
-            have h1 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 a ha)) * 2) (by simp)) =
-                unitPart (Units.mk0 a ha) := by
-              set u : ℤ_[2]ˣ := unitPart (Units.mk0 a ha)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
-                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
-                _ = unitPart (Units.mk0 a ha) := by simpa using (unitPart_of_unitPart ha)
-            have h2 : unitPart (Units.mk0 (↑↑(unitPart (Units.mk0 b hb)) * 2) (by simp)) =
-                unitPart (Units.mk0 b hb) := by
-              set u : ℤ_[2]ˣ := unitPart (Units.mk0 b hb)
-              calc unitPart (Units.mk0 (↑↑u * 2) (by simp))
-                _ = unitPart (Units.mk0 (↑↑u) (by simp)) := by simp [unitPart, valuation_units' u]
-                _ = unitPart (Units.mk0 b hb) := by simpa using (unitPart_of_unitPart hb)
-            rw [h1, h2]
-            ring_nf
-          · rw [Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 a ha)), show Padic.valuation 2 = 1 by simp]
-            norm_num
-          · rw [Padic.valuation_mul (by simp) (by simp),
-              valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
-            norm_num
-        _ = _ := by
-          rw_mod_cast [Int.negOnePow_eq_iff]
-          ring_nf
-          nth_rw 1 [← mul_one (omega (unitPart (Units.mk0 a ha))),
-            ← mul_one (omega (unitPart (Units.mk0 b hb))), ← mul_sub, add_sub_assoc,
-            ← mul_sub, Int.even_add]
-          rw [Int.even_mul, Int.even_mul]
-          have : Even (1 - a.valuation) := by
-            rw [← Int.even_sub_one] at ha'
-            grind
-          have : Even (1 - b.valuation) := by
-            rw [← Int.even_sub_one] at hb'
-            grind
-          tauto
+      simp [ha', hb', omega, two_adic_case11 ha hb]
 
 end two
 
