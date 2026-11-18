@@ -657,17 +657,23 @@ theorem two_adic_eq_mod :
     hilbertSym a b =
       hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * (2 : ℚ_[2]) ^ (a.valuation % 2))
         ((unitPart (Units.mk0 b hb) : ℚ_[2]) * (2 : ℚ_[2]) ^ (b.valuation % 2)) := by
+  have h : ∀ x : ℤ, ∃ s, s ≠ 0 ∧ (2 : ℚ_[2]) ^ x = 2 ^ (x % 2) * s ^ 2 := by
+    refine fun x ↦ ⟨(2 : ℚ_[2]) ^ ((x - x % 2) / 2), zpow_ne_zero _ (by norm_num), ?_⟩
+    nth_rw 1 [show x = x % 2 + 2 * ((x - x % 2) / 2) by omega, zpow_add₀ (by norm_num),
+      show 2 * ((x - x % 2) / 2) = ((x - x % 2) / 2) * 2 by omega, zpow_mul, ← zpow_ofNat]
+  obtain ⟨s1, h1₀, h1⟩ := h a.valuation
+  obtain ⟨s2, h2₀, h2⟩ := h b.valuation
   nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb]
-  have : ∀ x : ℤ, ∃ s, (2 : ℚ_[2]) ^ x = 2 ^ (x % 2) * s ^ 2 := by
-    intro x
-    use (2 : ℚ_[2]) ^ ((x - x % 2) / 2)
-    group
-    rw [Int.ediv_two_mul_two_of_even (by grind)]
+  rw_mod_cast [h1, h2, ← mul_assoc, mul_left_square_eq h1₀, ← mul_assoc, mul_right_square_eq h2₀]
 
-
-
-    sorry
-
+theorem two_adic_eq_pow : Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+    epsilon (unitPart (Units.mk0 b hb)) + a.valuation * omega (unitPart (Units.mk0 b hb)) +
+    b.valuation * omega (unitPart (Units.mk0 a ha))) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + a.valuation % 2 * omega (unitPart (Units.mk0 b hb)) +
+      b.valuation % 2 * omega (unitPart (Units.mk0 a ha))) := by
+  rw [Int.negOnePow_eq_iff]
+  grind
 
 /-- If `a`, `b` are nonzero in `ℚ_[2]`, then the Hilbert symbol `(a, b)₂` equals
 `(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where `u_a`, `u_b` are the unit parts of `a`, `b`
@@ -677,18 +683,30 @@ theorem two_adic_eq :
       epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
       omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
       omega (unitPart (Units.mk0 a ha))) := by
-  by_cases ha' : Even a.valuation
-  · by_cases hb' : Even b.valuation
-    · exact two_adic_case00 ha hb ha' hb'
+  rw [two_adic_eq_mod ha hb, two_adic_eq_pow ha hb]
+  by_cases ha' : a.valuation % 2 = 0
+  · by_cases hb' : b.valuation % 2 = 0
+    · simp only [ha', zpow_ofNat, pow_zero, mul_one, hb', Nat.reducePow,
+      RingHom.toMonoidHom_eq_coe, epsilon, omega]
+      by_cases hu : (Units.map (toZModPow 2).toMonoidHom) (unitPart (Units.mk0 a ha)) = 1
+      · rw [one_mod4 ha hb hu]
+        sorry
+      · sorry
+    · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
+      sorry
+  · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at ha'
+    by_cases hb' : b.valuation % 2 = 0
+    · sorry
+    · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
+      sorry
+
+
+
+#exit
     · calc _
-        _ = hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb) * 2) := by
-          nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb, even_pow ha', odd_pow hb',
-            mul_left_square_eq (by simp [zpow_ne_zero]), ← mul_assoc,
-            mul_right_square_eq (by simp [zpow_ne_zero])]
-          exact_mod_cast rfl
         _ = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
               epsilon (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha))) := by
-          rw [comm, two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
+          rw [two_adic_case10 (by simp) (by simp) _ (by simp only [valuation_units'])]
           · rw [valuation_units' (unitPart (Units.mk0 a ha)),
               Padic.valuation_mul (by simp) (by simp),
               valuation_units' (unitPart (Units.mk0 b hb)), show Padic.valuation 2 = 1 by simp]
