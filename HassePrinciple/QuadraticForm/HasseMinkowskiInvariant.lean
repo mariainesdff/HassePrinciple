@@ -6,15 +6,8 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Chi-Yun Hsu
 module
 
 public import HassePrinciple.ForMathlib.LinearAlgebra.Determinant
-public import HassePrinciple.HilbertSymbol.Basic
-public import HassePrinciple.HilbertSymbol.ExistenceTheorem
-public import HassePrinciple.QuadraticForm.LowRank
 public import HassePrinciple.QuadraticForm.Chain
-public import HassePrinciple.NumberTheory.ApproximationTheorem
-public import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
-public import Mathlib.Data.Fin.Basic
-
-public import Mathlib.Data.Sym.Sym2
+public import HassePrinciple.QuadraticForm.LowRank
 
 /-! # The Hasse-Minkowski invariant -/
 
@@ -37,27 +30,26 @@ lemma LinearMap.separatingLeft_of_equivalent {R M M' N : Type*} [CommRing R]
 
 end Prelim
 
+open QuadraticMap in
 theorem QuadraticForm.nondegenerate_iff_map_basis_ne_zero {R M ι : Type*}
     [CommRing R] [IsDomain R] [Invertible (2 : R)] [AddCommGroup M] [Module R M] [Finite ι]
     {Q : QuadraticForm R M} {v : Module.Basis ι R M} (hv : Q.associated.IsOrthoᵢ v) :
     Q.Nondegenerate ↔ ∀ i : ι, Q (v i) ≠ 0 := by
-  refine ⟨fun hQ ↦ ?_, fun h ↦ ?_⟩
-  · refine fun i hi ↦ hv.not_isOrtho_basis_self_of_separatingLeft ?_ i ?_
-    · exact (QuadraticMap.nondegenerate_associated_iff.mpr hQ).1
-    simpa [QuadraticMap.associated_eq_self_apply] using hi
-  · rw [← QuadraticMap.nondegenerate_associated_iff]
-    simp only [LinearMap.Nondegenerate]
+  refine ⟨fun hQ i hi ↦ ?_, fun h ↦ ?_⟩
+  · exact hv.not_isOrtho_basis_self_of_separatingLeft (nondegenerate_associated_iff.mpr hQ).1 i
+      (by simpa [QuadraticMap.associated_eq_self_apply] using hi)
+  · have : Module.Finite R M :=  Module.Finite.of_basis v
+    have : Module.Free R M := Module.Free.of_basis v
     have := Fintype.ofFinite ι
-    constructor
-    all_goals
+    rw [← nondegenerate_associated_iff]
+    apply LinearMap.BilinForm.Nondegenerate.ofSeparatingLeft
     intro x hx
     refine v.forall_coord_eq_zero_iff.mp (fun i ↦ ?_)
-    have hi := hx (v i)
-    rw [← v.sum_repr x] at hi
-    simp only [map_sum, map_smul, LinearMap.sum_apply, LinearMap.smul_apply] at hi
-    rw [Finset.sum_eq_single i (fun j _ hj ↦ by simp [hv hj, hv hj.symm]) (fun h0 ↦ by simp at h0)]
-      at hi
-    simpa [QuadraticMap.associated_eq_self_apply, h i] using hi
+    specialize hx (v i)
+    rw [← v.sum_repr x] at hx
+    simp only [map_sum, map_smul, LinearMap.sum_apply, LinearMap.smul_apply] at hx
+    rw [Finset.sum_eq_single i (fun j _ hj ↦ by simp [hv hj]) (fun h0 ↦ by simp at h0)] at hx
+    simpa [QuadraticMap.associated_eq_self_apply, h i] using hx
 
 open QuadraticForm in
 theorem hilbertSym.eq_one_iff_represents_one {k : Type*} [Field k] [Invertible (2 : k)]

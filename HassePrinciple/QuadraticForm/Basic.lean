@@ -129,12 +129,45 @@ lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fint
     (weightedSumSquares R w).Equivalent (weightedSumSquares R w') := ⟨weightedSumSquaresCongr' f h⟩
 
 -- CY : This looks to be related to the previous two lemmas.
-lemma weightedSumSquares_comp_equiv {R ι ι' : Type*} [CommSemiring R] [Fintype ι] [Fintype ι']
-    (w : ι' → R) (e : ι ≃ ι') :
+lemma weightedSumSquares_comp_equiv {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
+    (w : κ → S) (e : ι ≃ κ) :
     weightedSumSquares R (w ∘ e) =
       (weightedSumSquares R w).comp (LinearEquiv.funCongrLeft R R e.symm) := by
   ext m
   simpa using Finset.sum_equiv e (by simp) (by simp)
+
+open _root_.QuadraticMap
+
+theorem polar_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
+    [SMulCommClass S R R] [Fintype ι] (w : ι → S) :
+    polar (weightedSumSquares R w) = fun x y ↦ ∑ (i : ι), 2 * (w i) • (x i) * (y i) := by
+  ext x y
+  simp only [polar, weightedSumSquares_apply, Pi.add_apply, ← Finset.sum_sub_distrib, add_mul,
+    mul_add, smul_add]
+  apply Finset.sum_congr rfl
+  intro i _
+  ring_nf
+  rw [mul_smul_comm, mul_comm (x i)]
+
+theorem associated_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
+    [SMulCommClass S R R] [Invertible (2 : R)] [Fintype ι] (w : ι → S) (x y : ι → R) :
+    (weightedSumSquares R w).associated x y = ∑ i, (w i) • (x i * y i) := by
+  simp only [QuadraticMap.associated_apply, QuadraticMap.weightedSumSquares_apply,
+    Pi.add_apply, ← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun i _ ↦ ?_
+  rw [invOf_smul_eq_iff, two_smul, ← smul_sub, ← smul_sub, ← smul_add]
+  ring_nf
+
+lemma weightedSumSquares_isOrthoᵢ_basisFun {R ι : Type*} [CommRing R] [Invertible (2 : R)]
+    [Fintype ι] (w : ι → R) : (weightedSumSquares R w).associated.IsOrthoᵢ (Pi.basisFun R ι) := by
+  intro i j hij
+  simp only [Function.onFun, associated_weightedSumSquares]
+  refine Finset.sum_eq_zero fun l _ ↦ ?_
+  by_cases hi : l = i
+  classical
+  · simp [Pi.single_eq_of_ne hij, hi]
+  · simp [Pi.single_eq_of_ne hi]
 
 open Module _root_.QuadraticMap
 
@@ -199,11 +232,10 @@ theorem IsometryEquiv.isOrthoᵢ_map {R M₁ M₂ N ι : Type*} [CommRing R] [In
     [AddCommGroup M₁] [AddCommGroup M₂] [AddCommGroup N] [Module R M₁] [Module R M₂] [Module R N]
     {Q₁ : QuadraticMap R M₁ N} {Q₂ : QuadraticMap R M₂ N} (e : Q₁.IsometryEquiv Q₂)
     {v : Basis ι R M₁} (hv : Q₁.associated.IsOrthoᵢ v) :
-    Q₂.associated.IsOrthoᵢ (v.map e.toLinearEquiv) := by
-  have h : Q₂.comp e.toLinearEquiv.toLinearMap = Q₁ := ext e.map_app
+    Q₂.associated.IsOrthoᵢ (v.map e) := by
+  have h : Q₂.comp e = Q₁ := ext e.map_app
   rw [← h, associated_comp] at hv
-  intro i j hij
-  simpa [Function.onFun] using (hv hij)
+  aesop
 
 -- TODO: change in Mathlib
 theorem polarBilin_injective' :
@@ -850,44 +882,6 @@ lemma nondegenerate_prod [IsDomain R] [Module.Free R M] [Module.Finite R M]
   rw [nondegenerate_iff_discr_ne_zero b'] at hQ'
   rw [nondegenerate_iff_discr_ne_zero (b.prod b'), discr_prod]
   aesop
-
-open _root_.QuadraticMap
-
-theorem polar_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
-    [SMulCommClass S R R] [Fintype ι] (w : ι → S) :
-    polar (weightedSumSquares R w) = fun x y ↦ ∑ (i : ι), 2 * (w i) • (x i) * (y i) := by
-  ext x y
-  simp only [polar, weightedSumSquares_apply, Pi.add_apply, ← Finset.sum_sub_distrib, add_mul,
-    mul_add, smul_add]
-  apply Finset.sum_congr rfl
-  intro i _
-  ring_nf
-  rw [mul_smul_comm, mul_comm (x i)]
-
--- CY : This is similar to the previous theorem.
--- I don't think this should be in Section Discr though.
--- Should we move both theorems to Section weighteSumSquares?
-theorem associated_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
-    [SMulCommClass S R R] [Invertible (2 : R)] [Fintype ι] (w : ι → S) (x y : ι → R) :
-    (weightedSumSquares R w).associated x y = ∑ i, (w i) • (x i * y i) := by
-  simp only [QuadraticMap.associated_apply, QuadraticMap.weightedSumSquares_apply,
-    Pi.add_apply]
-  rw [← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib]
-  simp only [Finset.smul_sum]
-  refine Finset.sum_congr rfl fun i _ ↦ ?_
-  rw [invOf_smul_eq_iff, two_smul, ← smul_sub, ← smul_sub, ← smul_add]
-  exact congrArg (w i • ·) (by ring)
-
--- CY : This theorem uses the previous one, so I am putting it here for now.
-lemma weightedSumSquares_isOrthoᵢ_basisFun {R ι : Type*} [CommRing R] [Invertible (2 : R)]
-    [Fintype ι] (w : ι → R) : (weightedSumSquares R w).associated.IsOrthoᵢ (Pi.basisFun R ι) := by
-  intro i j hij
-  simp only [Function.onFun, associated_weightedSumSquares]
-  refine Finset.sum_eq_zero fun l _ ↦ ?_
-  by_cases hi : l = i
-  classical
-  · simp [Pi.single_eq_of_ne hij, hi]
-  · simp [Pi.single_eq_of_ne hi]
 
 end Discr
 
