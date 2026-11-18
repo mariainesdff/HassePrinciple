@@ -67,6 +67,7 @@ lemma units_mod8 (u : (ZMod (2 ^ 3))ˣ) : u = 1 ∨ u = -1 ∨
 /-- omega maps products to sums modulo 2. -/
 lemma omega_hom_mod2 {u v : (PadicInt 2)ˣ} :
     (omega (u * v) : ZMod 2) = (omega u + omega v : ZMod 2) := by
+  simp
   rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom u) with h
   rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom v) with h'
   aesop
@@ -106,6 +107,12 @@ lemma eq_one_or_neg_one_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) :
 lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 := by
   simp [hilbertSym, ha, hb]
   split_ifs <;> simp
+
+/-- The Hilbert Symbol `hilbertSym a b` is 1 if and only if there is a nontrivial solution to
+`z ^ 2 - a * x ^ 2 - b * y ^ 2 = 0`. -/
+lemma eq_one_iff_sol (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b = 1 ↔
+    ∃ z x y : k, (z, x, y) ≠ (0, 0, 0) ∧ z ^ 2 - a * x ^ 2 - b * y ^ 2 = 0 :=
+  ⟨fun h ↦ by simpa [ha, hb, hilbertSym] using h, fun h ↦ by simpa [ha, hb, hilbertSym] using h⟩
 
 /-- If `a` and `b` are multiplied by a square, the Hilbert symbol is unchanged. -/
 lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
@@ -226,6 +233,13 @@ theorem eq_neg_one_iff_not_one (ha : a ≠ 0) (hb : b ≠ 0) :
   have := eq_one_or_neg_one ha hb
   aesop
 
+/-- If both a and b are nonzero, the Hilbert symbol of a and b is 1 if and only if it is not -1. -/
+theorem eq_one_iff_not_neg_one (ha : a ≠ 0) (hb : b ≠ 0) :
+    hilbertSym a b = 1 ↔ ¬hilbertSym a b = -1 := by
+  refine ⟨fun h ↦ by simp [h], fun h ↦ ?_⟩
+  have := eq_one_or_neg_one ha hb
+  aesop
+
 /-- If the Hilbert symbol of a and b equals 1, then the Hilbert symbol of a and b * b' equals the
 Hilbert symbol of a and b'. -/
 @[simp]
@@ -273,6 +287,7 @@ theorem right_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
         rw [← eq_one_iff (by aesop) hanzero ha, hilbertSym, ite_eq_right (by aesop)] at this
         simp only [ite_eq_left_iff] at this
         grind
+
 @[simp]
 theorem left_mul_eq_of_eq_one (hab : hilbertSym a b = 1) :
     hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b := by
@@ -372,6 +387,29 @@ section Padic
 variable {p : ℕ} [hp : Fact (Nat.Prime p)] {a b a' b' : (ℚ_[p])}
 
 open Padic PadicInt
+
+--move to padics?
+/-- Every p-adic number is equal to its unit part times p to its valuation. -/
+lemma eq_unit_mul_pow_p {x : ℚ_[p]} (hx : x ≠ 0) :
+    x = (unitPart (Units.mk0 x hx)) * p ^ (valuation x) := by
+  simp [unitPart]
+  have : (p : ℚ_[p]) ^ x.valuation ≠ 0 := by
+    apply zpow_ne_zero
+    exact_mod_cast NeZero.out
+  field_simp [unitPart]
+
+--Not sure if these two lemmas really deserve to be here but I've used them several times. Also
+--p is not even relevant, it can be any number.
+lemma even_pow {x : ℤ} (hx : Even x) : (p : ℚ_[p]) ^ x = (p ^ (x / 2)) ^ 2 := by
+  nth_rw 1 [show x = (x / 2) * 2 by grind]
+  rw [zpow_mul]
+  exact_mod_cast rfl
+
+lemma odd_pow {x : ℤ} (hx : ¬ Even x) : (p : ℚ_[p]) ^ x = p * (p ^ ((x - 1) / 2)) ^ 2 := by
+  nth_rw 1 [show x = 1 + (((x - 1) / 2) * 2) by grind]
+  rw [zpow_add₀ NeZero.out, zpow_mul, zpow_one]
+  exact_mod_cast rfl
+
 section odd
 
 variable (hp2 : p ≠ 2) (ha : a ≠ 0) (hb : b ≠ 0)
@@ -416,39 +454,227 @@ section two
 
 variable {a b : (ℚ_[2])} (ha : a ≠ 0) (hb : b ≠ 0)
 
-/-- Main theorem for p=2, case v(a)=0, v(b)=0. -/
-lemma two_adic_case00 (ha0 : valuation (a : ℚ_[2]) = 0) (hb0 : valuation (b : ℚ_[2]) = 0) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
+--looking for a simpler proof of this
+private lemma four_times_unit (x : ℤ_[2]ˣ) : (toZModPow 3) 4 * (toZModPow 3) x.val = 4 := by
+  have : (toZModPow 3) (4 : ℤ_[2]) = (4 : ZMod (2 ^ 3)) := map_natCast _ 4
+  rw [this]
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom x) with h | h | h | h
+  all_goals
+    have := congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h
+    simp only [Nat.reducePow, RingHom.toMonoidHom_eq_coe, Units.coe_map,
+      MonoidHom.coe_coe, Units.val_one] at this
+    rw [this]
+    norm_num; try decide
+
+--and of this
+private lemma contra_of_neq_red_of_unit (x : ℤ_[2]ˣ)
+    (h : (Units.map (toZModPow 2).toMonoidHom x) = 1)
+    (h1 : (Units.map (toZModPow 3).toMonoidHom x) = -1 ∨
+      (Units.map (toZModPow 3).toMonoidHom x) = ⟨3, 3, by aesop, by aesop⟩) : False := by
+  have hx : (x : ℤ_[2]).toZModPow 2 = 1 :=
+    congrArg (fun x : (ZMod (2 ^ 2))ˣ => (x : ZMod (2 ^ 2))) h
+  have hx' : (x : ℤ_[2]).toZModPow 2 ≠ 1 := by
+    rcases h1 with h1 | h1
+    · have : (x : ℤ_[2]).toZModPow 2 = -1 := by
+        have hx1 : (x : ℤ_[2]).toZModPow 3 = -1 :=
+          congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
+        have hcast := congrArg
+          (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2))) hx1
+        simpa [← PadicInt.zmod_cast_comp_toZModPow 2 3 (by norm_num)] using hcast
+      rw [this]
+      decide
+    · have : (x : ℤ_[2]).toZModPow 2 = 3 := by
+        have hx1 : (x : ℤ_[2]).toZModPow 3 = 3 :=
+          congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h1
+        have hcast := congrArg
+          (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2))) hx1
+        have hthree : (ZMod.castHom (pow_dvd_pow 2 (by norm_num : 2 ≤ 3)) (ZMod (2 ^ 2)))
+            (3 : ZMod (2 ^ 3)) = 3 := map_natCast _ 3
+        simpa only [← PadicInt.zmod_cast_comp_toZModPow 2 3 (by norm_num),
+          RingHom.comp_apply, hthree] using hcast
+      rw [this]
+      decide
+  contradiction
+
+--this is maybe okay
+private lemma eq_one_of_one_mod8 (x y : ℤ_[2]ˣ) (h : (Units.map (toZModPow 3).toMonoidHom x) = 1) :
+    hilbertSym (x : ℚ_[2]) y = 1 := by
+  have ⟨r, hr⟩ : IsSquare (x : ℤ_[2]) := by
+    apply isSquare_of_zmodPow
+    · have := PadicInt.zmodRepr_units_ne_zero (p := 2) x
+      simp only [ne_eq, zmodRepr_eq_zero_iff_dvd, Nat.cast_ofNat] at this
+      exact this
+    · have hu : (x : ℤ_[2]).toZModPow 3 = 1 :=
+        congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h
+      rw [hu]
+      exact ⟨1, by simp⟩
+  rw [comm, hr, ← pow_two, coe_pow, right_square_eq_one (by simp) (by aesop)]
+
+--this is also a bit long
+private lemma eq_one_of_five_mod8 (x y : ℤ_[2]ˣ)
+    (h : (Units.map (toZModPow 3).toMonoidHom x) = ⟨-3, -3, by aesop, by aesop⟩) :
+      hilbertSym (x : ℚ_[2]) y = 1 := by
+  have ⟨r, hr⟩ : IsSquare (x + 4 * y : ℤ_[2]) := by
+    apply isSquare_of_zmodPow
+    · intro hdvd
+      have two_dvd_x : 2 ∣ (x : ℤ_[2]) := by
+        rwa [dvd_add_left] at hdvd
+        exact ⟨2 * y, by grind⟩
+      have := PadicInt.zmodRepr_units_ne_zero x
+      have := PadicInt.zmodRepr_eq_zero_of_dvd two_dvd_x
+      contradiction
+    · have x_eq : (toZModPow 3) x.val = -3 := by
+        simpa using congrArg (fun x : (ZMod (2 ^ 3))ˣ => (x : ZMod (2 ^ 3))) h
+      have y_eq := four_times_unit y
+      exact ⟨1, by simp [x_eq, y_eq]; ring⟩
+  simp only [hilbertSym, coe_eq_zero, Units.ne_zero, or_self, ↓reduceIte, ne_eq,
+    Prod.mk.injEq, not_and, Int.reduceNeg, ite_eq_left_iff, not_exists, reduceCtorEq,
+    imp_false, not_forall, not_not]
+  refine ⟨r, 1, 2, by simp, ?_⟩
+  rw_mod_cast [pow_two, ← hr]
+  ring_nf
+  simp only [PadicInt.coe_mul, ← mul_sub, mul_eq_zero]
+  right
+  apply sub_self
+
+private lemma one_mod4
+    (h : Units.map (toZModPow 2).toMonoidHom (unitPart (Units.mk0 a ha)) = 1) :
+    hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb)) = 1 := by
+  rcases units_mod8 (Units.map (toZModPow 3).toMonoidHom (unitPart (Units.mk0 a ha)))
+    with h1 | h1 | h1 | h1
+  · exact eq_one_of_one_mod8 (unitPart (Units.mk0 a ha)) (unitPart (Units.mk0 b hb)) h1
+  · exfalso
+    exact contra_of_neq_red_of_unit (unitPart (Units.mk0 a ha)) h (Or.inl h1)
+  · exfalso
+    exact contra_of_neq_red_of_unit (unitPart (Units.mk0 a ha)) h (Or.inr h1)
+  · exact eq_one_of_five_mod8 (unitPart (Units.mk0 a ha)) (unitPart (Units.mk0 b hb)) h1
+
+private lemma sum_squares (z x y : ℤ_[2]) (hz : IsUnit z)
+    (eq_mod4 : (toZModPow 2) z ^ 2 + (toZModPow 2) x ^ 2 + (toZModPow 2) y ^ 2 = 0) : False := by
+  have hz' : (toZModPow 2) z ^ 2 = 1 := by
+    have := units_mod4 (Units.map (toZModPow 2).toMonoidHom hz.unit)
+    rcases this with hz' | hz'
+    all_goals
+      have := congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) hz'
+      simp only [Nat.reducePow, RingHom.toMonoidHom_eq_coe, Units.coe_map, IsUnit.unit_spec,
+        MonoidHom.coe_coe, Units.val_one] at this
+      rw [this]
+      simp
+  rw [hz'] at eq_mod4
+  have sq_mod4 (t : ZMod (2 ^ 2)) : t ^ 2 = 0 ∨ t ^ 2 = 1 := by decide +revert
+  have hx' := sq_mod4 (x.toZModPow 2)
+  have hy' := sq_mod4 (y.toZModPow 2)
+  rcases hx' with hx' | hx'
+  all_goals
+    rcases hy' with hy' | hy'
+    all_goals
+      rw [hx', hy'] at eq_mod4
+      revert eq_mod4
+      decide
+
+/-- Main theorem for `p = 2`, case of even valuations `v (a)`, `v (b)`. -/
+lemma two_adic_case00 : hilbertSym (unitPart (Units.mk0 a ha) : ℚ_[2]) (unitPart (Units.mk0 b hb)) =
+    Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb))) := by
+  set u := unitPart (Units.mk0 a ha)
+  set v := unitPart (Units.mk0 b hb)
+  simp only [epsilon, Nat.reducePow, RingHom.toMonoidHom_eq_coe]
+  split_ifs with h
+  · simp only [h, ↓reduceIte, zero_mul, Int.negOnePow_zero, Units.val_one]
+    exact one_mod4 ha hb h
+  · simp only [h, ↓reduceIte, one_mul]
+    split_ifs with h'
+    · rw [comm]
+      simp only [h', ↓reduceIte, Int.negOnePow_zero, Units.val_one]
+      exact one_mod4 hb ha h'
+    · simp only [hilbertSym, coe_eq_zero, Units.ne_zero, or_self, ↓reduceIte, ne_eq,
+      Prod.mk.injEq, not_and, Int.reduceNeg, h', Int.negOnePow_one, Units.val_neg,
+      Units.val_one, ite_eq_right_iff, reduceCtorEq, imp_false, not_exists]
+      refine fun z x y hnetriv hsol ↦ ?_
+      have ⟨z, y, x, hsol, hprim⟩ : ∃ z' y' x' : ℤ_[2], z' ^ 2 - u * x' ^ 2 - v * y' ^ 2 = 0 ∧
+          (IsUnit z' ∨ IsUnit y' ∨ IsUnit x') := exists_padicInt_sol (by tauto) hsol
+      have hu : (u : ℤ_[2]).toZModPow 2 = -1 := by
+        rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) u) with h' | h'
+        · tauto
+        · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
+      have hv : (v : ℤ_[2]).toZModPow 2 = -1 := by
+        rcases units_mod4 ((Units.map (toZModPow 2).toMonoidHom) v) with h' | h'
+        · tauto
+        · simpa using (congrArg (fun (x : (ZMod (2 ^ 2))ˣ) ↦ (x.val : ZMod (2 ^ 2))) h')
+      have eq_mod4 :
+          (z.toZModPow 2) ^ 2 - (u : ℤ_[2]).toZModPow 2 * (x : ℤ_[2]).toZModPow 2 ^ 2 -
+          (v : ℤ_[2]).toZModPow 2 * (y : ℤ_[2]).toZModPow 2 ^ 2 = 0 := by
+        calc _
+          _ = ((z ^ 2 - (u : ℤ_[2]) * x ^ 2 - (v : ℤ_[2]) * y ^ 2).toZModPow 2) := by simp
+          _ = _ := by rw [hsol]; simp
+      rw [hu, hv] at eq_mod4
+      ring_nf at eq_mod4
+      rcases hprim with hz | hy | hx
+      · exact sum_squares z x y hz eq_mod4
+      · apply sum_squares y x z hy
+        rw [← eq_mod4]
+        ring
+      · apply sum_squares x y z hx
+        rw [← eq_mod4]
+        ring
+
+/-- Main theorem for `p = 2`, case `v (a) = 1`, `v (b) = 0`. -/
+lemma two_adic_case10 :
+    hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * 2) ((unitPart (Units.mk0 b hb))) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb)) +
+      omega (unitPart (Units.mk0 b hb))) := by
   sorry
 
-/-- Main theorem for p=2, case v(a)=1, v(b)=0. -/
-lemma two_adic_case10 (ha1 : valuation (a : ℚ_[2]) = 1) (hb0 : valuation (b : ℚ_[2]) = 0) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
+/-- Main theorem for `p = 2`, case `v (a) = 1`, `v (b) = 1`. -/
+lemma two_adic_case11 :
+    hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * 2) ((unitPart (Units.mk0 b hb)) * 2) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) * epsilon (unitPart (Units.mk0 b hb)) +
+      omega (unitPart (Units.mk0 b hb)) + omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
-/-- Main theorem for p=2, case v(a)=1, v(b)=1. -/
-lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : ℚ_[2]) = 1) :
-    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
-      epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
-      omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
-      omega (unitPart (Units.mk0 a ha))) := by
-  sorry
+--reduce to (a, b) = (u_a * 2 ^ (v_2(a) mod 2), u_b * 2 ^ (v_2(b) mod 2))
+lemma two_adic_eq_mod :
+    hilbertSym a b =
+      hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * (2 : ℚ_[2]) ^ (a.valuation % 2))
+        ((unitPart (Units.mk0 b hb) : ℚ_[2]) * (2 : ℚ_[2]) ^ (b.valuation % 2)) := by
+  have h : ∀ x : ℤ, ∃ s, s ≠ 0 ∧ (2 : ℚ_[2]) ^ x = 2 ^ (x % 2) * s ^ 2 := by
+    refine fun x ↦ ⟨(2 : ℚ_[2]) ^ ((x - x % 2) / 2), zpow_ne_zero _ (by norm_num), ?_⟩
+    nth_rw 1 [show x = x % 2 + 2 * ((x - x % 2) / 2) by omega, zpow_add₀ (by norm_num),
+      show 2 * ((x - x % 2) / 2) = ((x - x % 2) / 2) * 2 by omega, zpow_mul, ← zpow_ofNat]
+  obtain ⟨s1, h1₀, h1⟩ := h a.valuation
+  obtain ⟨s2, h2₀, h2⟩ := h b.valuation
+  nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb]
+  rw_mod_cast [h1, h2, ← mul_assoc, mul_left_square_eq h1₀, ← mul_assoc, mul_right_square_eq h2₀]
 
-/-- If a, b are nonzero in ℚ_[2], then the Hilbert symbol (a, b)₂ equals
-`(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where u_a, u_b are the unit parts of a, b
+lemma two_adic_eq_pow : Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+    epsilon (unitPart (Units.mk0 b hb)) + a.valuation * omega (unitPart (Units.mk0 b hb)) +
+    b.valuation * omega (unitPart (Units.mk0 a ha))) =
+      Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
+      epsilon (unitPart (Units.mk0 b hb)) + a.valuation % 2 * omega (unitPart (Units.mk0 b hb)) +
+      b.valuation % 2 * omega (unitPart (Units.mk0 a ha))) := by
+  rw [Int.negOnePow_eq_iff]
+  grind
+
+/-- If `a`, `b` are nonzero in `ℚ_[2]`, then the Hilbert symbol `(a, b)₂` equals
+`(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where `u_a`, `u_b` are the unit parts of `a`, `b`
 respectively. -/
 theorem two_adic_eq :
-    hilbertSym a b = Int.negOnePow (PadicInt.epsilon (unitPart (Units.mk0 a ha)) *
+    hilbertSym a b = Int.negOnePow (epsilon (unitPart (Units.mk0 a ha)) *
       epsilon (unitPart (Units.mk0 b hb)) + valuation (a : ℚ_[2]) *
       omega (unitPart (Units.mk0 b hb)) + valuation (b : ℚ_[2]) *
       omega (unitPart (Units.mk0 a ha))) := by
-  sorry
+  rw [two_adic_eq_mod ha hb, two_adic_eq_pow ha hb]
+  by_cases ha' : a.valuation % 2 = 0
+  · by_cases hb' : b.valuation % 2 = 0
+    · simp [ha', hb', two_adic_case00 ha hb]
+    · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
+      rw [comm]
+      simp [ha', hb', omega, epsilon, two_adic_case10 hb ha]
+      grind
+  · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at ha'
+    by_cases hb' : b.valuation % 2 = 0
+    · simp [ha', hb', omega, two_adic_case10 ha hb]
+    · simp only [EuclideanDomain.mod_eq_zero, Int.two_dvd_ne_zero] at hb'
+      simp [ha', hb', omega, two_adic_case11 ha hb]
 
 end two
 
