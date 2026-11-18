@@ -650,6 +650,25 @@ lemma two_adic_case11 (ha1 : valuation (a : ℚ_[2]) = 1) (hb1 : valuation (b : 
       omega (unitPart (Units.mk0 a ha))) := by
   sorry
 
+
+
+--reduce to (a, b) = (u_a * 2 ^ (v_2(a) mod 2), u_b * 2 ^ (v_2(b) mod 2))
+theorem two_adic_eq_mod :
+    hilbertSym a b =
+      hilbertSym ((unitPart (Units.mk0 a ha) : ℚ_[2]) * (2 : ℚ_[2]) ^ (a.valuation % 2))
+        ((unitPart (Units.mk0 b hb) : ℚ_[2]) * (2 : ℚ_[2]) ^ (b.valuation % 2)) := by
+  nth_rw 1 [eq_unit_mul_pow_p ha, eq_unit_mul_pow_p hb]
+  have : ∀ x : ℤ, ∃ s, (2 : ℚ_[2]) ^ x = 2 ^ (x % 2) * s ^ 2 := by
+    intro x
+    use (2 : ℚ_[2]) ^ ((x - x % 2) / 2)
+    group
+    rw [Int.ediv_two_mul_two_of_even (by grind)]
+
+
+
+    sorry
+
+
 /-- If `a`, `b` are nonzero in `ℚ_[2]`, then the Hilbert symbol `(a, b)₂` equals
 `(-1) ^ (ε(u_a)ε(u_b) + v(a)ω(u_b) + v(b)ω(u_a))`, where `u_a`, `u_b` are the unit parts of `a`, `b`
 respectively. -/
