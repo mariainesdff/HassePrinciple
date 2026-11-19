@@ -159,7 +159,7 @@ theorem eq_neg_one_iff (ha : IsUnit a) :
     legendreSym a = -1 ↔ ¬ IsSquare (residue R a) := by
   rw [IsLocalRing.legendreSym.eq_neg_one_iff_not_one ha, eq_one_iff ha]
 
-/-- We have the congruence `legendreSym a ≡ a ^ (p / 2) mod p`. -/
+/-- We have the congruence `legendreSym a ≡ (residue R a) ^ (Fintype.card (ResidueField R)/ 2)`. -/
 theorem eq_pow (hR : ringChar (ResidueField R) ≠ 2) :
     legendreSym a = (residue R a) ^ (Fintype.card (ResidueField R) / 2) := by
     simp only [legendreSym, MulChar.compLocalHom_apply]
