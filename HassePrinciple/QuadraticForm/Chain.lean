@@ -25,7 +25,7 @@ theorem IsContiguous.map {ι R M N : Type*} [CommRing R] [AddCommGroup M] [AddCo
   exact ⟨i, j, by rw [Basis.map_apply, Basis.map_apply, hij]⟩
 
 variable {k : Type*} [Field k] [Invertible (2 : k)]
-  {V : Type*} [AddCommGroup V] [Module k V] [FiniteDimensional k V]
+  {V : Type*} [AddCommGroup V] [Module k V] --[FiniteDimensional k V]
   {Q : QuadraticForm k V}
 
 /-- Given a quadratic form `Q` and two bases `b, b'` of the vector space `V`, a chain from `b` to
@@ -62,9 +62,13 @@ lemma exists_const (hdim : 3 ≤ finrank k V) (hQ : Q.Nondegenerate)
 /-- Let `V` be a vector space of dimension at least `3`, let `Q` be a nondegenerate quadratic form
   on `V` and let `b, b'` be two `Q`-orthogonal bases of `V`. Then there exists a chain from
   `b` to `b'`. -/
-theorem chain_of_nondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι)
-    (hQ : Q.associated.SeparatingLeft)
+def chainOfNondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι) (hQ : Q.Nondegenerate)
     {b b' : Basis ι k V} (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b') :
-    Nonempty (Chain Q b b') := sorry
+    Chain Q b b' := sorry
+
+theorem chain_of_Nondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι)
+    (hQ : Q.Nondegenerate) {b b' : Basis ι k V}
+    (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b') :
+    Nonempty (Chain Q b b') := ⟨chainOfNondegenerate hdim hQ hb hb'⟩
 
 end Module.Basis

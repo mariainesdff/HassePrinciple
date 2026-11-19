@@ -131,11 +131,11 @@ lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fint
 -- CY : This looks to be related to the previous two lemmas.
 lemma weightedSumSquares_comp_equiv {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
     [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
-    (w : κ → S) (e : ι ≃ κ) :
-    weightedSumSquares R (w ∘ e) =
-      (weightedSumSquares R w).comp (LinearEquiv.funCongrLeft R R e.symm) := by
+    (w : κ → S) (f : ι ≃ κ) :
+    weightedSumSquares R (w ∘ f) =
+      (weightedSumSquares R w).comp (LinearEquiv.funCongrLeft R R f.symm) := by
   ext m
-  simpa using Finset.sum_equiv e (by simp) (by simp)
+  simpa using Finset.sum_equiv f (by simp) (by simp)
 
 open _root_.QuadraticMap
 
