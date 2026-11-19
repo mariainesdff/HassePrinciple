@@ -162,47 +162,41 @@ theorem eq_neg_one_iff (ha : IsUnit a) :
 /-- We have the congruence `legendreSym a ≡ a ^ (p / 2) mod p`. -/
 theorem eq_pow {p : ℕ} [Fact (Nat.Prime p)] (hp : Fintype.card (ResidueField R) = p) :
     residue R (legendreSym a) = (residue R a) ^ (p / 2) := by
-    simp only [map_intCast]
-    simp only [legendreSym]
-    simp only [MulChar.compLocalHom_apply]
-    simp only [quadraticChar_apply]
+    simp only [map_intCast, legendreSym, MulChar.compLocalHom_apply, quadraticChar_apply]
     by_cases hp2 : ringChar (ResidueField R) = 2
-    · by_cases hzero : (residue R) a = 0
-      · rw [hzero]
-        rw [zero_pow]
+    · by_cases h0 : (residue R) a = 0
+      · rw [h0, zero_pow]
         · simp only [quadraticCharFun_zero, Int.cast_zero]
         · simp only [ne_eq, Nat.div_eq_zero_iff, OfNat.ofNat_ne_zero, Order.lt_two_iff, false_or,
           not_le]
           rw [← hp]
           exact Fintype.one_lt_card
-      · push Not at hzero
-        have h6 : IsSquare ((residue R) a) := by apply (FiniteField.isSquare_of_char_two hp2
+      · push Not at h0
+        have h1 : IsSquare ((residue R) a) := by apply (FiniteField.isSquare_of_char_two hp2
           ((residue R) a))
-        rw [← quadraticChar_one_iff_isSquare hzero] at h6
+        rw [← quadraticChar_one_iff_isSquare h0] at h1
         simp only [quadraticCharFun]
-        split_ifs with h1 h2
-        · rw [h1]
+        split_ifs with h2 h3
+        · rw [h2]
           simp only [Int.cast_zero]
           lia
-        · push Not at h1
+        · push Not at h2
           simp only [Int.cast_one]
           have : -1 = 1 := by
             refine Int.neg_eq_of_add_eq_zero ?_
             rw [one_add_one_eq_two]
             have : CharP ℤ 2 := by sorry
             rw [CharTwo.two_eq_zero]
-          rw [← this] at h6
-          rw [quadraticChar_neg_one_iff_not_isSquare] at h6
-          have : 1 = (residue R) a ^ (p / 2) := absurd h2 h6
+          rw [← this, quadraticChar_neg_one_iff_not_isSquare] at h1
+          have : 1 = (residue R) a ^ (p / 2) := absurd h3 h1
           exact this
-        · rw [quadraticChar_one_iff_isSquare hzero] at h6
-          have : -1 = (residue R) a ^ (p / 2) := absurd h6 h2
+        · rw [quadraticChar_one_iff_isSquare h0] at h1
+          have : -1 = (residue R) a ^ (p / 2) := absurd h1 h3
           simp only [Int.reduceNeg, Int.cast_neg, Int.cast_one]
           exact this
     · simp only [quadraticCharFun]
-      by_cases hzero : (residue R) a = 0
-      · rw [hzero]
-        rw [zero_pow]
+      by_cases h0 : (residue R) a = 0
+      · rw [h0, zero_pow]
         · lia
         · simp only [ne_eq, Nat.div_eq_zero_iff, OfNat.ofNat_ne_zero, Order.lt_two_iff, false_or,
           not_le]
@@ -210,38 +204,33 @@ theorem eq_pow {p : ℕ} [Fact (Nat.Prime p)] (hp : Fintype.card (ResidueField R
           exact Fintype.one_lt_card
       · split_ifs with h1 h2
         · simp only [Int.cast_zero]
-          have : 0 = (residue R) a ^ (p / 2) := absurd h1 hzero
+          have : 0 = (residue R) a ^ (p / 2) := absurd h1 h0
           exact this
         · obtain ⟨w, h⟩ := h2
           rw [h]
-          push Not at hzero
-          rw [h] at hzero
-          rw [mul_self_ne_zero] at hzero
+          push Not at h0
+          rw [h, mul_self_ne_zero] at h0
           simp only [Int.cast_one]
-          rw [← pow_two]
-          rw [← pow_mul']
-          rw [← hp]
-          rw [pow_mul]
+          rw [← pow_two, ← pow_mul', ← hp, pow_mul]
           have : w ^ (Fintype.card (ResidueField R) / 2) = 1 ∨ w ^ (Fintype.card (ResidueField R) /
           2)
             = -1 := by
             refine FiniteField.pow_dichotomy ?_ ?_
             · push Not at hp2
               exact hp2
-            · exact hzero
+            · exact h0
           rcases this with h3 | h3 <;>
           simp [h3]
         · push Not at h1
-          have h8 : (residue R) a ≠ 0 := by apply h1
+          have h4 : (residue R) a ≠ 0 := by apply h1
           rw [IsLocalRing.residue_ne_zero_iff_isUnit] at h1
           rw [← eq_neg_one_iff h1] at h2
           simp only [Int.reduceNeg, Int.cast_neg, Int.cast_one]
-          rw [eq_neg_one_iff h1] at h2
-          rw [FiniteField.isSquare_iff hp2 h8] at h2
-          have h9 : (residue R) a ^ (Fintype.card (ResidueField R) / 2) = 1 ∨
+          rw [eq_neg_one_iff h1, FiniteField.isSquare_iff hp2 h4] at h2
+          have h5 : (residue R) a ^ (Fintype.card (ResidueField R) / 2) = 1 ∨
           (residue R) a ^ (Fintype.card (ResidueField R) / 2) = -1 := by apply
-          (FiniteField.pow_dichotomy hp2 h8)
-          rw [hp] at h9
+          (FiniteField.pow_dichotomy hp2 h4)
+          rw [hp] at h5
           rw [hp] at h2
           tauto
 
