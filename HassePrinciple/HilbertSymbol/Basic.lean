@@ -300,8 +300,6 @@ theorem right_minus_self_mul (ha : a ≠ 1) :
 lemma one_right (ha : a ≠ 0) : hilbertSym a 1 = 1 := by
   rw [← one_pow 2, right_square_eq_one ha one_ne_zero]
 
-section Bilin
-
 variable (k) in
 /-- We say that `HasBilinHilbertSym k` if the Hilbert symbol on `k` is bilinear, i.e., if
 `hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b` for all `a, a', b` in `k`.
@@ -310,11 +308,28 @@ Note that, by the commutativity property of the Hilbert symbol, this also implie
 class HasBilinHilbertSym : Prop where
   mul_left_eq {a a' b : k} : hilbertSym (a * a') b = hilbertSym a b * hilbertSym a' b
 
-lemma HasBilinHilbertSym.mul_right_eq [HasBilinHilbertSym k] :
-    hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
+namespace HasBilinHilbertSym
+
+variable [HasBilinHilbertSym k]
+
+lemma mul_right_eq : hilbertSym a (b * b') = hilbertSym a b * hilbertSym a b' := by
   rw [comm, mul_left_eq, comm, comm (b := b')]
 
-end Bilin
+lemma prod_right_eq {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (f : ι → k) :
+    hilbertSym a (∏ i ∈ s, f i) = ∏ i ∈ s, hilbertSym a (f i) := by
+  by_cases ha : a = 0
+  · simp [hilbertSym, ha, zero_pow hs.card_ne_zero]
+  let h : k →* ℤ := {
+    toFun b      := hilbertSym a b
+    map_one'     := one_right ha
+    map_mul' _ _ := hilbertSym.HasBilinHilbertSym.mul_right_eq }
+  exact map_prod h f s
+
+lemma prod_left_eq {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (f : ι → k) :
+    hilbertSym (∏ i ∈ s, f i) b = ∏ i ∈ s, hilbertSym (f i)  b := by
+  rw [comm, prod_right_eq (s := s) hs f, Finset.prod_congr rfl fun i hi ↦ comm]
+
+end HasBilinHilbertSym
 
 end Field
 
