@@ -310,21 +310,21 @@ private lemma existence_disjoint (infty_not_mem_T : ∀ i : I, ereal i = 1) :
         rw [← Int.cast_inj (α := ℚ), hej,
           padic_odd_eq hp2 (fun xp0 ↦ by simp [hilbertSym, xp0] at hxp) (by simp [ha])] at hxp
         simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
-          mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
+          mul_zero, mul_ite, mul_one, ite_self, Int.negOnePow_zero,
           val_one, Int.cast_one, zpow_zero, one_mul, Int.reduceNeg, Int.cast_neg,
           zpow_eq_neg_one_iff₀] at hxp
         exact hxp.2
       simp only [Padic.valuation_ratCast, val_x, Padic.valuation_intCast,
         is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero, mul_zero, mul_ite,
-        PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
+         mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
         zpow_zero, zpow_one, one_mul, ← hxp, Int.cast_inj]
       rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (fun xp0 ↦ by aesop) (by simp [ha])]
       simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
-        mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
+        mul_zero, mul_ite, mul_one, ite_self, Int.negOnePow_zero,
         val_one, Int.cast_one, zpow_zero, one_mul]
       rw [zpow_odd_one_or_neg_one_eq_self val_xp]
       simp only [Int.cast_inj, ← Int.cast_one (R := ℚ), ← Int.cast_neg]
-      exact PadicInt.legendreSym.eq_one_or_neg_one (by simp)
+      exact IsLocalRing.legendreSym.eq_one_or_neg_one (by simp)
     · --case p ∉ T: val_p(x) = 0, so LHR = 1 = RHS.
       have val_x : padicValRat p x.val = 0 :=
         padicValRat_x_eq_zero_of_p_notMem_T hep h1 disjoint_ST hpq hpT

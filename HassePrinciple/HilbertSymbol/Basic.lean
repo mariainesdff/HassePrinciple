@@ -18,6 +18,16 @@ public import Mathlib.NumberTheory.LSeries.PrimesInAP
 -- Notation:
 namespace PadicInt
 
+variable {p : ℕ} [Fact (Nat.Prime p)]
+
+noncomputable instance : Fintype (IsLocalRing.ResidueField ℤ_[p]) :=
+  Fintype.ofEquiv (ZMod p) (PadicInt.residueField (p := p)).symm.toEquiv
+
+noncomputable instance : DecidableEq (IsLocalRing.ResidueField ℤ_[p]) :=
+  Equiv.decidableEq (PadicInt.residueField (p := p)).toEquiv
+
+noncomputable abbrev legendreSym := IsLocalRing.legendreSym (R := ℤ_[p])
+
 /-- epsilon(u) is the class modulo 2 of (u - 1) / 2. -/
 noncomputable abbrev epsilon (u : (PadicInt 2)ˣ) : ℤ :=
   if Units.map (toZModPow 2).toMonoidHom u = 1 then 0 else 1
