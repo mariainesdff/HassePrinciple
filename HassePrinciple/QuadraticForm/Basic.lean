@@ -9,7 +9,6 @@ public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
 public import HassePrinciple.ForMathlib.LinearAlgebra.LinearIndependent.Basis
 public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
 public import Mathlib.Algebra.Squarefree.Basic
-public import Mathlib.LinearAlgebra.Matrix.BilinearForm
 public import Mathlib.LinearAlgebra.QuadraticForm.Prod
 public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct

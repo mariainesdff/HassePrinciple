@@ -6,6 +6,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Chi-Yun Hsu
 module
 
 public import HassePrinciple.ForMathlib.LinearAlgebra.Determinant
+public import HassePrinciple.HilbertSymbol.ExistenceTheorem
 public import HassePrinciple.QuadraticForm.Chain
 public import HassePrinciple.QuadraticForm.LowRank
 
