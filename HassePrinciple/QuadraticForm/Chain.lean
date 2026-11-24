@@ -66,7 +66,7 @@ def chainOfNondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι
     {b b' : Basis ι k V} (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b') :
     Chain Q b b' := sorry
 
-theorem chain_of_Nondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι)
+theorem chain_of_nondegenerate {ι : Type*} [Fintype ι] (hdim : 3 ≤ Fintype.card ι)
     (hQ : Q.Nondegenerate) {b b' : Basis ι k V}
     (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b') :
     Nonempty (Chain Q b b') := ⟨chainOfNondegenerate hdim hQ hb hb'⟩

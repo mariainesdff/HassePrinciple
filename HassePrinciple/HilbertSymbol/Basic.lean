@@ -7,6 +7,7 @@ module
 
 public import HassePrinciple.Padics.Lemmas
 public import HassePrinciple.Padics.Legendre
+public import HassePrinciple.QuadraticForm.Basic
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 public import Mathlib.NumberTheory.PrimeCounting
 public import Mathlib.NumberTheory.LSeries.PrimesInAP
@@ -190,6 +191,25 @@ theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
     simp only [QuadraticAlgebra.norm_def, zero_mul, add_zero] at hnorm'
     rw [hnorm']
     ring
+
+open QuadraticForm in
+theorem eq_one_iff_represents_one {k : Type*} [Field k] [Invertible (2 : k)]
+    {w : Fin 2 → k} (hw : w 0 ≠ 0 ∧ w 1 ≠ 0) :
+    hilbertSym (w 0) (w 1) = 1 ↔ (weightedSumSquares k w).represents (1 : kˣ) := by
+  have hdef : hilbertSym (w 0 : k) (w 1) = 1 ↔
+      ∃ z x y : k, (z, x, y) ≠ (0, 0, 0) ∧ w 0 * x ^ 2 + w 1 * y ^ 2 - z ^ 2 = 0 := by
+    simp [hilbertSym, hw]
+    grind
+  rw [hdef, (represents_iff_sub_isotropic ((QuadraticMap.nondegenerate_iff_map_basis_ne_zero
+    (weightedSumSquares_isOrthoᵢ_basisFun w)).mpr (by simp [hw]))) 1,
+    ← QuadraticMap.represents_zero_iff_isotropic]
+  dsimp [QuadraticMap.represents]
+  refine ⟨fun ⟨z, x, y, hne, hrep⟩ ↦
+      ⟨(![x, y], ![z]), ⟨by simpa [pow_two, Units.smul_def, sub_eq_add_neg] using hrep, by aesop⟩⟩,
+    fun ⟨x, ⟨hrep, hne⟩⟩ ↦
+      ⟨x.2 0, x.1 0, x.1 1, ?_, by simpa [pow_two, Units.smul_def, sub_eq_add_neg] using hrep⟩⟩
+  simp [Prod.ext_iff, funext_iff] at hne
+  grind
 
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if b is a square. -/
 @[simp]

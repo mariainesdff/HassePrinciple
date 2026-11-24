@@ -9,6 +9,7 @@ public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
 public import HassePrinciple.ForMathlib.LinearAlgebra.LinearIndependent.Basis
 public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
 public import Mathlib.Algebra.Squarefree.Basic
+public import Mathlib.LinearAlgebra.Matrix.BilinearForm
 public import Mathlib.LinearAlgebra.QuadraticForm.Prod
 public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct
@@ -108,34 +109,25 @@ lemma baseChange_discr {R n M₁ : Type*} [Fintype n] [DecidableEq n] (A : Type*
     (Q.baseChange A).discr (b.baseChange A) = algebraMap R A (Q.discr b) := by
   simp [discr, baseChange_toMatrix, Matrix.det_apply]
 
-/-- This generalizes Mathlib's `weightedSumSquaresCongr`. -/
-def weightedSumSquaresCongr' {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
-    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
-    {w : ι → S} {w' : κ → S} (f : ι ≃ κ) (h : w = w'.comp f) :
-    (weightedSumSquares R w).IsometryEquiv (weightedSumSquares R w') where
-  toFun m k := m (f.symm k)
-  map_add' m n  := by ext; simp
-  map_smul' r m := by ext; simp
-  invFun m i    := m (f i)
-  left_inv m    := by simp
-  right_inv m   := by simp
-  map_app' m    := by
-    simp only [QuadraticMap.weightedSumSquares_apply, h, Function.comp_apply]
-    exact Finset.sum_equiv f.symm (by simp) (by simp)
-
-lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
-    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
-    {w : ι → S} {w' : κ → S} (f : ι ≃ κ) (h : w = w'.comp f) :
-    (weightedSumSquares R w).Equivalent (weightedSumSquares R w') := ⟨weightedSumSquaresCongr' f h⟩
-
--- CY : This looks to be related to the previous two lemmas.
 lemma weightedSumSquares_comp_equiv {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
-    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
-    (w : κ → S) (f : ι ≃ κ) :
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R] (w : κ → S) (f : ι ≃ κ) :
     weightedSumSquares R (w ∘ f) =
       (weightedSumSquares R w).comp (LinearEquiv.funCongrLeft R R f.symm) := by
   ext m
   simpa using Finset.sum_equiv f (by simp) (by simp)
+
+/-- This generalizes Mathlib's `weightedSumSquaresCongr`. -/
+def weightedSumSquaresCongr' {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R] {w : κ → S} (f : ι ≃ κ) :
+    (weightedSumSquares R w).IsometryEquiv (weightedSumSquares R (w ∘ f)) :=
+  (weightedSumSquares_comp_equiv (R := R) w f) ▸
+    (weightedSumSquares R w).isometryEquivOfCompLinearEquiv _
+
+lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
+    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R]
+    {w : κ → S} (f : ι ≃ κ) :
+    (weightedSumSquares R w).Equivalent (weightedSumSquares R (w ∘ f)) :=
+  ⟨weightedSumSquaresCongr' f⟩
 
 open _root_.QuadraticMap
 
@@ -397,6 +389,26 @@ theorem Equivalent.nondegenerate_iff [IsDomain R] [IsTorsionFree R M] [IsTorsion
     [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q') :
     Q.Nondegenerate ↔ Q'.Nondegenerate :=
   ⟨fun hQ ↦ h.nondegenerate hQ, fun hQ' ↦ h.symm.nondegenerate hQ'⟩
+
+theorem nondegenerate_iff_map_basis_ne_zero {ι : Type*} [IsDomain R] [Invertible (2 : R)] [Finite ι]
+    [IsTorsionFree R N]
+    {Q : QuadraticMap R M N} {v : Module.Basis ι R M} (hv : Q.associated.IsOrthoᵢ v) :
+    Q.Nondegenerate ↔ ∀ i : ι, Q (v i) ≠ 0 := by
+  refine ⟨fun hQ i hi ↦ ?_, fun h ↦ ?_⟩
+  · exact hv.not_isOrtho_basis_self_of_separatingLeft (nondegenerate_associated_iff.mpr hQ).1 i
+      (by simpa [QuadraticMap.associated_eq_self_apply] using hi)
+  · have := Fintype.ofFinite ι
+    rw [← QuadraticMap.nondegenerate_associated_iff]
+    constructor
+    all_goals
+    · intro x hx
+      refine v.forall_coord_eq_zero_iff.mp (fun i ↦ ?_)
+      specialize hx (v i)
+      rw [← v.sum_repr x] at hx
+      simp only [map_sum, map_smul, LinearMap.sum_apply, LinearMap.smul_apply] at hx
+      rw [Finset.sum_eq_single i (fun j _ hj ↦ by simp [hv hj, hv hj.symm]) (fun h ↦ by simp at h)]
+        at hx
+      simpa [QuadraticMap.associated_eq_self_apply, h i] using hx
 
 lemma nondegenerate_weightedSumSquares {k : Type*} [Field k] [Invertible (2 : k)] {n : ℕ}
     (w : Fin n → kˣ) : (weightedSumSquares k w).Nondegenerate := by
