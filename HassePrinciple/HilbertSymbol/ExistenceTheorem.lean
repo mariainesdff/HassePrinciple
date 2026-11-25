@@ -223,8 +223,7 @@ private lemma isSquare_x
     have : (q : ZMod 8) = A := by
       apply ModEq.of_dvd at q_cong
       · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
-      · simp only [(by omega : 8 = 4 * 2)]
-        rw [mul_dvd_mul_iff_left (by omega)]
+      · rw [(by omega : 8 = 4 * 2), mul_dvd_mul_iff_left (by omega)]
         exact dvd_prod_of_mem Subtype.val (two_in_S a)
     simp [q, A, this]
   · apply PadicInt.isSquare_of_zmod (by rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]; exact hp2)
@@ -247,9 +246,9 @@ private lemma isSquare_x_of_p_mem_S {p : Primes} (hpS : p ∈ S a)
   simp [← PadicInt.algebraMap_apply]
 
 include disjoint_ST in
-private lemma padicValRat_x_eq_one_of_p_mem_T (p : Primes)
-    (pneq : p ≠ q hep hone disjoint_ST) (hpT : p ∈ T hep hone) :
-      padicValRat p (x hep hone disjoint_ST).val = 1 := by
+private lemma padicValRat_x_eq_one_of_p_mem_T {p : Primes} (pneq : p ≠ q hep hone disjoint_ST)
+    (hpT : p ∈ T hep hone) :
+    padicValRat p (x hep hone disjoint_ST).val = 1 := by
   have q_prime := hilbertSym.q_prime hep hone disjoint_ST
   have : Fact (Nat.Prime (q hep hone disjoint_ST)) := ⟨q_prime⟩
   have hTp : T hep hone = (T hep hone \ {p}) ∪ {p} := by
@@ -316,7 +315,7 @@ private lemma existence_disjoint (infty_not_mem_T : ∀ i : I, ereal i = 1) :
     by_cases hpT : p ∈ T hep hone
       --case p ∈ T: val_p(x) = 1.
     · have val_x : padicValRat p x.val = 1 :=
-        padicValRat_x_eq_one_of_p_mem_T hep hone disjoint_ST p hpq hpT
+        padicValRat_x_eq_one_of_p_mem_T hep hone disjoint_ST hpq hpT
       --we extract xp from hex and use it.
       obtain ⟨xp, hxp⟩ := hex.2 p
       have val_xp : Odd xp.valuation := by
