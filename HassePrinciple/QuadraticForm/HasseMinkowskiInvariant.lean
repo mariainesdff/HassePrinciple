@@ -109,9 +109,8 @@ lemma _root_.Fin.prod_lt_succ {M : Type*} [CommMonoid M] {n : ℕ}
   simp [Finset.prod_filter, Fintype.prod_prod_type, Fin.prod_univ_succ, Fin.succ_pos,
     Fin.succ_lt_succ_iff]
 
-lemma hasseMinkowskiInvAux.of_succ {n : ℕ} [NeZero n] [Invertible (2 : k)]
-    [hilbertSym.HasBilinHilbertSym k] (w : Fin (n + 1) → k) :
-    hasseMinkowskiInvAux w =
+lemma hasseMinkowskiInvAux.of_succ {n : ℕ} [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
+    (hn : n ≠ 0) (w : Fin (n + 1) → k) : hasseMinkowskiInvAux w =
       hilbertSym (w 0) (w 0 * (weightedSumSquares k w).discr (Pi.basisFun k _)) *
         hasseMinkowskiInvAux (w ∘ Fin.succ) := by
   rw [hasseMinkowskiInvAux_def (fun i ↦ (w i : k)),
@@ -120,17 +119,18 @@ lemma hasseMinkowskiInvAux.of_succ {n : ℕ} [NeZero n] [Invertible (2 : k)]
   rw [weightedSumSquares_discr, Fin.prod_univ_succ, ← mul_assoc, mul_comm]
   simp only [smul_eq_mul, mul_one]
   by_cases hw0 : w 0 = 0
-  · simpa [hilbertSym, hw0] using NeZero.out
+  · simpa [hilbertSym, hw0] using hn
   rw [← sq, hilbertSym.mul_right_square_eq hw0, hilbertSym.HasBilinHilbertSym.prod_right_eq]
-  exact ⟨0, by simp⟩
+  rw [Finset.univ_nonempty_iff, ← Fin.pos_iff_nonempty]
+  exact Nat.pos_of_ne_zero hn
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_succ_eq {n : ℕ} {w w' : Fin (n + 1) → k}
-    [NeZero n] [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
+    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hn : n ≠ 0)
     (h : (weightedSumSquares k w).Equivalent (weightedSumSquares k w'))
     (ih : hasseMinkowskiInvAux (w ∘ Fin.succ) = hasseMinkowskiInvAux (w' ∘ Fin.succ))
     (h0 : w 0 = w' 0) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
-  rw [hasseMinkowskiInvAux.of_succ w, hasseMinkowskiInvAux.of_succ w', ih, h0]
+  rw [hasseMinkowskiInvAux.of_succ hn w, hasseMinkowskiInvAux.of_succ hn w', ih, h0]
   apply congrArg (· * hasseMinkowskiInvAux (w' ∘ Fin.succ))
   rw [IsometryEquiv.discr (Equiv.refl _) (Pi.basisFun _ _) (Pi.basisFun _ _) (Classical.choice h),
     ← mul_assoc]
@@ -219,7 +219,7 @@ theorem equivalent_weightedSumSquares_succ {n : ℕ} {w w' : Fin (n + 1) → k} 
 
 open LinearEquiv in
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → k}
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
+    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hn : n ≠ 0)
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
@@ -230,7 +230,7 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fi
   let e'fe : (weightedSumSquares k (w ∘ e)).IsometryEquiv (weightedSumSquares k (w'∘ e')) :=
     ⟨(funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')), heq⟩
   rw [← hasseMinkowskiInvAux.eq_of_equiv w e, ← hasseMinkowskiInvAux.eq_of_equiv w' e']
-  refine hasseMinkowskiInvAux.eq_of_equivalent_of_succ_eq ⟨e'fe⟩ (ih ?_) ?_
+  refine hasseMinkowskiInvAux.eq_of_equivalent_of_succ_eq hn ⟨e'fe⟩ (ih ?_) ?_
   · exact equivalent_weightedSumSquares_succ e'fe (weight_eq_of_basisFun_apply_eq e'fe h0)
   · simpa using (weight_eq_of_basisFun_apply_eq e'fe h0)
 
@@ -238,7 +238,7 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fi
 -- I have not thought hard about whether we can combine them.
 open LinearEquiv in
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_zero {n : ℕ} {w w' : Fin (n + 1) → k}
-    {i : Fin (n + 1)} [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
+    {i : Fin (n + 1)} [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hn : n ≠ 0)
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
@@ -249,7 +249,7 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_zero {n : ℕ} {w w' : Fin (n + 1
   let e'fe : (weightedSumSquares k (w ∘ e)).IsometryEquiv (weightedSumSquares k (w'∘ e')) :=
     ⟨(funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')), heq⟩
   rw [← hasseMinkowskiInvAux.eq_of_equiv w e, ← hasseMinkowskiInvAux.eq_of_equiv w' e']
-  apply hasseMinkowskiInvAux.eq_of_equivalent_of_succ_eq ⟨e'fe⟩
+  apply hasseMinkowskiInvAux.eq_of_equivalent_of_succ_eq hn ⟨e'fe⟩
     (ih (equivalent_weightedSumSquares_succ e'fe h0))
   simpa using h0
 
@@ -311,9 +311,8 @@ lemma _root_.Module.Basis.map_map {ι R M₁ M₂ M₃ : Type*} [CommSemiring R]
   Basis.eq_of_apply_eq fun i ↦ by simp [Basis.map_apply]
 
 lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} {Q : QuadraticForm k V}
-    {b b' : Basis (Fin (n + 1)) k V}
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
-    (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
+    {b b' : Basis (Fin (n + 1)) k V} [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
+    (hn : n ≠ 0) (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
     (ih : ∀ {w0 w0' : Fin n → k}, (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
       hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
     (hc : b.IsContiguous b') :
@@ -324,7 +323,7 @@ lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} {Q : QuadraticForm k V
   let fb := Q.isometryEquivWeightedSumSquares' hb
   let fb' := Q.isometryEquivWeightedSumSquares' hb'
   let f := fb.symm.trans fb'
-  refine hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous f ih ?_
+  refine hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous hn f ih ?_
   simp only [f, fb]
   have hc_map := hc.map fb'.toLinearEquiv
   rw [Module.Basis.map_isometryEquivWeightedSumSquares',
@@ -332,9 +331,8 @@ lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} {Q : QuadraticForm k V
   exact hc_map
 
 lemma hasseMinkowskiInvBasis_eq_of_chain {n : ℕ} {Q : QuadraticForm k V}
-    {b b' : Basis (Fin (n + 1)) k V}
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
-    (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
+    {b b' : Basis (Fin (n + 1)) k V} [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
+    (hn : n ≠ 0) (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
     (ih : ∀ {w0 w0' : Fin n → k}, (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
       hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
     (c : Module.Basis.Chain Q b b') :
@@ -345,7 +343,7 @@ lemma hasseMinkowskiInvBasis_eq_of_chain {n : ℕ} {Q : QuadraticForm k V}
   simp only [Fin.isValue, Nat.reduceAdd, Fin.zero_eta, not_lt_zero, IsEmpty.forall_iff,
     implies_true] at *
   rw [basis_zero] at basis_m_sub_one
-  refine hasseMinkowskiInvBasis_eq_of_isContiguous hb hb' ih ?_
+  refine hasseMinkowskiInvBasis_eq_of_isContiguous hn hb hb' ih ?_
   use 0, 0
   exact congrArg (fun b ↦ b 0) basis_m_sub_one
   | succ m ih' =>
@@ -369,7 +367,7 @@ lemma hasseMinkowskiInvBasis_map {n : ℕ} {Q : QuadraticForm k V} {Q' : Quadrat
 end hasseMinkowskiInvBasis
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n : ℕ} {w w' : Fin (n + 1) → k}
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] [NeZero n]
+    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hn : n ≠ 0)
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (ih : ∀ {w0 w0' : Fin n → k}, (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
       hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
@@ -379,7 +377,7 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n : ℕ} {w w' : Fin (n + 
   rw [hasseMinkowskiInvAux_Basis w, hasseMinkowskiInvAux_Basis w']
   have hb := f.isOrthoᵢ_map (weightedSumSquares_isOrthoᵢ_basisFun w)
   rw [hasseMinkowskiInvBasis_map f _ hb]
-  exact hasseMinkowskiInvBasis_eq_of_chain hb (weightedSumSquares_isOrthoᵢ_basisFun w') ih c
+  exact hasseMinkowskiInvBasis_eq_of_chain hn hb (weightedSumSquares_isOrthoᵢ_basisFun w') ih c
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent {n n' : ℕ} {w : Fin n → k} {w' : Fin n' → k}
     [Invertible (2 : k)] -- `[Invertible (2 : k)]` is used in `eq_one_iff_represents_one`
