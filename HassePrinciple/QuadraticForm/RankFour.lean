@@ -5,11 +5,9 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
+public import HassePrinciple.HilbertSymbol.ExistenceTheorem
 public import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
 public import HassePrinciple.QuadraticForm.RankThree
-public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct
-public import Mathlib.LinearAlgebra.TensorProduct.Pi
 
 /-! # The Hasse-Minkowski theorem for rank 4 quadratic forms -/
 
