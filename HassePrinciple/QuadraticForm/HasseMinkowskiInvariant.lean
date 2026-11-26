@@ -351,7 +351,7 @@ lemma hasseMinkowskiInvBasis_eq_of_chain {n : ℕ} {Q : QuadraticForm k V}
   have ih' := ih' (basis_ortho 1) basis' (by simp [basis', basis_ortho]) (by simp [basis'])
     (by simp [basis', basis_m_sub_one]) (fun i hi ↦ basis_isContiguous (i + 1) (by omega))
   rw [← ih']
-  refine hasseMinkowskiInvBasis_eq_of_isContiguous hb _ ih ?_
+  refine hasseMinkowskiInvBasis_eq_of_isContiguous hn hb _ ih ?_
   simpa [basis_zero] using basis_isContiguous 0 (by omega)
 
 lemma hasseMinkowskiInvBasis_map {n : ℕ} {Q : QuadraticForm k V} {Q' : QuadraticForm k W}
@@ -428,7 +428,8 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n n' : ℕ} {w : Fin n → k} {w' :
   by_cases hw : ∃ i, w i = 0
   · obtain ⟨f⟩ := h
     obtain ⟨i, hi⟩ := hw
-    exact hasseMinkowskiInvAux.eq_of_equivalent_of_zero f hasseMinkowskiInvAux.eq_of_equivalent hi
+    exact hasseMinkowskiInvAux.eq_of_equivalent_of_zero (by omega) f
+      hasseMinkowskiInvAux.eq_of_equivalent hi
   have hw' : ¬∃ i, w' i = 0 := by
     contrapose! hw
     obtain ⟨i, hi⟩ := hw
@@ -449,7 +450,8 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n n' : ℕ} {w : Fin n → k} {w' :
   have hb' := weightedSumSquares_isOrthoᵢ_basisFun w'
   have hb := f.isOrthoᵢ_map (weightedSumSquares_isOrthoᵢ_basisFun w)
   obtain ⟨c⟩ := Module.Basis.chain_of_nondegenerate hdim hNondeg hb hb'
-  exact hasseMinkowskiInvAux.eq_of_equivalent_of_chain f hasseMinkowskiInvAux.eq_of_equivalent c
+  exact hasseMinkowskiInvAux.eq_of_equivalent_of_chain (by omega) f
+    hasseMinkowskiInvAux.eq_of_equivalent c
 
 variable [FiniteDimensional k V] [FiniteDimensional k W]
 
