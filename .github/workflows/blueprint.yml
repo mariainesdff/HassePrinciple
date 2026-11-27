@@ -21,11 +21,11 @@ permissions:
 
 jobs:
   build_project:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Build project
     steps:
       - name: Cleanup to free disk space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.0
+        uses: jlumbroso/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6 # v1.3.0
         with:
           tool-cache: false
           android: true
@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0 # Fetch all history for all branches and tags
 
       - name: Build and lint project
-        uses: leanprover/lean-action@50fcf42d2e460296f1a34b402e990d1b24f8b596 # 2025-07-02
+        uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # 2025-07-02
         with:
           build: true
           lint: true
