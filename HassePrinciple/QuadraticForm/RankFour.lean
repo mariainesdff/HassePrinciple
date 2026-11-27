@@ -129,15 +129,15 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
       · simp [← h2, baseChange_discr, weightedSumSquares_discr, Units.smul_def, mul_comm]
   -- There exists `x : ℚ` with `(xₚ, - ab)ᵥ = (a, b)ᵥ` and `(xₚ, - cd)ᵥ = (-c, -d)ᵥ`
   -- for each place `v`.
-  obtain ⟨x, hx⟩ : ∃ (x : ℚˣ), (∀ (p : Nat.Primes),
-      hilbertSym (x : ℚ_[p]) (-(w 0) * w 1) = hilbertSym (w 0 : ℚ_[p]) (w 1) ∧
-      hilbertSym (x : ℚ_[p]) (-(w 2) * w 3) = hilbertSym (-w 2 : ℚ_[p]) (-w 3)) ∧
+  obtain ⟨x, hx⟩ : ∃ (x : ℚˣ),
       hilbertSym (x : ℝ) (-(w 0) * w 1) = hilbertSym (w 0 : ℝ) (w 1) ∧
-      hilbertSym (x : ℝ) (-(w 2) * w 3) = hilbertSym (-w 2 : ℝ) (-w 3) := by
+      hilbertSym (x : ℝ) (-(w 2) * w 3) = hilbertSym (-w 2 : ℝ) (-w 3) ∧
+      (∀ (p : Nat.Primes), hilbertSym (x : ℚ_[p]) (-(w 0) * w 1) = hilbertSym (w 0 : ℚ_[p]) (w 1) ∧
+      hilbertSym (x : ℚ_[p]) (-(w 2) * w 3) = hilbertSym (-w 2 : ℚ_[p]) (-w 3)) := by
     have := exists_rat_with_two_prescribed_hilbertSym
+      (er := hilbertSym (w 0 : ℝ) (w 1)) (er' := hilbertSym (-w 2 : ℝ ) (-w 3))
       (ep := fun p ↦ hilbertSym ((w 0) : ℚ_[p]) (w 1))
       (ep' := fun p ↦ hilbertSym ((-w 2): ℚ_[p]) (-w 3))
-      (er := hilbertSym (w 0 : ℝ) (w 1)) (er' := hilbertSym (-w 2 : ℝ ) (-w 3))
       (-(w 0) * w 1) (-(w 2) * w 3)
       (by aesop (add norm eq_one_or_neg_one_of_ne_zero))
       (by aesop (add norm eq_one_or_neg_one_of_ne_zero))
@@ -147,21 +147,21 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
       Rat.cast_mul] at this ⊢ hxr' hp'
     rw [this]
     refine ⟨⟨almost_all_one _ _, almost_all_one (-w ⟨2, by omega⟩) (-w ⟨3, by omega⟩)⟩,
-      ⟨prod_eq_one _ _, ?_⟩, fun p ↦ ⟨(hp p).choose, hp' p⟩ , ⟨xr, hxr'⟩⟩
+      ⟨prod_eq_one _ _, ?_⟩, ⟨xr, hxr'⟩, fun p ↦ ⟨(hp p).choose, hp' p⟩⟩
     exact_mod_cast prod_eq_one (-w ⟨2, by omega⟩) (-w ⟨3, by omega⟩)
   -- We conclude by showing that `x` is represented by `Q1` and `Q2`.
   refine ⟨x, ?_, ?_⟩
   · rw [represents_iff_sub_isotropic (nondegenerate_weightedSumSquares _)]
     exact isotropic_of_rank_three _ (by simp) (nondegenerate_prod
       (nondegenerate_weightedSumSquares _) (nondegenerate_weightedSumSquares _))
-      ⟨fun p _ ↦ isotropic_prod_neg (hx.1 ⟨p, Fact.out⟩).1, isotropic_prod_neg hx.2.1⟩
+      ⟨fun p _ ↦ isotropic_prod_neg (hx.2.2 ⟨p, Fact.out⟩).1, isotropic_prod_neg hx.1⟩
   · rw [represents_iff_sub_isotropic (nondegenerate_weightedSumSquares _)]
     apply isotropic_of_rank_three _ (by simp) (nondegenerate_prod
       (nondegenerate_weightedSumSquares _) (nondegenerate_weightedSumSquares _))
     refine ⟨fun p _ ↦ ?_, ?_⟩
     · apply isotropic_prod_neg (w := ![-w ⟨2, by omega⟩, -w ⟨3, by omega⟩])
-      convert (hx.1 ⟨p, Fact.out⟩).2 using 1 <;> simp
+      convert (hx.2.2 ⟨p, Fact.out⟩).2 using 1 <;> simp
     · apply isotropic_prod_neg (w := ![-w ⟨2, by omega⟩, -w ⟨3, by omega⟩])
-      convert hx.2.2 using 1 <;> simp
+      convert hx.2.1 using 1 <;> simp
 
 end QuadraticForm.EverywhereLocallyIsotropic
